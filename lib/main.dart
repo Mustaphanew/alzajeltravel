@@ -1,0 +1,152 @@
+import 'package:alzajeltravel/utils/classes/http_overrides/http_overrides.dart';
+import 'package:alzajeltravel/firebase_options.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:jiffy/jiffy.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:alzajeltravel/controller/main_controller.dart';
+import 'package:alzajeltravel/locale/translation.dart';
+import 'package:alzajeltravel/model/dio_init/dio_init.dart';
+import 'package:alzajeltravel/services/notification_service.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/enums.dart';
+import 'package:alzajeltravel/utils/themes.dart';
+import 'package:alzajeltravel/utils/widgets.dart';
+import 'package:alzajeltravel/view/frame.dart';
+import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
+import 'package:alzajeltravel/view/frame/search_flight.dart';
+import 'package:alzajeltravel/view/intro.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+Future<void> main() async {
+  // 1) أساسيات التمهيد
+  setupHttpOverrides();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 2) تهيئاتك المتزامنة/المسبقة
+  await GetStorage.init();
+  await Jiffy.setLocale('ar');
+
+  // 3) Firebase (يفضل قبل إظهار أي حوارات أذونات)
+  try {
+    final app = await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    print(
+      "firebase initialized: ${app.name}, "
+      "${app.options.apiKey}, ${app.options.appId}, ${app.options.projectId}",
+    );
+  } catch (e) {
+    print("error firebase: $e");
+  }
+
+  // 4) إشعارات: تهيئة القناة + المستمعات + طلب إذن إذا لزم
+  await NotificationService.init();
+
+  initDio(); // 👈 مهم عشان الكوكيز تشتغل
+
+  // تهيئة مبكرة (خصوصًا للويب لأن تحميل wasm يأخذ لحظة)
+  await AppVars.dbHelper.createDatabase();
+
+  runApp(
+    GlobalLoaderOverlay(
+      overlayColor: Colors.black.withValues(alpha: 0.3),
+      overlayWidgetBuilder: (progress) {
+        return Container(
+          height: 300,
+          width: 300,
+          child: FlightLoader(),
+        );
+      },
+      child: const MyApp(),
+    ),
+  );
+
+  // 6) معالجة حالة "التطبيق مُنهى وتم فتحه عبر الإشعار"
+  //    (مرة واحدة فقط، بعد runApp، ومع تأجيل لِـ frame لضمان جاهزية الـ Navigator والبلجنز)
+  if (!kIsWeb) {
+    final initial = await AwesomeNotifications().getInitialNotificationAction(removeFromActionEvents: true);
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await NotificationController.onActionReceivedMethod(initial);
+      });
+    }
+  }
+
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  MainController mainController = Get.put(MainController());
+
+  @override
+  void initState() {
+    super.initState();
+    print("first_run: ${AppVars.getStorage.read("first_run")}"); // (first_run == null) is the first run
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<MainController>(
+      builder: (controller) {
+        AppFuns.setUpRebuild();
+        return GetMaterialApp(
+          title: 'New Horizon Travel',
+          debugShowCheckedModeBanner: false,
+
+          // لا حاجة لوضع navigatorKey هنا غالبًا؛ Get يضبطه لك
+          initialRoute: Pages.root.path,
+
+          getPages: [
+            GetPage(
+              name: Pages.root.path,
+              page: () {
+                if (AppVars.getStorage.read("first_run") == null) {
+                  return Intro();
+                } else {
+                  return Frame();
+                }
+              },
+            ),
+            GetPage(
+              name: Pages.flight.path,
+              page: () => SearchFlight(frameContext: context),
+            ),
+            GetPage(
+              name: Pages.addPassport.path,
+              page: () => PassportsFormsPage(adultsCounter: 0, childrenCounter: 0, infantsInLapCounter: 0),
+            ),
+          ],
+
+          theme: Themes.lightTheme(context),
+
+          darkTheme: Themes.darkTheme(context),
+          themeMode: AppVars.appThemeMode ?? ThemeMode.system,
+
+          // Translation __________________________________________
+          locale: AppVars.appLocale,
+          fallbackLocale: Locale("en"),
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          translations: Translation(),
+          supportedLocales: [const Locale("ar"), const Locale('en')],
+
+          // end Translation __________________________________________
+          home: AppVars.getStorage.read("first_run") == null ? Intro() : Frame(),
+        );
+      },
+    );
+  }
+}

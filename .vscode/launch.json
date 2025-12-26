@@ -1,0 +1,30 @@
+// {
+//   "version": "0.2.0",
+//   "configurations": [
+//     {
+//       "name": "Flutter Web (Chrome - Debug)",
+//       "type": "dart",
+//       "request": "launch",
+//       "deviceId": "chrome",
+//       "flutterMode": "debug",
+//       "args": [
+//         "--web-browser-flag=--user-data-dir=C:\\flutter_web_profile",
+//         "--web-browser-flag=--no-sandbox"
+//       ]
+//     },
+
+
+// {
+//   "name": "Flutter Web (web-server)",
+//   "type": "dart",
+//   "request": "launch",
+//   "flutterMode": "debug",
+//   "args": [
+//     "-d",
+//     "web-server",
+//     "--web-port=53099"
+//   ]
+// }
+
+//   ]
+// }

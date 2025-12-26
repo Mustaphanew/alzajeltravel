@@ -1,0 +1,18 @@
+{
+  "prettier.printWidth": 140,
+  "dart.lineLength": 140,
+
+  "[dart]": {
+    "editor.rulers": [140],
+    "editor.defaultFormatter": "Dart-Code.dart-code"
+  },
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 140,
+  "editor.defaultFormatter": "Dart-Code.flutter",
+  "files.autoSave": "off",
+  "dart.flutterGenerateLocalizationsOnSave": "never",
+  "editor.maxTokenizationLineLength": 20000,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

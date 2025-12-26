@@ -1,0 +1,130 @@
+name: alzajeltravel
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  get: ^4.7.3
+  get_storage: ^2.1.1
+  introduction_screen: ^4.0.0
+  cached_network_image: ^3.4.1
+  permission_handler: ^12.0.1
+  googleapis_auth: ^2.0.0
+  fluttertoast: ^9.0.0
+  # sqflite: ^2.4.2
+  sqlite3: ^3.1.1
+  sqlite3_flutter_libs: ^0.5.41
+  swipe_image_gallery: ^0.11.0
+  dropdown_search: ^6.0.2
+  flutter_svg: ^2.2.2
+  jiffy: 6.4.3
+  share_plus: ^12.0.1
+  http: ^1.5.0
+  dio: ^5.9.0
+  cookie_jar: ^4.0.8
+  dio_cookie_manager: ^3.3.0
+  htmltopdfwidgets: ^2.0.0-beta.2
+  printing: ^5.14.2
+  path_provider: ^2.1.5
+  open_filex: ^4.7.0
+  carousel_slider: ^5.1.1
+  smooth_page_indicator: ^2.0.1
+  persistent_bottom_nav_bar: ^6.2.1
+  flutter_animate: ^4.5.2
+  syncfusion_flutter_datepicker: ^31.1.23
+  path: ^1.9.1
+  mrz_parser: ^2.0.1
+  # flutter_mrz_scanner: ^2.2.1
+  # flutter_mrz_scanner_enhanced: ^3.2.0
+  intl: ^0.20.2
+  image: ^4.5.4
+  image_picker: ^1.2.0
+  firebase_core: ^4.2.0
+  firebase_messaging: ^16.0.3
+  awesome_notifications: ^0.10.1
+#  firebase_auth: ^6.1.2
+#  google_sign_in: ^7.2.0
+#  flutter_facebook_auth: ^7.1.2
+  country_flags: ^4.1.0
+  url_launcher: ^6.3.2
+  font_awesome_flutter: ^10.12.0
+  loader_overlay: ^5.0.0
+  dotted_line: ^3.2.3
+
+  local_auth: ^3.0.0
+  flutter_secure_storage: ^10.0.0
+  fl_chart: ^1.1.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+#   flutter_native_splash:
+# flutter_native_splash:
+#  color: "#e7b245"
+#  image: "assets/images/logo_2.png"
+#  branding: "assets/images/splash_text_white.png"
+#  branding_dark: "assets/images/splash_text_white.png"
+#  android_12:
+#    image: "assets/images/logo_2_12.png"
+#    image_dark: "assets/images/logo_2_12.png"
+#    color: "#e7b245"
+#    icon_background_color: "#e7b245"
+#    icon_background_color_dark: "#e7b245"
+#    branding: "assets/images/splash_text_white.png"
+#    branding_dark: "assets/images/splash_text_white.png"
+#  # dart run flutter_native_splash:create
+
+#   flutter_launcher_icons:
+# flutter_icons:
+#   android: "ic_launcher"
+#   ios: true
+#   image_path: "assets/images/icon.png"
+#   adaptive_icon_background: "#e7b245"
+#   adaptive_icon_foreground: "assets/images/icon_foreground.png"
+#   web:
+#     generate: true
+#     image_path: "assets/images/icon.png"
+#     background_color: "#e7b245"
+#     theme_color: "#e7b245"
+#  # flutter pub run flutter_launcher_icons:main
+
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/images/icons/
+    - assets/images/gifs/
+    - assets/images/flags/
+    - assets/notifications_key/
+
+  fonts:
+    - family: Almaria
+      fonts:
+        - asset: assets/fonts/Almaria/Almarai-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Almaria/Almarai-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Almaria/Almarai-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Almaria/Almarai-ExtraBold.ttf
+          weight: 800

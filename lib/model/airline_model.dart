@@ -1,0 +1,42 @@
+import 'package:alzajeltravel/utils/app_consts.dart';
+
+class AirlineModel {
+  final int id;
+  final String code; // IATA: TK, QR...
+  final Map<String, dynamic> name; // Turkish Airlines
+  final String countryCode;
+  final String? image; // logo URL (اختياري)
+  final String? note; // الوصف
+
+  const AirlineModel({
+    required this.id,
+    required this.code, 
+    required this.name, 
+    required this.countryCode,
+    this.note, 
+    this.image,
+    });
+
+  factory AirlineModel.fromJson(Map<String, dynamic> json) {
+    return AirlineModel(
+      id: json['id'],
+      code: json['code'],
+      name: json['name'], 
+      countryCode: json['country_code'],
+      note: json['note'],
+      
+      image: AppConsts.imageAirlineUrl + json['image'].toString().toUpperCase() + '.png',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "code": code, 
+      "name": name, 
+      "country_code": countryCode,
+      "note": note, 
+      "image": image,
+    };
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "565049632804",
+    "project_id": "alzajeltravel-2496e",
+    "storage_bucket": "alzajeltravel-2496e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565049632804:android:8388d1f70f34549bfe10b1",
+        "android_client_info": {
+          "package_name": "com.alzajeltravel.agent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ5skr9Ok1pEGD0FUeR_X9tbdkIJU-IhY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

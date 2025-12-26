@@ -1,0 +1,488 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:io' as io;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+// الكاميرا (لايف MRZ)
+import 'package:flutter_mrz_scanner_enhanced/flutter_mrz_scanner_enhanced.dart'
+    show MRZScanner, MRZController;
+
+// للـ OCR من صورة ثابتة (المعرض)
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+// Parsing للـ MRZ
+import 'package:mrz_parser/mrz_parser.dart';
+
+class MRZScannerPage extends StatefulWidget {
+  const MRZScannerPage({super.key});
+
+  @override
+  State<MRZScannerPage> createState() => _MRZScannerPageState();
+}
+
+class _MRZScannerPageState extends State<MRZScannerPage> {
+  // صورة الجواز المعروضة أعلى الواجهة:
+  Uint8List? _imageBytes; // من الكاميرا (takePhoto)
+  String? _imagePath;     // من المعرض
+
+  // نص MRZ الخام (اختياري للعرض/النسخ عندما نقرأ من المعرض)
+  String _rawMrz = '';
+
+  // الحقول المطلوبة:
+  final txtType = TextEditingController();            // P/I/V
+  final txtCountryCode = TextEditingController();     // كود الدولة المُصدِّرة
+  final txtCountryName = TextEditingController();     // اسم الدولة
+  final txtPassportNumber = TextEditingController();
+  final txtSurname = TextEditingController();
+  final txtGivenNames = TextEditingController();
+  final txtDateOfBirth = TextEditingController();     // YYYY-MM-DD
+  final txtAge = TextEditingController();
+  final txtAgeCategory = TextEditingController();     // infant/child/adult
+  final txtDateOfExpiry = TextEditingController();    // YYYY-MM-DD
+  final txtStatus = TextEditingController();          // valid/expired
+  final txtSex = TextEditingController();             // M/F/X
+
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    txtType.dispose();
+    txtCountryCode.dispose();
+    txtCountryName.dispose();
+    txtPassportNumber.dispose();
+    txtSurname.dispose();
+    txtGivenNames.dispose();
+    txtDateOfBirth.dispose();
+    txtAge.dispose();
+    txtAgeCategory.dispose();
+    txtDateOfExpiry.dispose();
+    txtStatus.dispose();
+    txtSex.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imagePreview = AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          color: Colors.grey.shade200,
+          child: _buildImagePreview(),
+        ),
+      ),
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('MRZ Scanner (camera + gallery)'),
+        actions: [
+          IconButton(
+            tooltip: 'Copy JSON',
+            icon: const Icon(Icons.copy_all),
+            onPressed: () =>
+                Clipboard.setData(ClipboardData(text: jsonEncode(_toJson()))),
+          ),
+          IconButton(
+            tooltip: 'Copy MRZ text',
+            icon: const Icon(Icons.copy),
+            onPressed: _rawMrz.isEmpty
+                ? null
+                : () => Clipboard.setData(ClipboardData(text: _rawMrz)),
+          ),
+        ],
+      ),
+      body: AbsorbPointer(
+        absorbing: _busy,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            imagePreview,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: Text(_busy ? 'Scanning…' : 'مسح بالكاميرا (MRZ)'),
+                    onPressed: _busy ? null : _scanWithCamera,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('صورة من المعرض'),
+                    onPressed: _busy ? null : _pickFromGalleryAndParse,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _field('type', txtType),
+            _field('country code', txtCountryCode),
+            _field('country full name', txtCountryName),
+            _field('passport number', txtPassportNumber),
+            _field('surname', txtSurname),
+            _field('given names', txtGivenNames),
+            _field('date of birth (YYYY-MM-DD)', txtDateOfBirth),
+            _field('compute age', txtAge),
+            _field('age category', txtAgeCategory),
+            _field('date of expiry (YYYY-MM-DD)', txtDateOfExpiry),
+            _field('passport status', txtStatus),
+            _field('sex (M/F)', txtSex),
+            const SizedBox(height: 12),
+            if (_rawMrz.isNotEmpty) ...[
+              const Text('MRZ (من المعرض):',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              SelectableText(_rawMrz, style: const TextStyle(fontFamily: 'monospace')),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePreview() {
+    if (_imageBytes == null && _imagePath == null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.image_outlined, size: 40, color: Colors.grey),
+          SizedBox(height: 6),
+          Text('لا توجد صورة بعد', style: TextStyle(color: Colors.grey)),
+        ],
+      );
+    }
+    if (_imageBytes != null) {
+      return Image.memory(_imageBytes!, fit: BoxFit.cover);
+    }
+    return Image.file(io.File(_imagePath!), fit: BoxFit.cover);
+  }
+
+  Widget _field(String label, TextEditingController c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: c,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.copy),
+            tooltip: 'Copy',
+            onPressed: () => Clipboard.setData(ClipboardData(text: c.text)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===================== كاميرا (لايف) =====================
+  Future<void> _scanWithCamera() async {
+    // طلب الإذن (Android)، iOS يظهر prompt تلقائي
+    if (await Permission.camera.request().isDenied) {
+      _snack('يتطلب إذن الكاميرا.');
+      return;
+    }
+
+    final payload = await Navigator.of(context).push<_ScanPayload>(
+      MaterialPageRoute(builder: (_) => const _LiveScanPage()),
+    );
+    if (payload == null) return;
+
+    // اعرض الصورة القادمة من takePhoto (مقتصّة MRZ غالبًا)
+    setState(() {
+      _imageBytes = payload.imageBytes;
+      _imagePath = null;
+      _rawMrz = ''; // عادةً لا نملك نص MRZ خام من الكاميرا عبر هذه المكتبة
+    });
+
+    // املأ الحقول
+    _fillFromMrzResult(payload.result);
+
+    _printToConsole();
+  }
+
+  // ===================== معرض (صورة ثابتة) =====================
+  Future<void> _pickFromGalleryAndParse() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? file =
+          await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
+      if (file == null) return;
+
+      setState(() {
+        _busy = true;
+        _imagePath = file.path;
+        _imageBytes = null; // سنعرض من المسار
+      });
+
+      // OCR عبر ML Kit
+      final input = InputImage.fromFilePath(file.path);
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final recognized = await recognizer.processImage(input);
+      await recognizer.close();
+
+      final raw = recognized.text;
+      final normalized = _normalizeMrz(raw);
+      final mrzLines = _detectMrzLines(normalized); // 2 أو 3 أسطر
+      if (mrzLines == null) {
+        _snack('تعذر العثور على MRZ داخل الصورة. حاول قصّ المنطقة السفلية.');
+        return;
+      }
+
+      // احتفظ بالنص لعرضه ونسخه
+      _rawMrz = mrzLines.join('\n');
+
+      // Parse -> MRZResult
+      final parsed = MRZParser.tryParse(mrzLines);
+      if (parsed == null) {
+        _snack('تعذر parsing لنص الـ MRZ.');
+        return;
+      }
+
+      _fillFromMrzResult(parsed);
+      _printToConsole();
+    } catch (e) {
+      _snack('Gallery OCR error: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // ===================== تعبئة الحقول =====================
+  void _fillFromMrzResult(MRZResult r) {
+    // النوع — نأخذ أول حرف فقط (P/I/V)
+    final docType = (r.documentType.isNotEmpty)
+        ? r.documentType.trim().toUpperCase()[0]
+        : 'P';
+
+    final issuing = r.countryCode.toUpperCase();
+    final dob = _formatYMD(r.birthDate);
+    final doe = _formatYMD(r.expiryDate);
+    final age = _computeAge(r.birthDate);
+    final status = _passportStatus(r.expiryDate);
+
+    txtType.text = docType;                           // P
+    txtCountryCode.text = issuing;                    // SAU, YEM, ...
+    txtCountryName.text = _countryName(issuing);      // الاسم
+    txtPassportNumber.text = r.documentNumber.replaceAll('<', '');
+    txtSurname.text = _cleanName(r.surnames);
+    txtGivenNames.text = _cleanName(r.givenNames);
+    txtDateOfBirth.text = dob;
+    txtAge.text = age.toString();
+    txtAgeCategory.text = _ageCategory(age);
+    txtDateOfExpiry.text = doe;
+    txtStatus.text = status;
+    txtSex.text = _sexToChar(r.sex);                  // M/F/X
+
+    setState(() {});
+  }
+
+  // ===================== Utils =====================
+  String _sexToChar(Sex sex) {
+    switch (sex) {
+      case Sex.male: return 'M';
+      case Sex.female: return 'F';
+      default: return 'X';
+    }
+  }
+
+  String _cleanName(String s) =>
+      s.replaceAll('<', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  String _formatYMD(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  int _computeAge(DateTime dob) {
+    final now = DateTime.now();
+    var a = now.year - dob.year;
+    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) a--;
+    return a;
+  }
+
+  String _ageCategory(int age) {
+    if (age >= 12) return 'adult';
+    if (age >= 2) return 'child';
+    return 'infant';
+  }
+
+  String _passportStatus(DateTime expiry) {
+    final today = DateTime.now();
+    final end = DateTime(expiry.year, expiry.month, expiry.day);
+    final now = DateTime(today.year, today.month, today.day);
+    return end.isBefore(now) ? 'expired' : 'valid';
+  }
+
+  // خرائط أسماء دول (مختصرة؛ أضف ما تحتاجه)
+  String _countryName(String code3) {
+    const map = {
+      'YEM':'Yemen','SAU':'Saudi Arabia','ARE':'United Arab Emirates','QAT':'Qatar',
+      'KWT':'Kuwait','OMN':'Oman','BHR':'Bahrain','EGY':'Egypt','JOR':'Jordan',
+      'LBN':'Lebanon','SYR':'Syria','IRQ':'Iraq','IRN':'Iran','PSE':'Palestine',
+      'TUR':'Türkiye','USA':'United States','GBR':'United Kingdom','CAN':'Canada',
+      'AUS':'Australia','DEU':'Germany','FRA':'France','ESP':'Spain','ITA':'Italy',
+      'IND':'India','PAK':'Pakistan','CHN':'China','JPN':'Japan','KOR':'Korea, Republic of',
+      'RUS':'Russian Federation'
+    };
+    return map[code3] ?? code3;
+  }
+
+  // —— تطبيع/اكتشاف MRZ من نص OCR (المعرض) ——
+  String _normalizeMrz(String raw) {
+    final up = raw.toUpperCase();
+    final buf = StringBuffer();
+    for (final ch in up.runes) {
+      final c = String.fromCharCode(ch);
+      if (_isMrzChar(c) || c == '\n') buf.write(c);
+    }
+    return buf.toString();
+  }
+
+  bool _isMrzChar(String c) => RegExp(r'^[A-Z0-9<]$').hasMatch(c);
+
+  /// محاولة استخراج 2×44 (TD3/TD2) أو 3×30 (TD1/MRV)
+  List<String>? _detectMrzLines(String normalized) {
+    final joined = normalized.replaceAll('\r', '');
+    final lines = joined.split('\n')
+        .map((e) => e.replaceAll(RegExp(r'[^A-Z0-9<]'), ''))
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    // ابحث عن أي سطرين متتاليين بطول >= 40 قابلة للقص لـ 44
+    for (int i = 0; i + 1 < lines.length; i++) {
+      final l1 = lines[i];
+      final l2 = lines[i + 1];
+      if (l1.length >= 40 && l2.length >= 40) {
+        final a = (l1.padRight(44, '<')).substring(0, 44);
+        final b = (l2.padRight(44, '<')).substring(0, 44);
+        // سطر1 ينبغي أن يبدأ بــ P< أو I< أو V<
+        if (RegExp(r'^[PIV]<').hasMatch(a)) return [a, b];
+      }
+    }
+
+    // ابحث عن ثلاثة أسطر ~30
+    for (int i = 0; i + 2 < lines.length; i++) {
+      final a = (lines[i].padRight(30, '<')).substring(0, 30);
+      final b = (lines[i + 1].padRight(30, '<')).substring(0, 30);
+      final c = (lines[i + 2].padRight(30, '<')).substring(0, 30);
+      if (a.length == 30 && b.length == 30 && c.length == 30) {
+        return [a, b, c];
+      }
+    }
+    return null;
+  }
+
+  Map<String, dynamic> _toJson() => {
+    'type': txtType.text,
+    'country_code': txtCountryCode.text,
+    'country_full_name': txtCountryName.text,
+    'passport_number': txtPassportNumber.text,
+    'surname': txtSurname.text,
+    'given_names': txtGivenNames.text,
+    'date_of_birth': txtDateOfBirth.text,
+    'age': int.tryParse(txtAge.text),
+    'age_category': txtAgeCategory.text,
+    'date_of_expiry': txtDateOfExpiry.text,
+    'passport_status': txtStatus.text,
+    'sex': txtSex.text,
+    'mrz_text': _rawMrz.isEmpty ? null : _rawMrz,
+  };
+
+  void _printToConsole() {
+    final m = _toJson();
+    // ignore: avoid_print
+    m.forEach((k, v) => print('$k: $v'));
+    // ignore: avoid_print
+    print('JSON: ${jsonEncode(m)}');
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+}
+
+// =============== صفحة المسح بالكاميرا عبر MRZScanner ===============
+class _LiveScanPage extends StatefulWidget {
+  const _LiveScanPage();
+
+  @override
+  State<_LiveScanPage> createState() => _LiveScanPageState();
+}
+
+class _LiveScanPageState extends State<_LiveScanPage> {
+  MRZController? _controller;
+  bool _torch = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scan MRZ (Camera)'),
+        actions: [
+          IconButton(
+            icon: Icon(_torch ? Icons.flashlight_off : Icons.flashlight_on),
+            onPressed: () {
+              if (_controller == null) return;
+              setState(() => _torch = !_torch);
+              if (_torch) {
+                _controller!.flashlightOn();
+              } else {
+                _controller!.flashlightOff();
+              }
+            },
+          ),
+        ],
+      ),
+      body: MRZScanner(
+        withOverlay: true, // موصى به لقصّ الوثيقة بدقة :contentReference[oaicite:3]{index=3}
+        onControllerCreated: (c) => _onControllerCreated(c),
+      ),
+    );
+  }
+
+  void _onControllerCreated(MRZController c) {
+    _controller = c;
+    // عند حصول parsing ناجح – أعد النتيجة وصورة مقتصّة (إن أمكن)
+    c.onParsed = (MRZResult r) async {
+      try {
+        // أوقف المعاينة أولاً
+        c.stopPreview();
+
+        // التقط صورة (غالبًا سيعيد منطقة الوثيقة المقصوصة)
+        final bytes = await c.takePhoto(crop: true); // returns List<int>?
+        final payload = _ScanPayload(
+          result: r,
+          imageBytes: bytes != null ? Uint8List.fromList(bytes) : null,
+        );
+
+        if (mounted) Navigator.of(context).pop(payload);
+      } catch (e) {
+        if (mounted) Navigator.of(context).pop(_ScanPayload(result: r));
+      }
+    };
+
+    c.onError = (text) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('MRZ error: $text')));
+    };
+
+    c.startPreview(isFrontCam: false);
+  }
+}
+
+// حمولة ترجع من شاشة المسح
+class _ScanPayload {
+  final MRZResult result;
+  final Uint8List? imageBytes;
+  _ScanPayload({required this.result, this.imageBytes});
+}

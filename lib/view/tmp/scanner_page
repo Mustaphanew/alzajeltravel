@@ -1,0 +1,484 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_ocr_sdk/model_type.dart';
+import 'package:flutter_ocr_sdk/mrz_parser.dart';
+import 'package:flutter_ocr_sdk/mrz_result.dart';
+import 'package:flutter_ocr_sdk/ocr_line.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_ocr_sdk/flutter_ocr_sdk.dart';
+
+class ScannerPage extends StatefulWidget {
+  const ScannerPage({super.key, required this.licenseKey});
+  final String licenseKey;
+
+  @override
+  State<ScannerPage> createState() => _ScannerPageState();
+}
+
+class _ScannerPageState extends State<ScannerPage> {
+  // OCR
+  final FlutterOcrSdk _ocr = FlutterOcrSdk();
+  bool _ocrReady = false;
+  bool _busy = false;
+
+  // مسار الصورة لعرضها في أعلى الواجهة
+  String? _imagePath;
+
+  // نص MRZ الخام (لعرضه/نسخه)
+  String _rawMrz = '';
+
+  // Controllers للحقول المطلوبة
+  final txtType = TextEditingController();            // P / I / V
+  final txtCountryCode = TextEditingController();     // SAU, YEM, ...
+  final txtCountryName = TextEditingController();     // Saudi Arabia, ...
+  final txtPassportNumber = TextEditingController();
+  final txtSurname = TextEditingController();
+  final txtGivenNames = TextEditingController();
+  final txtDateOfBirth = TextEditingController();     // YYYY-MM-DD
+  final txtAge = TextEditingController();
+  final txtAgeCategory = TextEditingController();     // infant / child / adult
+  final txtDateOfExpiry = TextEditingController();    // YYYY-MM-DD
+  final txtStatus = TextEditingController();          // valid / expired
+  final txtSex = TextEditingController();             // M / F / X
+
+  @override
+  void initState() {
+    super.initState();
+    _initOcr();
+  }
+
+  Future<void> _initOcr() async {
+    try {
+      await _ocr.init(widget.licenseKey);
+      await _ocr.loadModel(modelType: ModelType.mrz);
+      setState(() => _ocrReady = true);
+    } catch (e) {
+      _snack('OCR init error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    txtType.dispose();
+    txtCountryCode.dispose();
+    txtCountryName.dispose();
+    txtPassportNumber.dispose();
+    txtSurname.dispose();
+    txtGivenNames.dispose();
+    txtDateOfBirth.dispose();
+    txtAge.dispose();
+    txtAgeCategory.dispose();
+    txtDateOfExpiry.dispose();
+    txtStatus.dispose();
+    txtSex.dispose();
+    super.dispose();
+  }
+
+  // ===================== UI =====================
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Passport MRZ • flutter_ocr_sdk'),
+        actions: [
+          IconButton(
+            tooltip: 'نسخ JSON',
+            icon: const Icon(Icons.copy_all),
+            onPressed: () => Clipboard.setData(ClipboardData(text: jsonEncode(_toJson()))),
+          ),
+          IconButton(
+            tooltip: 'نسخ نص MRZ',
+            icon: const Icon(Icons.copy),
+            onPressed: _rawMrz.isEmpty ? null : () => Clipboard.setData(ClipboardData(text: _rawMrz)),
+          ),
+        ],
+      ),
+      body: AbsorbPointer(
+        absorbing: _busy,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // معاينة صورة الجواز
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade200,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _imagePath == null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.image_outlined, size: 40, color: Colors.grey),
+                            SizedBox(height: 6),
+                            Text('لا توجد صورة بعد', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      )
+                    : Image.file(
+                        File(_imagePath!),
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // الأزرار
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: Text(_busy ? 'جارٍ الالتقاط…' : 'التقاط من الكاميرا'),
+                    onPressed: _busy ? null : () => _pickImage(ImageSource.camera),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('اختيار من المعرض'),
+                    onPressed: _busy ? null : () => _pickImage(ImageSource.gallery),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // الحقول
+            _field('type', txtType),
+            _field('country code', txtCountryCode),
+            _field('country full name', txtCountryName),
+            _field('passport number', txtPassportNumber),
+            _field('surname', txtSurname),
+            _field('given names', txtGivenNames),
+            _field('date of birth (YYYY-MM-DD)', txtDateOfBirth),
+            _field('compute age', txtAge),
+            _field('age category', txtAgeCategory),
+            _field('date of expiry (YYYY-MM-DD)', txtDateOfExpiry),
+            _field('passport status', txtStatus),
+            _field('sex (M/F)', txtSex),
+
+            const SizedBox(height: 12),
+
+            if (_rawMrz.isNotEmpty) ...[
+              const Text('MRZ Text (read-only):', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              SelectableText(_rawMrz, style: const TextStyle(fontFamily: 'monospace')),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _field(String label, TextEditingController c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: c,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () => Clipboard.setData(ClipboardData(text: c.text)),
+            tooltip: 'Copy',
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===================== التقاط/اختيار صورة =====================
+
+  Future<void> _pickImage(ImageSource source) async {
+    if (!_ocrReady) {
+      _snack('المحرك لم يكتمل تهيئته بعد.');
+      return;
+    }
+
+    final picker = ImagePicker();
+    XFile? file;
+    if (source == ImageSource.camera) {
+      file = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.rear, // ✅ الصحيح في image_picker
+      );
+    } else {
+      file = await picker.pickImage(source: ImageSource.gallery);
+    }
+    if (file == null) return;
+
+    setState(() {
+      _busy = true;
+      _imagePath = file!.path; // سنعرض الصورة في معاينة أعلى الواجهة
+    });
+    try {
+      await _recognizeMrz(file.path);
+    } catch (e) {
+      _snack('OCR error: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // ===================== التعرف وملء الحقول =====================
+
+  Future<void> _recognizeMrz(String imagePath) async {
+    final result = await _ocr.recognizeFile(imagePath); // List<List<OcrLine>>?
+    final lines = <OcrLine>[];
+    if (result != null) {
+      for (final para in result) {
+        lines.addAll(para);
+      }
+    }
+
+    // نفضّل MrzResult المباشر إن توفر (نأخذ أعلى ثقة)
+    OcrLine? best = lines
+        .where((l) => l.mrzResult != null && (l.mrzResult!.lines?.isNotEmpty ?? false))
+        .fold<OcrLine?>(null, (prev, curr) {
+      if (prev == null) return curr;
+      return (curr.confidence >= (prev.confidence)) ? curr : prev;
+    });
+
+    if (best != null) {
+      _fillFromMrzResult(best.mrzResult!, best.mrzResult!.lines ?? '');
+      return;
+    }
+
+    // احتياطي: تحليل نص الـOCR كـ TD3/TD1
+    final rawCombined = lines.map((e) => e.text).join('\n');
+    final normalized = _normalizeMrzText(rawCombined);
+    final two = _extractTwoLines44(normalized);
+    final three = _extractThreeLines30(normalized);
+
+    if (two != null) {
+      final r = MRZ.parseTwoLines(two.$1, two.$2);
+      _fillFromMrzResult(r, '${two.$1}\n${two.$2}');
+      return;
+    } else if (three != null) {
+      final r = MRZ.parseThreeLines(three.$1, three.$2, three.$3);
+      _fillFromMrzResult(r, '${three.$1}\n${three.$2}\n${three.$3}');
+      return;
+    }
+
+    _snack('لم أتعرف على منطقة MRZ في الصورة. قصّ المنطقة السفلية وحاول مجددًا.');
+  }
+
+  void _fillFromMrzResult(MrzResult mrz, String raw) {
+    // نص الـMRZ للعرض/النسخ (نحافظ على \n إن أمكن)
+    _rawMrz = _normalizeMrzText(raw, keepNewlines: true);
+
+    // النوع كرمز MRZ (P/I/V) وليس الوصف الطويل
+    final type = _docTypeFromMrz(mrz, raw);
+
+    // كود الدولة من السطر الأول (خانات 2..4) مع احتياطي لقيمة الـSDK
+    final issuing = _issuingFromLinesOr(raw, (mrz.issuingCountry ?? '').toUpperCase().trim());
+
+    final surname = _cleanName(mrz.surname ?? '');
+    final given = _cleanName(mrz.givenName ?? '');
+    final sex = _sexNormalize(mrz.gender ?? ''); // M/F/X
+    final number = _toEnglishDigits((mrz.docNumber ?? '').replaceAll('<', ''));
+
+    final dob = _formatYMD(_parseMrzDate(mrz.birthDate ?? ''));
+    final doe = _formatYMD(_parseMrzDate(mrz.expiration ?? ''));
+
+    final age = _computeAge(_parseMrzDate(mrz.birthDate ?? ''));
+    final ageCat = _ageCategory(age);
+    final status = _passportStatus(_parseMrzDate(mrz.expiration ?? ''));
+
+    // تعبئة الحقول
+    txtType.text = type;
+    txtCountryCode.text = issuing;
+    txtCountryName.text = _countryName(issuing);
+    txtPassportNumber.text = number;
+    txtSurname.text = surname;
+    txtGivenNames.text = given;
+    txtDateOfBirth.text = dob;
+    txtAge.text = age?.toString() ?? '';
+    txtAgeCategory.text = ageCat;
+    txtDateOfExpiry.text = doe;
+    txtStatus.text = status;
+    txtSex.text = sex;
+
+    _printToConsole();
+    setState(() {});
+  }
+
+  void _printToConsole() {
+    final m = _toJson();
+    m.forEach((k, v) => print('$k: $v'));
+    print('JSON: ${jsonEncode(m)}');
+  }
+
+  Map<String, dynamic> _toJson() => {
+        'type': txtType.text,
+        'country_code': txtCountryCode.text,
+        'country_full_name': txtCountryName.text,
+        'passport_number': txtPassportNumber.text,
+        'surname': txtSurname.text,
+        'given_names': txtGivenNames.text,
+        'date_of_birth': txtDateOfBirth.text,
+        'age': txtAge.text.isEmpty ? null : int.tryParse(txtAge.text),
+        'age_category': txtAgeCategory.text,
+        'date_of_expiry': txtDateOfExpiry.text,
+        'passport_status': txtStatus.text,
+        'sex': txtSex.text,
+        'mrz_text': _rawMrz,
+      };
+
+  // ===================== Utilities =====================
+
+  static final RegExp _mrzAllowed = RegExp(r'[A-Z0-9<]');
+
+  // تحويل الأرقام العربية/الفارسية -> إنجليزية (تصحيح كامل)
+  static const Map<String, String> _arToEn = {
+    // Arabic-Indic
+    '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9',
+    // Eastern Arabic-Indic (Persian)
+    '۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
+  };
+
+  String _toEnglishDigits(String input) {
+    final sb = StringBuffer();
+    for (final ch in input.split('')) {
+      sb.write(_arToEn[ch] ?? ch);
+    }
+    return sb.toString();
+  }
+
+  // تطبيع النص: أحرف MRZ فقط + اختياريًا المحافظة على \n
+  String _normalizeMrzText(String raw, {bool keepNewlines = false}) {
+    String up = _toEnglishDigits(raw.toUpperCase());
+    if (keepNewlines) {
+      final allowedOrNl = RegExp(r'[A-Z0-9<\n]');
+      final s = up.split('').where((c) => allowedOrNl.hasMatch(c)).join();
+      final flat = s.replaceAll('\n', '');
+      if (!s.contains('\n') && flat.length == 88) {
+        return '${flat.substring(0,44)}\n${flat.substring(44)}';
+      }
+      return s;
+    } else {
+      final only = up.split('').where((c) => _mrzAllowed.hasMatch(c)).join();
+      return only.length > 88 ? only.substring(only.length - 88) : only;
+    }
+  }
+
+  String _cleanName(String s) =>
+      s.replaceAll('<', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  String _sexNormalize(String s) {
+    final t = s.trim().toUpperCase();
+    if (t == 'M' || t == 'MALE') return 'M';
+    if (t == 'F' || t == 'FEMALE') return 'F';
+    return 'X';
+  }
+
+  DateTime? _parseMrzDate(String raw) {
+    final d = _toEnglishDigits(raw).replaceAll(RegExp(r'[^0-9]'), '');
+    if (d.length == 6) return _parseYYMMDD(d);
+    if (d.length == 8) {
+      return DateTime.tryParse('${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}');
+    }
+    return DateTime.tryParse(raw);
+  }
+
+  DateTime? _parseYYMMDD(String yymmdd) {
+    if (yymmdd.length != 6) return null;
+    final yy = int.tryParse(yymmdd.substring(0, 2)) ?? 0;
+    final mm = int.tryParse(yymmdd.substring(2, 4)) ?? 1;
+    final dd = int.tryParse(yymmdd.substring(4, 6)) ?? 1;
+    final year = (yy >= 50) ? 1900 + yy : 2000 + yy; // pivot
+    return DateTime(year, mm, dd);
+  }
+
+  String _formatYMD(DateTime? d) =>
+      d == null ? '' : '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  int? _computeAge(DateTime? dob) {
+    if (dob == null) return null;
+    final now = DateTime.now();
+    var a = now.year - dob.year;
+    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) a--;
+    return a;
+  }
+
+  String _ageCategory(int? age) {
+    if (age == null) return '';
+    if (age >= 12) return 'adult';
+    if (age >= 2) return 'child'; // 2–11
+    return 'infant'; // 0–1
+  }
+
+  String _passportStatus(DateTime? doe) {
+    if (doe == null) return '';
+    final today = DateTime.now();
+    final end = DateTime(doe.year, doe.month, doe.day);
+    final now = DateTime(today.year, today.month, today.day);
+    return end.isBefore(now) ? 'expired' : 'valid';
+  }
+
+  String _countryName(String code3) {
+    const map = {
+      'YEM':'Yemen','SAU':'Saudi Arabia','ARE':'United Arab Emirates','QAT':'Qatar',
+      'KWT':'Kuwait','OMN':'Oman','BHR':'Bahrain','EGY':'Egypt','JOR':'Jordan','LBN':'Lebanon',
+      'SYR':'Syria','IRQ':'Iraq','IRN':'Iran','PSE':'Palestine','TUR':'Türkiye','USA':'United States',
+      'GBR':'United Kingdom','CAN':'Canada','AUS':'Australia','DEU':'Germany','FRA':'France',
+      'ESP':'Spain','ITA':'Italy','IND':'India','PAK':'Pakistan','CHN':'China','JPN':'Japan',
+      'KOR':'Korea, Republic of','RUS':'Russian Federation',
+    };
+    final c = code3.toUpperCase();
+    return map[c] ?? c;
+  }
+
+  // ====== استخراج السطور يدويًا (احتياطي) ======
+  (String, String)? _extractTwoLines44(String filtered) {
+    final text = filtered.replaceAll('\n', '');
+    if (text.length >= 88) {
+      final last88 = text.substring(text.length - 88);
+      return (last88.substring(0, 44), last88.substring(44));
+    }
+    final idx = text.indexOf('P<');
+    if (idx >= 0 && text.length - idx >= 88) {
+      final cand = text.substring(idx, idx + 88);
+      return (cand.substring(0, 44), cand.substring(44));
+    }
+    return null;
+  }
+
+  (String, String, String)? _extractThreeLines30(String filtered) {
+    final text = filtered.replaceAll('\n', '');
+    if (text.length >= 90) {
+      final last90 = text.substring(text.length - 90);
+      return (last90.substring(0, 30), last90.substring(30, 60), last90.substring(60));
+    }
+    return null;
+  }
+
+  // ====== النوع والكود من السطر الأول ======
+  String _docTypeFromMrz(MrzResult mrz, String rawMrzLines) {
+    final t = (mrz.type ?? '').toUpperCase();
+    if (t.contains('PASSPORT')) return 'P';
+    if (t.contains('ID')) return 'I';
+    if (t.contains('VISA') || t.contains('MRV')) return 'V';
+    final normalized = _normalizeMrzText(rawMrzLines, keepNewlines: true);
+    final line1 = normalized.split('\n').firstWhere((l) => l.isNotEmpty, orElse: () => '');
+    return line1.isNotEmpty ? line1[0] : 'P';
+  }
+
+  String _issuingFromLinesOr(String rawLines, String fallback) {
+    final n = _normalizeMrzText(rawLines, keepNewlines: true);
+    final l1 = n.split('\n').firstWhere((l) => l.isNotEmpty, orElse: () => '');
+    if (l1.length >= 5) return l1.substring(2, 5);
+    return fallback;
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+}
