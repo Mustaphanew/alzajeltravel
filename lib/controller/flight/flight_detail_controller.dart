@@ -29,7 +29,7 @@ class FlightDetailApiController extends GetxController {
       );
 
       if (res == null) {
-        Get.snackbar("Error".tr, "Could not load flight details".tr);
+        Get.snackbar("Error".tr, "Response is null".tr);
         return;
       }
 
