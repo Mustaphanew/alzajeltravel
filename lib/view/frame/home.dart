@@ -148,7 +148,7 @@ class _HomeState extends State<Home> {
                                 style: TextStyle(color: Colors.white, fontSize: AppConsts.xlg, fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                "with New Horizon Travels",
+                                "with Alzajel Travel",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: AppConsts.normal,

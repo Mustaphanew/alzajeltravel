@@ -100,7 +100,7 @@ class _MyAppState extends State<MyApp> {
       builder: (controller) {
         AppFuns.setUpRebuild();
         return GetMaterialApp(
-          title: 'New Horizon Travel',
+          title: 'Alzajel Travel',
           debugShowCheckedModeBanner: false,
 
           // لا حاجة لوضع navigatorKey هنا غالبًا؛ Get يضبطه لك
