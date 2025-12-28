@@ -18,16 +18,18 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   late final LoginController controller;
 
+  final formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
-    controller = Get.put(LoginController());
+    controller = Get.put(LoginController(), permanent: false,);
     AppVars.getStorage.write("first_run", false);
   }
 
   Future<void> login(BuildContext context) async {
     context.loaderOverlay.show();
-    await controller.login();
+    await controller.login(validateForm: (formKey.currentState?.validate() ?? false));
     if(context.mounted) context.loaderOverlay.hide();
   }
 
@@ -54,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
-                key: c.formKey,
+                key: formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

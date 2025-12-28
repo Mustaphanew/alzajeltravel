@@ -82,7 +82,7 @@ class CacheImg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("url: $url"); 
+    // print("url: $url");
     String imageUrl;
     if (url == "" || url == " ") {
       imageUrl = "";

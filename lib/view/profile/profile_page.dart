@@ -174,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 }
 
-class BalanceCard extends StatelessWidget {
+class BalanceCard extends StatefulWidget {
   const BalanceCard({
     super.key,
     required this.data,
@@ -185,57 +185,100 @@ class BalanceCard extends StatelessWidget {
   final BuildContext context;
 
   @override
+  State<BalanceCard> createState() => _BalanceCardState();
+}
+
+class _BalanceCardState extends State<BalanceCard> {
+  bool showValue = false;
+
+  @override
   Widget build(BuildContext context) {
-    String fmt(double v) => v.toStringAsFixed(2);
     final cs = Theme.of(context).colorScheme;
-
-    Widget balanceRow(String title, String value, {TextStyle? styleTitle, TextStyle? styleValue}) {
-      return Row(
-        children: [
-          Expanded(child: Text(title, style: styleTitle)),
-          Text(AppFuns.priceWithCoin(double.parse(value), "USD"), textDirection: TextDirection.ltr, style: styleValue),
-        ],
-      );
-    }
-
     return Card(
       borderOnForeground: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Colors.grey, width: 1),
+        side: BorderSide(color: cs.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsetsDirectional.only(
+          start: 16,
+          end: 8,
+          top: 8,
+          bottom: 8,
+        ),
+        child: Row(
           children: [
-            Text(
-              'Account Balance'.tr,
-              style: TextStyle( fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Account Balance'.tr,
+                    style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.normal),
+                  ),
+                  // const SizedBox(height: 4),
+              
+                  Text('Remaining Balance'.tr, 
+                    style: TextStyle(
+                      color: cs.primaryFixed, 
+                      fontSize: AppConsts.xlg,
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (showValue)
+                    SelectableText(
+                      AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"), 
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        color: cs.secondaryFixed,
+                        fontSize: AppConsts.xlg,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  if (!showValue)
+                    Text(
+                      '******',
+                      style: TextStyle(
+                        color: cs.secondaryFixed, 
+                        fontWeight: FontWeight.bold,
+                        fontSize: AppConsts.xlg, 
+                      ),
+                    ),
+              
+              
+              
+                  // const Divider(height: 16),
+              
+                  // balanceRow(
+                  //   'Used Balance'.tr, 
+                  //   fmt(data.usedBalance ?? 0), 
+                  //   styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
+                  // ),
+              
+                  // const Divider(height: 16, thickness: 3),
+              
+                  // balanceRow(
+                  //   'Total Balance'.tr,
+                  //   fmt(data.totalBalance ?? 0),
+                  //   styleTitle: const TextStyle(fontWeight: FontWeight.bold),
+                  //   styleValue: const TextStyle(fontWeight: FontWeight.w900),
+                  // ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-
-            balanceRow(
-              'Remaining Balance'.tr, 
-              fmt(data.remainingBalance ?? 0), 
-              styleValue: TextStyle(color: cs.secondaryFixed, fontWeight: FontWeight.bold),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  showValue = !showValue;
+                });
+              },
+              icon: Icon(
+                showValue ? Icons.visibility : Icons.visibility_off,
+                color: cs.primaryFixed,
+              ),
             ),
-            // const Divider(height: 16),
-
-            // balanceRow(
-            //   'Used Balance'.tr, 
-            //   fmt(data.usedBalance ?? 0), 
-            //   styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
-            // ),
-
-            // const Divider(height: 16, thickness: 3),
-
-            // balanceRow(
-            //   'Total Balance'.tr,
-            //   fmt(data.totalBalance ?? 0),
-            //   styleTitle: const TextStyle(fontWeight: FontWeight.bold),
-            //   styleValue: const TextStyle(fontWeight: FontWeight.w900),
-            // ),
           ],
         ),
       ),

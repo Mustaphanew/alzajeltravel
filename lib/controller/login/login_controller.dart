@@ -13,7 +13,9 @@ class LoginController extends GetxController {
   final _storage = const FlutterSecureStorage();
   final _biometric = BiometricService();
 
-  final formKey = GlobalKey<FormState>();
+  
+
+
 
   final emailController = TextEditingController(text: GetStorage().read('profile') != null ? GetStorage().read('profile')['email'] : '');
   final passwordController = TextEditingController();
@@ -76,11 +78,11 @@ class LoginController extends GetxController {
     return null;
   }
 
-  Future<void> login() async {
+  Future<void> login({required bool validateForm}) async {
     // إغلاق الكيبورد
     FocusManager.instance.primaryFocus?.unfocus();
 
-    if (!(formKey.currentState?.validate() ?? false)) return;
+    if (!validateForm) return;
 
     isLoading = true;
     update();
@@ -221,7 +223,7 @@ class LoginController extends GetxController {
     };
     GetStorage().write('profile', profileMap);
     final profileModel = ProfileModel.fromJson(profileMap);
-    Get.to(() => Frame());
+    Get.offAll(() => Frame());
   }
 
   @override

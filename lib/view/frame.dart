@@ -1,5 +1,7 @@
+import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -13,6 +15,7 @@ import 'package:alzajeltravel/view/frame/my_drawer.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+import 'dart:async';
 
 class Frame extends StatefulWidget {
   const Frame({super.key});
@@ -21,19 +24,53 @@ class Frame extends StatefulWidget {
   State<Frame> createState() => _FrameState();
 }
 
-class _FrameState extends State<Frame> {
+class _FrameState extends State<Frame> with WidgetsBindingObserver {
   GetStorage getStorage = GetStorage();
 
   TranslationController translationController = Get.put(TranslationController());
   // MainController mainController = Get.put(MainController());
   FrameController frameController = Get.put(FrameController());
 
+  DateTime? _leftAt;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     AppVars.profile = GetStorage().read('profile') != null ? ProfileModel.fromJson(GetStorage().read('profile')) : null;
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      print("didChangeAppLifecycleState paused2");
+      _leftAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      final leftAt = _leftAt;
+      _leftAt = null;
+      print("didChangeAppLifecycleState resumed2");
+      if (leftAt != null) {
+        final diff = DateTime.now().difference(leftAt);
+        if (diff.inSeconds >= 5) {
+          _goToLogin();
+        }
+      }
+    }
+  }
+
+  void _goToLogin() {
+    print("_goToLogin");
+    // امنع التكرار
+    if (Get.currentRoute == "/login") return;
+    Get.offAll(() => const LoginPage());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
 
   // ✅ الشاشات لكل تبويب
   List<Widget> _buildScreens() {
@@ -101,6 +138,8 @@ class _FrameState extends State<Frame> {
       ),
     ];
   }
+
+
 
   @override
   Widget build(BuildContext context) {
