@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/utils/classes/http_overrides/http_overrides.dart';
 import 'package:alzajeltravel/firebase_options.dart';
+import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -144,7 +145,7 @@ class _MyAppState extends State<MyApp> {
           supportedLocales: [const Locale("ar"), const Locale('en')],
 
           // end Translation __________________________________________
-          home: AppVars.getStorage.read("first_run") == null ? Intro() : Frame(),
+          home: AppVars.getStorage.read("first_run") == null ? Intro() : LoginPage(),
         );
       },
     );

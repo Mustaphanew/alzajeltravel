@@ -69,7 +69,7 @@ class _IntroState extends State<Intro> {
                   );
                 }).toList(),
                 onDone: () {
-                  Get.offAll(() => Frame());
+                  Get.offAll(() => LoginPage());
                 },
                 showBackButton: false,
                 showSkipButton: true,
@@ -149,49 +149,7 @@ class _IntroState extends State<Intro> {
                                   onPressed: (c.loading == true)
                                       ? null
                                       : () async {
-                                          // Dio dio = Dio();
-                                          // final response = await dio.post(
-                                          //   'http://172.16.0.66/amadeus_api.php',
-                                          //   data: {'action': 'health'},
-                                          // );
-                                          // print("response: ${response.data['amadeus_token_ok']}");
-
                                           Get.offAll(() => LoginPage());
-                                          //// Get.offAll(() => Frame());
-
-                                          // Get.snackbar(
-                                          //   'Error'.tr,
-                                          //   'Booking request failed, please try again.'.tr,
-                                          //   snackPosition: SnackPosition.BOTTOM,
-                                          // );
-
-                                          // Get.offAll(() => CountryTmp());
-
-                                          // await c.check().then((value) {
-                                          //   if (value == true) {
-
-                                          //   } else {
-                                          //     Fluttertoast.showToast(msg: "Token is $value");
-                                          //   }
-                                          // });
-
-                                          //Get.offAll(() => SettingsPage());
-                                          // Get.offAll(() => Auth());
-
-                                          //
-
-                                          // Get.offAll(() => PassportOcrPageT());
-                                          // Get.offAll(() => ScannerPage(licenseKey: 'DLS2eyJoYW5kc2hha2VDb2RlIjoiMTA0Njg3NTcxLU1UQTBOamczTlRjeExWUnlhV0ZzVUhKdmFnIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWRscy5keW5hbXNvZnRvbmxpbmUuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDQ2ODc1NzEiLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJjaGVja0NvZGUiOi0xMjI1MDM2MzQ0fQ==',));
-                                          // Get.offAll(() => MRZScannerPage());
-                                          // Get.offAll(() => PassportForm(ageGroup: AgeGroup.adult));
-                                          // Get.offAll(() => NotificationDemoPage());
-                                          // Get.offAll(() => FareCardsPage(journeyType: JourneyType.oneWay));
-
-                                          // Get.to(() => PassportsFormsPage(
-                                          //   adultsCounter: 1,
-                                          //   childrenCounter: 1,
-                                          //   infantsInLapCounter: 0,
-                                          // ));
                                         },
                                   child: Text(
                                     "Get Started".tr,

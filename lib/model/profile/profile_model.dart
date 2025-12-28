@@ -15,8 +15,6 @@ class ProfileModel {
 
   // Balances (read-only)
   final double? remainingBalance;
-  final double? usedBalance;
-  final double? totalBalance;
 
   const ProfileModel({
     required this.companyRegistrationNumber,
@@ -30,8 +28,6 @@ class ProfileModel {
     this.branchCode,
     required this.status,
     this.remainingBalance,
-    this.usedBalance,
-    this.totalBalance,
   });
 
   static String _readString(Map<String, dynamic> map, List<String> keys) {
@@ -74,8 +70,6 @@ class ProfileModel {
       status: _readString(map, ['status', 'Status', 'الحالة', 'الحالة:']),
 
       remainingBalance: _readMoney(map, ['remainingBalance', 'Remaining Balance', 'الرصيد المتبقي', 'الرصيد المتبقي:']),
-      usedBalance: _readMoney(map, ['usedBalance', 'Used Balance', 'الرصيد المستخدم', 'الرصيد المستخدم:']),
-      totalBalance: _readMoney(map, ['totalBalance', 'Total Balance', 'الرصيد الإجمالي', 'الرصيد الإجمالي:']),
       branchCode: _readString(map, ['branchCode', 'Branch Code', 'رقم الفرع', 'رقم الفرع:']),
     );
   }
@@ -95,8 +89,6 @@ class ProfileModel {
 
       // balances are read-only (normally you do not send them for update)
       'remainingBalance': remainingBalance,
-      'usedBalance': usedBalance,
-      'totalBalance': totalBalance,
     };
   }
 

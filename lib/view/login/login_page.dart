@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     controller = Get.put(LoginController());
+    AppVars.getStorage.write("first_run", false);
   }
 
   Future<void> login(BuildContext context) async {
@@ -169,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                       ],
-                    ),                    
+                    ),
                   ],
                 ),
               ),

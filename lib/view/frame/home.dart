@@ -1,4 +1,5 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
+import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -44,11 +45,14 @@ class _HomeState extends State<Home> {
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) {
                 if (value == 'share') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share clicked')));
+                  CustomSnackBar.success(
+                    context, 'Share clicked 2',
+                    subtitle: 'If you need to show the user some information in a nice way, you can use this package.',
+                  );
                 } else if (value == 'notifications') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('notifications clicked')));
+                  CustomSnackBar.error(context, 'Notifications clicked');
                 } else if (value == 'app_rating') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('App Rating clicked')));
+                  CustomSnackBar.warning(context, "App Rating");
                 } else if (value == 'about_us') {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('About Us clicked')));
                 } else if (value == 'sign_in') {

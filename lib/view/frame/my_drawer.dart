@@ -122,18 +122,6 @@ class _MyDrawerState extends State<MyDrawer> {
                           fontSize: AppConsts.xlg,
                         ),
                       ),
-                      Text(
-                        AppFuns.priceWithCoin(profileModel!.usedBalance, "\$"),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: cs.error,
-                          fontFamily: AppConsts.font,
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppConsts.xlg,
-                        ),
-                      ),
 
                     ],
                     // ],

@@ -1,12 +1,10 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
-import 'package:alzajeltravel/view/profile/profile_balance_charts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:alzajeltravel/controller/profile/profile_controller.dart';
-import 'package:intl/intl.dart' as intl; // عدّل المسار حسب مشروعك
 
 class ProfilePage extends StatefulWidget {
   final ProfileModel data;
@@ -42,35 +40,34 @@ class _ProfilePageState extends State<ProfilePage> {
 
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(0),
               child: Column(
                 children: [
                   //  const SizedBox(height: 20),
-                  ProfileBalanceCharts(profile: widget.data),
-                  const SizedBox(height: 16),
+                  // ProfileBalanceCharts(profile: widget.data),
                   Divider(height: 0, thickness: 2),
                   Form(
                     key: c.formKey,
 
                     child: ExpansionTile(
                       initiallyExpanded: true,
-                      tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
+                      tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                       title: Text("Profile".tr),
-
                       subtitle: Text("close and reopen all open command prompts", style: TextStyle(color: Colors.grey[600])),
-
+                      childrenPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                       children: [
                         const SizedBox(height: 12),
-                        TextFormField(
-                          controller: c.companyRegistrationNumberController,
-                          decoration: InputDecoration(
-                            labelText: 'Company Registration Number'.tr,
-                            hintText: 'Enter Company Registration Number'.tr,
-                          ),
-                          validator: (v) => c.validateRequired(v, 'Company Registration Number Required'),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
+
+                        // TextFormField(
+                        //   controller: c.companyRegistrationNumberController,
+                        //   decoration: InputDecoration(
+                        //     labelText: 'Company Registration Number'.tr,
+                        //     hintText: 'Enter Company Registration Number'.tr,
+                        //   ),
+                        //   validator: (v) => c.validateRequired(v, 'Company Registration Number Required'),
+                        //   textInputAction: TextInputAction.next,
+                        // ),
+                        // const SizedBox(height: 12),
 
                         TextFormField(
                           controller: c.nameController,
@@ -108,40 +105,40 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 12),
 
                         // Country (readOnly + open picker)
-                        TextFormField(
-                          controller: c.countryController,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: 'Country'.tr,
-                            hintText: 'Select Country'.tr,
-                            suffixIcon: const Icon(Icons.arrow_drop_down),
-                          ),
-                          onTap: c.pickCountry,
-                          validator: (v) => c.validateRequired(v, 'Country Required'),
-                        ),
-                        const SizedBox(height: 12),
+                        // TextFormField(
+                        //   controller: c.countryController,
+                        //   readOnly: true,
+                        //   decoration: InputDecoration(
+                        //     labelText: 'Country'.tr,
+                        //     hintText: 'Select Country'.tr,
+                        //     suffixIcon: const Icon(Icons.arrow_drop_down),
+                        //   ),
+                        //   onTap: c.pickCountry,
+                        //   validator: (v) => c.validateRequired(v, 'Country Required'),
+                        // ),
+                        // const SizedBox(height: 12),
 
-                        TextFormField(
-                          controller: c.addressController,
-                          decoration: InputDecoration(labelText: 'Address'.tr, hintText: 'Enter Address'.tr),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
+                        // TextFormField(
+                        //   controller: c.addressController,
+                        //   decoration: InputDecoration(labelText: 'Address'.tr, hintText: 'Enter Address'.tr),
+                        //   textInputAction: TextInputAction.next,
+                        // ),
+                        // const SizedBox(height: 12),
 
-                        TextFormField(
-                          controller: c.websiteController,
-                          keyboardType: TextInputType.url,
-                          decoration: InputDecoration(labelText: 'Website'.tr, hintText: 'Enter Website'.tr),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
+                        // TextFormField(
+                        //   controller: c.websiteController,
+                        //   keyboardType: TextInputType.url,
+                        //   decoration: InputDecoration(labelText: 'Website'.tr, hintText: 'Enter Website'.tr),
+                        //   textInputAction: TextInputAction.next,
+                        // ),
+                        // const SizedBox(height: 12),
                         // branch code
-                        TextFormField(
-                          controller: c.branchCodeController,
-                          decoration: InputDecoration(labelText: 'Branch Code'.tr, hintText: 'Enter Branch Code'.tr),
-                          readOnly: true,
-                          textInputAction: TextInputAction.next,
-                        ),
+                        // TextFormField(
+                        //   controller: c.branchCodeController,
+                        //   decoration: InputDecoration(labelText: 'Branch Code'.tr, hintText: 'Enter Branch Code'.tr),
+                        //   readOnly: true,
+                        //   textInputAction: TextInputAction.next,
+                        // ),
                         const SizedBox(height: 12),
 
                         // Status (readOnly)
@@ -223,22 +220,22 @@ class BalanceCard extends StatelessWidget {
               fmt(data.remainingBalance ?? 0), 
               styleValue: TextStyle(color: cs.secondaryFixed, fontWeight: FontWeight.bold),
             ),
-            const Divider(height: 16),
+            // const Divider(height: 16),
 
-            balanceRow(
-              'Used Balance'.tr, 
-              fmt(data.usedBalance ?? 0), 
-              styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
-            ),
+            // balanceRow(
+            //   'Used Balance'.tr, 
+            //   fmt(data.usedBalance ?? 0), 
+            //   styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
+            // ),
 
-            const Divider(height: 16, thickness: 3),
+            // const Divider(height: 16, thickness: 3),
 
-            balanceRow(
-              'Total Balance'.tr,
-              fmt(data.totalBalance ?? 0),
-              styleTitle: const TextStyle(fontWeight: FontWeight.bold),
-              styleValue: const TextStyle(fontWeight: FontWeight.w900),
-            ),
+            // balanceRow(
+            //   'Total Balance'.tr,
+            //   fmt(data.totalBalance ?? 0),
+            //   styleTitle: const TextStyle(fontWeight: FontWeight.bold),
+            //   styleValue: const TextStyle(fontWeight: FontWeight.w900),
+            // ),
           ],
         ),
       ),
