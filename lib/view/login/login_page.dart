@@ -1,7 +1,7 @@
 import 'package:alzajeltravel/controller/login/login_controller.dart';
-import 'package:alzajeltravel/services/notification_service.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -152,21 +152,22 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(width: 8),
                         if(c.biometricEnabled)
-                          SizedBox(
-                            height: 58,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                context.loaderOverlay.show(
-                                  widgetBuilder: (context) => Center(
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: cs.primaryContainer,),
-                                  ),
-                                );
-                                await c.loginWithBiometrics();
-                                if(context.mounted) context.loaderOverlay.hide();
-                              },
-                              child: Icon(Icons.fingerprint_outlined, size: 32,),
+                          if(!kIsWeb)
+                            SizedBox(
+                              height: 58,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  context.loaderOverlay.show(
+                                    widgetBuilder: (context) => Center(
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: cs.primaryContainer,),
+                                    ),
+                                  );
+                                  await c.loginWithBiometrics();
+                                  if(context.mounted) context.loaderOverlay.hide();
+                                },
+                                child: Icon(Icons.fingerprint_outlined, size: 32,),
+                              ),
                             ),
-                          ),
                       ],
                     ),                    
                   ],

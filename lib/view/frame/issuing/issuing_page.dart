@@ -1,8 +1,6 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:alzajeltravel/controller/passport/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
