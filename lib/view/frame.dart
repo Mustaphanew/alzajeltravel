@@ -51,7 +51,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
       print("didChangeAppLifecycleState resumed2");
       if (leftAt != null) {
         final diff = DateTime.now().difference(leftAt);
-        if (diff.inSeconds >= 5) {
+        if (diff.inSeconds >= 20) {
           _goToLogin();
         }
       }

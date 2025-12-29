@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 
 class CustomSnackBar {
 
-  static void success(BuildContext context, String title, {String? subtitle, bool copy = false}) {
+  static void success(BuildContext context, String title, {String? subtitle, String? detail, bool copy = false}) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -30,10 +30,10 @@ class CustomSnackBar {
               ),
             ),
             if (copy)
-              IconButton(
+              IconButton( 
                 style: IconButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
-                  await FlutterClipboard.copy('${title}: ${subtitle}').then((val) {
+                  await FlutterClipboard.copy('${title}: ${subtitle??''}\n${detail??''}').then((val) {
                     Fluttertoast.showToast(
                       msg: "Copied to clipboard".tr,
                       toastLength: Toast.LENGTH_SHORT,
@@ -52,17 +52,17 @@ class CustomSnackBar {
           ],
         ),
         backgroundColor: cs.secondaryFixed,
-        duration: Duration(milliseconds: 2000),
+        duration: Duration(milliseconds: 3000),
         showCloseIcon: true,
       ),
       snackBarAnimationStyle: AnimationStyle(
-        duration: Duration(milliseconds: 1000),
+        duration: Duration(milliseconds: 1500),
         curve: Curves.easeInOut,
         reverseCurve: Curves.easeInOut,
       ),
     );
   }
-  static void error(BuildContext context, String title, {String? subtitle, bool copy = true}) {
+  static void error(BuildContext context, String title, {String? subtitle, String? detail, bool copy = true}) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -90,7 +90,7 @@ class CustomSnackBar {
               IconButton(
                 style: IconButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
-                  await FlutterClipboard.copy('${title}: ${subtitle}').then((val) {
+                  await FlutterClipboard.copy('${title}: ${subtitle??''}\n${detail??''}').then((val) {
                     Fluttertoast.showToast(
                       msg: "Copied to clipboard".tr,
                       toastLength: Toast.LENGTH_SHORT,
@@ -109,17 +109,17 @@ class CustomSnackBar {
           ],
         ),
         backgroundColor: cs.error,
-        duration: Duration(milliseconds: 2000),
+        duration: Duration(milliseconds: 3000),
         showCloseIcon: true,
       ),
       snackBarAnimationStyle: AnimationStyle(
-        duration: Duration(milliseconds: 1000),
+        duration: Duration(milliseconds: 1500),
         curve: Curves.easeInOut,
         reverseCurve: Curves.easeInOut,
       ),
     );
   }
-  static void warning(BuildContext context, String title, {String? subtitle, bool copy = true}) {
+  static void warning(BuildContext context, String title, {String? subtitle, String? detail, bool copy = true}) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -147,7 +147,7 @@ class CustomSnackBar {
               IconButton(
                 style: IconButton.styleFrom(foregroundColor: Colors.black),
                 onPressed: () async {
-                  await FlutterClipboard.copy('${title}: ${subtitle}').then((val) {
+                  await FlutterClipboard.copy('${title}: ${subtitle??''}\n${detail??''}').then((val) {
                     Fluttertoast.showToast(
                       msg: "Copied to clipboard".tr,
                       toastLength: Toast.LENGTH_SHORT,
@@ -166,12 +166,12 @@ class CustomSnackBar {
           ],
         ),
         backgroundColor: cs.secondary,
-        duration: Duration(milliseconds: 2000),
+        duration: Duration(milliseconds: 3000),
         showCloseIcon: true,
         closeIconColor: Colors.black,
       ),
       snackBarAnimationStyle: AnimationStyle(
-        duration: Duration(milliseconds: 1000),
+        duration: Duration(milliseconds: 1500),
         curve: Curves.easeInOut,
         reverseCurve: Curves.easeInOut,
       ),

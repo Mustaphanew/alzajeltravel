@@ -49,8 +49,8 @@ class _HomeState extends State<Home> {
                     context, 'Share clicked 2',
                     subtitle: 'If you need to show the user some information in a nice way, you can use this package.',
                   );
-                } else if (value == 'notifications') {
-                  CustomSnackBar.error(context, 'Notifications clicked');
+                } else if (value == 'notifications') { 
+                  CustomSnackBar.error(context, 'Notifications clicked', detail: 'If you need to show the user some information in a nice way, you can use this package.');
                 } else if (value == 'app_rating') {
                   CustomSnackBar.warning(context, "App Rating");
                 } else if (value == 'about_us') {

@@ -239,14 +239,13 @@ Map<String, String> ar = {
   'Base fare': 'سعر الرحلة',
   'Total per traveler': 'إجمالي المسافر',
   'Select seat': 'اختر المقعد',
-  'Sex': 'الجنس',
   'Total': 'المجموع',
 
 
   // login
   "Login": "تسجيل الدخول",
   "Access to competitive global airfare content through the New Horizons system.":
-      "الوصول إلى محتوى أسعار الطيران العالمية التنافسية عبر نظام نيو هورايزونز.",
+      "الوصول إلى محتوى أسعار الطيران العالمية التنافسية عبر نظام نيو هورايزون.",
   "Email Hint": "أدخل بريدك الإلكتروني",
   "Email Required": "البريد الإلكتروني مطلوب",
   "Invalid Email": "البريد الإلكتروني غير صحيح",

@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login(BuildContext context) async {
     context.loaderOverlay.show();
-    await controller.login(validateForm: (formKey.currentState?.validate() ?? false));
+    await controller.login(context, validateForm: (formKey.currentState?.validate() ?? false));
     if(context.mounted) context.loaderOverlay.hide();
   }
 
