@@ -1,7 +1,4 @@
-import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/src/snackbar/snackbar.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/seat_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
@@ -132,4 +129,5 @@ class TravelersReviewController extends GetxController {
       return null;
     }
   }
+
 }

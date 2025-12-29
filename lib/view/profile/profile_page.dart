@@ -228,14 +228,18 @@ class _BalanceCardState extends State<BalanceCard> {
                   ),
                   const SizedBox(height: 8),
                   if (showValue)
-                    SelectableText(
-                      AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"), 
-                      textDirection: TextDirection.ltr,
-                      style: TextStyle(
-                        color: cs.secondaryFixed,
-                        fontSize: AppConsts.xlg,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        SelectableText(
+                          AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"), 
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(
+                            color: cs.secondaryFixed,
+                            fontSize: AppConsts.xlg,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   if (!showValue)
                     Text(

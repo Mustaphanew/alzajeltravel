@@ -15,7 +15,7 @@ import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
-import 'package:alzajeltravel/view/frame/passport/travelers_review/travelers_review_page.dart';
+import 'package:alzajeltravel/view/frame/travelers_review/travelers_review_page.dart';
 
 import 'package:alzajeltravel/utils/widgets/country_picker.dart'; // عدّل المسار لو مختلف
 

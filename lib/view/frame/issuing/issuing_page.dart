@@ -1,8 +1,10 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
+import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:alzajeltravel/controller/passport/travelers_review/travelers_review_controller.dart';
+import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
 import 'package:alzajeltravel/model/flight/revalidated_flight_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
@@ -43,6 +45,8 @@ class _IssuingPageState extends State<IssuingPage> {
 
   late BookingDataModel booking;
 
+  String bookingStatus = "";
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +67,7 @@ class _IssuingPageState extends State<IssuingPage> {
       faringsData.add({"type": "Infant X${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
       baggagesData.add({"type": "Infant", "Weight": "5kg"});
     }
+    bookingStatus = booking.status.name;
   }
 
   @override
@@ -73,6 +78,13 @@ class _IssuingPageState extends State<IssuingPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Issuing"),
+          leading: IconButton(
+            tooltip: "Back".tr,
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Get.back();
+            },
+          ),
           actions: [
             TextButton.icon(
               style: ElevatedButton.styleFrom(
@@ -104,7 +116,7 @@ class _IssuingPageState extends State<IssuingPage> {
         ),
         body: Column(
           children: [
-            StatusCard(cs: cs, widget: widget),
+            StatusCard(cs: cs, bookingStatus: bookingStatus),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -301,9 +313,9 @@ class _IssuingPageState extends State<IssuingPage> {
             ),
       
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               width: double.infinity,
-              height: 80,
+              // height: 80,
               decoration: BoxDecoration(color: cs.surfaceContainer),
               child: Row(
                 children: [
@@ -312,38 +324,78 @@ class _IssuingPageState extends State<IssuingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text("Total".tr),
                         Text(
-                          AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                          "Total".tr,
+                          style: const TextStyle(fontSize: AppConsts.lg),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          AppFuns.priceWithCoin(summary.totalPrice, booking.currency), 
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
                         ),
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      context.loaderOverlay.show();
-                      try {
-                        final res = await travelersReviewController.confirmBooking(booking.id);
-                        if (res != null) {
-                          // update travelers by setTicketNumber
-                          final passengers = res['passengers'] as List;
-                          for (var passenger in passengers) { 
-                            travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
-                          }
-                          booking = booking.copyWith(
-                            status: res['booking']['status'],
-                          ); 
-                        }
-                      } catch (e) {
-                        Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
-                      }
+                  if(booking.status == BookingStatus.preBooking)
+                    IntrinsicWidth(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () async {
 
-                      if (context.mounted) context.loaderOverlay.hide();
-                      setState(() {});
-                    },
-                    child: Text("Confirm Booking".tr),
-                  ),
+                              final dialog = await CustomDialog.success(context, title: 'Dialog Title', desc: 'Dialog description here', btnOkText: 'Ok');
+
+                              if(dialog != DismissType.btnOk){
+                                return;
+                              }
+
+
+                              
+                              if(context.mounted) context.loaderOverlay.show();
+                              try {
+                                final res = await travelersReviewController.confirmBooking(booking.id);
+                                if (res != null) {
+                                  // update travelers by setTicketNumber
+                                  final passengers = res['passengers'] as List;
+                                  for (var passenger in passengers) {
+                                    travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
+                                  }
+                                  print("res['booking']['status'] ${res['booking']['status']}");
+                                  booking = booking.copyWith(
+                                    status: BookingStatus.fromJson(res['booking']['status']),  
+                                  );
+                                  bookingStatus = booking.status.name; 
+                                  print("booking.status.name: $bookingStatus"); 
+                                } 
+                              } catch (e) {
+                                Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+                              }
+                              if (context.mounted) context.loaderOverlay.hide();
+                              setState(() {});
+                          
+                            },
+                            child: Text("Confirm Booking".tr),
+                          ),
+                          const SizedBox(height: 8),
+                          // cancel
+                          TextButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: cs.error,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: cs.error),
+                              ),
+                            ), 
+                            onPressed: () async {
+                              
+                            },
+                            child: Text("Cancel".tr),
+                          ),
+                        ],
+                      ),
+                    ),
+
                 ],
               ),
             ),
@@ -441,18 +493,17 @@ class _IssuingPageState extends State<IssuingPage> {
   }
 }
 
-class StatusCard extends StatelessWidget {
-  const StatusCard({super.key, required this.cs, required this.widget});
+class StatusCard extends StatelessWidget { 
+  const StatusCard({super.key, required this.cs, required this.bookingStatus});
 
   final ColorScheme cs;
-  final IssuingPage widget;
+  final String bookingStatus;
 
   @override
   Widget build(BuildContext context) {
-    final status = widget.booking.status;
     Color color = cs.secondary;
     IconData icon = Icons.info;
-    if (status == BookingStatus.confirmed) {
+    if (bookingStatus == BookingStatus.confirmed.name) {
       color = cs.secondaryFixed;
       icon = Icons.check_circle;
     }
@@ -463,9 +514,9 @@ class StatusCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: cs.onPrimary),
+          Icon(icon, size: 32, color: cs.onPrimary), 
           SizedBox(width: 12),
-          FirstTitle(title: "Status".tr + " " + widget.booking.status.name, color: cs.onPrimary),
+          FirstTitle(title: "Status".tr + " " + bookingStatus, color: cs.onPrimary),
         ],
       ),
     );

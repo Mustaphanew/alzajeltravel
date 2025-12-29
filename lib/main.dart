@@ -1,5 +1,8 @@
+import 'package:alzajeltravel/root_decider.dart';
 import 'package:alzajeltravel/utils/classes/http_overrides/http_overrides.dart';
 import 'package:alzajeltravel/firebase_options.dart';
+import 'package:alzajeltravel/utils/routes.dart';
+import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -56,11 +59,7 @@ Future<void> main() async {
     GlobalLoaderOverlay(
       overlayColor: Colors.black.withValues(alpha: 0.3),
       overlayWidgetBuilder: (progress) {
-        return Container(
-          height: 300,
-          width: 300,
-          child: FlightLoader(),
-        );
+        return Container(height: 300, width: 300, child: FlightLoader());
       },
       child: const MyApp(),
     ),
@@ -76,7 +75,6 @@ Future<void> main() async {
       });
     }
   }
-
 }
 
 class MyApp extends StatefulWidget {
@@ -105,26 +103,46 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
 
           // لا حاجة لوضع navigatorKey هنا غالبًا؛ Get يضبطه لك
-          initialRoute: Pages.root.path,
+          initialRoute: Routes.root.path,
 
           getPages: [
             GetPage(
-              name: Pages.root.path,
-              page: () {
-                if (AppVars.getStorage.read("first_run") == null) {
-                  return Intro();
-                } else {
-                  return Frame();
-                }
-              },
+              name: Routes.root.path,
+              page: () => const RootDecider(),
             ),
             GetPage(
-              name: Pages.flight.path,
+              name: Routes.intro.path,
+              page: () => const Intro(),
+            ),
+            GetPage(
+              name: Routes.login.path,
+              page: () => const LoginPage(),
+            ),
+            GetPage(
+              name: Routes.frame.path,
+              page: () => Frame(),
+            ),
+            GetPage(
+              name: Routes.searchFlight.path,
               page: () => SearchFlight(frameContext: context),
             ),
             GetPage(
-              name: Pages.addPassport.path,
-              page: () => PassportsFormsPage(adultsCounter: 0, childrenCounter: 0, infantsInLapCounter: 0),
+              name: Routes.passportForms.path,
+              page: () => PassportsFormsPage(
+                adultsCounter: Get.arguments['adultsCounter'],
+                childrenCounter: Get.arguments['childrenCounter'],
+                infantsInLapCounter: Get.arguments['infantsInLapCounter'],
+              ),
+            ),
+            GetPage(
+              name: Routes.prebookingAndIssueing.path,
+              page: () => IssuingPage(
+                offerDetail: Get.arguments["offerDetail"],
+                travelers: Get.arguments["travelers"],
+                contact: Get.arguments["contact"], 
+                pnr: Get.arguments["pnr"],
+                booking: Get.arguments["booking"],
+              ),
             ),
           ],
 
@@ -145,7 +163,7 @@ class _MyAppState extends State<MyApp> {
           supportedLocales: [const Locale("ar"), const Locale('en')],
 
           // end Translation __________________________________________
-          home: AppVars.getStorage.read("first_run") == null ? Intro() : LoginPage(),
+          // home: AppVars.getStorage.read("first_run") == null ? Intro() : LoginPage(),
         );
       },
     );

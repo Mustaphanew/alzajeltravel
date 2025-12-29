@@ -1,12 +1,12 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
+import 'package:alzajeltravel/utils/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
-import 'package:alzajeltravel/controller/passport/travelers_review/travelers_review_controller.dart';
+import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
-import 'package:alzajeltravel/model/passport/passport_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
@@ -147,7 +147,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     final p = traveler.passport;
 
     final ageGroupLabel = p.ageGroupLabel;
-    final fareLabel = AppFuns.priceWithCoin(traveler.totalFare, '\$');
 
     return Card(
       color: cs.surfaceContainer,
@@ -280,7 +279,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     final phoneNumber = widget.contact.phone;
 
     final phoneLabel = (dialCode.isEmpty && phoneNumber.isEmpty) ? '-' : '${dialCode.isNotEmpty ? dialCode + ' ' : ''}$phoneNumber';
-    final nationality = widget.contact.nationality.name['en'];
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -442,13 +440,20 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
               final preRes = await c.preBooking(widget.insertId.toString()); 
               if(preRes != null && preRes is Map<String, dynamic>) {
                 final booking = BookingDataModel.fromJson(preRes['booking']);
-                Get.to(() => IssuingPage(
-                  offerDetail: flightDetailApiController.revalidatedDetails.value!, 
-                  travelers: c.travelers, 
-                  contact: widget.contact,
-                  pnr: preRes['PNR'] ?? '',
-                  booking: booking,
-                ));
+
+                Get.offNamedUntil(
+                  Routes.prebookingAndIssueing.path,
+                  (route) => route.settings.name == Routes.frame.path,
+                  arguments: {
+                    "offerDetail": flightDetailApiController.revalidatedDetails.value!,
+                    "travelers": c.travelers,
+                    "contact": widget.contact,
+                    "pnr": preRes["PNR"] ?? "",
+                    "booking": booking,
+                  },
+                );
+
+
               }
               if(context.mounted) context.loaderOverlay.hide();
             },

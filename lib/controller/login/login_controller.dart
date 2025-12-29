@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/frame.dart';
 import 'package:flutter/material.dart';
@@ -219,7 +220,8 @@ class LoginController extends GetxController {
       "totalBalance": 0,
     };
     AppVars.getStorage.write('profile', profileMap);
-    Get.offAll(() => Frame());
+    // Get.offAll(() => Frame());
+    Get.offAllNamed(Routes.frame.path);
   }
 
   @override

@@ -3,36 +3,13 @@
 import 'package:alzajeltravel/model/country_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
 
-// enum BookingStatus {
-//   confirmed,
-//   preBooking,
-//   canceled,
-//   expiry,
-//   voided,
-// }
 
-// extension BookingStatusExtension on BookingStatus {
-//   String get name {
-//     switch (this) {
-//       case BookingStatus.confirmed:
-//         return "confirmed";
-//       case BookingStatus.preBooking:
-//         return "pre-booking";
-//       case BookingStatus.canceled:
-//         return "cancelled";
-//       case BookingStatus.expiry:
-//         return "canceled";
-//       case BookingStatus.voided:
-//         return "voided";
-//     }
-//   }
-// }
 
 enum BookingStatus {
   confirmed('confirmed'),
   preBooking('pre-book'),
-  canceled('cancelled'),
-  expiry('canceled'),
+  canceled('canceled'),
+  expiry('cancelled'),
   voided('voided'),
   notFound('not_found');
 
