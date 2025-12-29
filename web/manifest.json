@@ -1,14 +1,24 @@
 {
-  "name": "alzajeltravel",
-  "short_name": "alzajeltravel",
+  "name": "Alzajel Travel",
+  "short_name": "Alzajel",
   "start_url": "/alzajeltravel/",
   "scope": "/alzajeltravel/",
   "display": "standalone",
   "background_color": "#e7b245",
   "theme_color": "#e7b245",
-  "description": "A new Flutter project.",
+  "description": "Alzajel Travel",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
+
+  "lang": "en",
+  "localization": {
+    "ar": {
+      "name": "الزاجل للسفريات",
+      "short_name": "الزاجل",
+      "description": "الزاجل للسفريات"
+    }
+  },
+
   "icons": [
     { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png" },
