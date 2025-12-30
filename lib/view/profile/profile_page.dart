@@ -53,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       initiallyExpanded: true,
                       tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                       title: Text("Profile".tr),
-                      subtitle: Text("close and reopen all open command prompts", style: TextStyle(color: Colors.grey[600])),
+                      // subtitle: Text("close and reopen all open command prompts", style: TextStyle(color: Colors.grey[600])),
                       childrenPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                       children: [
                         const SizedBox(height: 12),

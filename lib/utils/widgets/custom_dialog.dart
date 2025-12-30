@@ -30,7 +30,7 @@ class CustomDialog {
         onPressed: () {
           Navigator.of(context).pop(DismissType.btnCancel);
         },
-        child: Text('cancel'.tr),
+        child: Text('Close'.tr),
       ),
     ).show();
     return dialog;
@@ -63,7 +63,7 @@ class CustomDialog {
         onPressed: () {
           Navigator.of(context).pop(DismissType.btnCancel);
         },
-        child: Text('cancel'.tr),
+        child: Text('Close'.tr),
       ),
     ).show();
     return dialog;
@@ -96,7 +96,7 @@ class CustomDialog {
         onPressed: () {
           Navigator.of(context).pop(DismissType.btnCancel);
         },
-        child: Text('cancel'.tr),
+        child: Text('Close'.tr),
       ),
     ).show();
     return dialog;

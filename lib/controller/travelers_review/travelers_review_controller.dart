@@ -130,4 +130,49 @@ class TravelersReviewController extends GetxController {
     }
   }
 
+  // cancel pre-booking
+  dynamic cancelPreBookingRes;
+  Future<dynamic> cancelPreBooking(String insertId) async {
+    try {
+      cancelPreBookingRes = await AppVars.api.post(AppApis.cancelPnr, params: {"insert_id": insertId});
+      if (cancelPreBookingRes == null) {
+        Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+        return null;
+      }
+      if (cancelPreBookingRes is! Map<String, dynamic>) {
+        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        return null;
+      }
+      return cancelPreBookingRes;
+    } catch (e) {
+      print("❌ cancelPreBooking error: $e");
+      Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+      return null;
+    }
+  }
+
+  // void issue
+  dynamic voidIssueRes;
+  Future<dynamic> voidIssue(String insertId) async { 
+    try {
+      voidIssueRes = await AppVars.api.post(AppApis.voidIssue, params: {
+        "insert_id": insertId,
+        "cancel_pnr_after_void": 1
+      });
+      if (voidIssueRes == null) {
+        Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+        return null;
+      }
+      if (voidIssueRes is! Map<String, dynamic>) {
+        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        return null;
+      }
+      return voidIssueRes;
+    } catch (e) {
+      print("❌ voidIssue error: $e");
+      Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+      return null;
+    }
+  }
+
 }

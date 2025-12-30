@@ -8,4 +8,6 @@ class AppApis {
   static const String preBookFlight = '/flight/pre-book';
   static const String issueFlight = '/flight/issue';
   static const String cancelPnr = '/flight/cancel-pnr';
+  static const String voidIssue = '/flight/void'; 
+  
 }

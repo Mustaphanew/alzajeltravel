@@ -205,7 +205,7 @@ class _HomeState extends State<Home> {
                   },
                   readOnly: true,
                   decoration: InputDecoration(
-                    hintText: "Find destinations ...",
+                    hintText: "Find destinations".tr,
                     prefixIcon: Icon(Icons.travel_explore_outlined, color: cs.tertiary),
                     contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 0),
                   ),

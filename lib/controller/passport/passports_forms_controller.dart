@@ -335,6 +335,15 @@ class PassportsFormsController extends GetxController {
     return p.issuingCountry?.alpha2 ?? p.issuingCountry?.alpha3 ?? "";
   }
 
+  DateTime? parseTktTimeLimit(dynamic v) {
+    final s = (v ?? '').toString().trim();
+    if (s.isEmpty) return null;
+
+    // يحول "2025-12-31 23:59:59" إلى "2025-12-31T23:59:59" عشان DateTime.parse يكون مضمون
+    final normalized = s.contains('T') ? s : s.replaceFirst(' ', 'T');
+    return DateTime.tryParse(normalized);
+  }
+
   Future<Map<String, dynamic>?> createBookingServer(List<PassportModel> passports, ContactModel contact) async {
     // 1) حضّر بيانات الاتصال (contact) كما طلبت بالضبط
   //  final Map<String, dynamic> contact = {
@@ -410,6 +419,15 @@ class PassportsFormsController extends GetxController {
     // }
 
     if (response is Map<String, dynamic>) {
+
+      final tkt = response['flight']?['TktTimeLimit'];
+      final c = flightDetailApiController.revalidatedDetails;
+      final current = c.value;
+      if (current != null) {
+        c.value = current.copyWith(timeLimit: parseTktTimeLimit(tkt));
+        print('timeLimit: ${flightDetailApiController.revalidatedDetails.value?.timeLimit}');
+      }
+
       return response;
     }
 

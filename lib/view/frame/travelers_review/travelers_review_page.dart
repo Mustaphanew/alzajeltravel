@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/routes.dart';
+import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -58,6 +59,8 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     return GetBuilder<TravelersReviewController>(
       init: TravelersReviewController(widget.travelers),
       builder: (c) {
+        final offerDetail = flightDetailApiController.revalidatedDetails.value;
+        final timeLimit = offerDetail?.timeLimit;
         return SafeArea(
           bottom: true,
           top: false,
@@ -74,10 +77,35 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (flightDetailApiController.revalidatedDetails.value != null) ...[
+                        if(timeLimit != null) ...[
+                          const SizedBox(height: 12),
+                          Card(
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            child: Container(
+                              padding: EdgeInsets.only(top: 12, bottom: 16,),
+                              width: double.infinity,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    "Time Left".tr,
+                                    style: TextStyle(
+                                      fontSize: AppConsts.lg
+                                    ),
+                                  ),
+                                  SizedBox(height: 8), 
+                                  TimeRemaining(
+                                    timeLimit: timeLimit,
+                                    expiredText: 'Expired'.tr,
+                                  ),
+                                ],
+                              ),
+                            ), 
+                          ),
+                        ],
+                        if (offerDetail != null) ...[
                           Padding(
-                            padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0),
-                            child: FlightMainCard(revalidatedDetails: flightDetailApiController.revalidatedDetails.value!),
+                            padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 
+                            child: FlightMainCard(revalidatedDetails: offerDetail),
                           ),
                           SizedBox(height: 8),
                         ],
@@ -227,7 +255,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                   children: [
                                     Text('Date of expiry', style: const TextStyle(fontWeight: FontWeight.bold),),  
                                     Text(AppFuns.formatDobPretty(p.dateOfExpiry, locale: 'en')), 
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 4), 
                                     Text('Issuing country', style: const TextStyle(fontWeight: FontWeight.bold),),  
                                     Text(p.issuingCountry?.name['en'] ?? '-'), 
                                   ],
@@ -338,6 +366,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
   }
 
   Widget _buildSummaryBar(BuildContext context, TravelersReviewController c, ColorScheme cs) {
+    final offerDetail = flightDetailApiController.revalidatedDetails.value;
     return Container(
       
       width: double.infinity,
@@ -357,12 +386,12 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ======= تفاصيل الأسعار =======
           Expanded(
             child: Align(
-              alignment: Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: IntrinsicWidth(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,6 +437,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                       ),
 
                     // 🔹 Divider الآن بعرض الـ Column (يعني على قد النص)
+                    const SizedBox(height: 8),
                     Divider(color: cs.primaryFixed),
 
                     // Total
@@ -445,7 +475,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   Routes.prebookingAndIssueing.path,
                   (route) => route.settings.name == Routes.frame.path,
                   arguments: {
-                    "offerDetail": flightDetailApiController.revalidatedDetails.value!,
+                    "offerDetail": offerDetail!,
                     "travelers": c.travelers,
                     "contact": widget.contact,
                     "pnr": preRes["PNR"] ?? "",

@@ -4,19 +4,13 @@ class FareRule {
   final String category;
   final String rule;
 
-  FareRule({
-    required this.category,
-    required this.rule,
-  });
+  FareRule({required this.category, required this.rule});
 
   factory FareRule.fromJson(Map<String, dynamic> json) {
     final raw = (json['rule_det'] ?? '') as String;
     // نحول <br> إلى سطر جديد
     final clean = raw.replaceAll('<br>', '\n');
-    return FareRule(
-      category: (json['Category'] ?? '').toString(),
-      rule: clean,
-    );
+    return FareRule(category: (json['Category'] ?? '').toString(), rule: clean);
   }
 }
 
@@ -29,6 +23,8 @@ class RevalidatedFlightModel {
   final int paxNameCharacterLimit;
   final List<FareRule> fareRules;
 
+  final DateTime? timeLimit; // ✅ جديد
+
   RevalidatedFlightModel({
     required this.offer,
     required this.isRefundable,
@@ -37,16 +33,36 @@ class RevalidatedFlightModel {
     required this.lastNameCharacterLimit,
     required this.paxNameCharacterLimit,
     required this.fareRules,
+    this.timeLimit, // ✅ optional
   });
+
+  RevalidatedFlightModel copyWith({
+    FlightOfferModel? offer,
+    bool? isRefundable,
+    bool? isPassportMandatory,
+    int? firstNameCharacterLimit,
+    int? lastNameCharacterLimit,
+    int? paxNameCharacterLimit,
+    List<FareRule>? fareRules,
+    DateTime? timeLimit,
+  }) {
+    return RevalidatedFlightModel(
+      offer: offer ?? this.offer,
+      isRefundable: isRefundable ?? this.isRefundable,
+      isPassportMandatory: isPassportMandatory ?? this.isPassportMandatory,
+      firstNameCharacterLimit: firstNameCharacterLimit ?? this.firstNameCharacterLimit,
+      lastNameCharacterLimit: lastNameCharacterLimit ?? this.lastNameCharacterLimit,
+      paxNameCharacterLimit: paxNameCharacterLimit ?? this.paxNameCharacterLimit,
+      fareRules: fareRules ?? this.fareRules,
+      timeLimit: timeLimit ?? this.timeLimit,
+    );
+  }
 
   /// json هنا هو الرد الكامل من /flight/revalidate
   factory RevalidatedFlightModel.fromResponseJson(Map<String, dynamic> json) {
     // بعض الأحيان في root: fareRules
     // وأحياناً: fareRule أو selected.fareRule
-    final rulesRaw = json['fareRules'] ??
-        json['fareRule'] ??
-        json['selected']?['fareRule'] ??
-        [];
+    final rulesRaw = json['fareRules'] ?? json['fareRule'] ?? json['selected']?['fareRule'] ?? [];
 
     final rulesJson = (rulesRaw is List) ? rulesRaw : <dynamic>[];
 
@@ -61,9 +77,8 @@ class RevalidatedFlightModel {
       firstNameCharacterLimit: (revalidateJson['firstNameCharacterLimit'] ?? 0) as int,
       lastNameCharacterLimit: (revalidateJson['lastNameCharacterLimit'] ?? 0) as int,
       paxNameCharacterLimit: (revalidateJson['paxNameCharacterLimit'] ?? 0) as int,
-      fareRules: rulesJson
-          .map((e) => FareRule.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      fareRules: rulesJson.map((e) => FareRule.fromJson(e as Map<String, dynamic>)).toList(),
+      timeLimit: null, // ✅ أول مرة فاضي
     );
   }
 }

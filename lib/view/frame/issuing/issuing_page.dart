@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
+import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,6 +48,8 @@ class _IssuingPageState extends State<IssuingPage> {
 
   String bookingStatus = "";
 
+  DateTime? timeLimit;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +71,7 @@ class _IssuingPageState extends State<IssuingPage> {
       baggagesData.add({"type": "Infant", "Weight": "5kg"});
     }
     bookingStatus = booking.status.name;
+    timeLimit = widget.offerDetail.timeLimit;
   }
 
   @override
@@ -123,7 +127,35 @@ class _IssuingPageState extends State<IssuingPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 12),
+                    if(timeLimit != null && booking.status == BookingStatus.preBooking) ...[
+                      const SizedBox(height: 12),
+                      Card(
+                        child: Container(
+                          padding: EdgeInsets.only(top: 12, bottom: 16),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            // color: cs.secondary,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                "Time Left".tr,
+                                style: TextStyle(
+                                  fontSize: AppConsts.lg
+                                ),
+                              ),
+                              SizedBox(height: 8), 
+                              TimeRemaining(
+                                timeLimit: timeLimit,
+                                expiredText: 'Expired'.tr,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 12),
                     ...[
                       FirstTitle(title: "Booking".tr),
                       const SizedBox(height: 4),
@@ -316,7 +348,22 @@ class _IssuingPageState extends State<IssuingPage> {
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               width: double.infinity,
               // height: 80,
-              decoration: BoxDecoration(color: cs.surfaceContainer),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                // shadow
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 5,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -335,7 +382,7 @@ class _IssuingPageState extends State<IssuingPage> {
                         ),
                       ],
                     ),
-                  ),
+                  ), 
                   if(booking.status == BookingStatus.preBooking)
                     IntrinsicWidth(
                       child: Column(
@@ -343,15 +390,21 @@ class _IssuingPageState extends State<IssuingPage> {
                         children: [
                           ElevatedButton(
                             onPressed: () async {
-
-                              final dialog = await CustomDialog.success(context, title: 'Dialog Title', desc: 'Dialog description here', btnOkText: 'Ok');
-
+            
+                              final dialog = await CustomDialog.success(
+                                context, 
+                                title: 'Confirm Booking', 
+                                desc: 'Are you sure you want to confirm this booking?'.tr +
+                                '\n' +
+                                AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
+                                'will be deducted from your balance'.tr, 
+                                btnOkText: 'Confirm', 
+                              );
+            
                               if(dialog != DismissType.btnOk){
                                 return;
                               }
 
-
-                              
                               if(context.mounted) context.loaderOverlay.show();
                               try {
                                 final res = await travelersReviewController.confirmBooking(booking.id);
@@ -388,14 +441,86 @@ class _IssuingPageState extends State<IssuingPage> {
                               ),
                             ), 
                             onPressed: () async {
-                              
+                              final dialog = await CustomDialog.error(
+                                context, 
+                                title: 'Cancel Pre-Booking', 
+                                desc: 'Are you sure you want to cancel this pre-booking?'.tr,
+                                btnOkText: 'Cancel',
+                              );
+            
+                              if(dialog != DismissType.btnOk){ 
+                                return;
+                              }
+            
+                              if(context.mounted) context.loaderOverlay.show();
+                              try {
+                                final res = await travelersReviewController.cancelPreBooking(booking.id);
+                                if (res != null) {
+                                  booking = booking.copyWith(
+                                    status: BookingStatus.fromJson(res['booking']['status']),  
+                                  );
+                                  bookingStatus = booking.status.name; 
+                                  print("booking.status.name: $bookingStatus"); 
+                                } 
+                              } catch (e) {
+                                Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+                              }
+                              if (context.mounted) context.loaderOverlay.hide();
+                              setState(() {});
+            
                             },
                             child: Text("Cancel".tr),
                           ),
                         ],
                       ),
                     ),
-
+                  if(booking.status == BookingStatus.confirmed)
+                    IntrinsicWidth(
+                      child: Column( 
+                        children: [
+                          // void
+                          TextButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: cs.error,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: cs.error),
+                              ),
+                            ), 
+                            onPressed: () async {
+                              final dialog = await CustomDialog.error(
+                                context, 
+                                title: 'Void Issue', 
+                                desc: 'Are you sure you want to void this issue?'.tr,
+                                btnOkText: 'Void',
+                              );
+            
+                              if(dialog != DismissType.btnOk){ 
+                                return;
+                              }
+            
+                              if(context.mounted) context.loaderOverlay.show();
+                              try {
+                                final res = await travelersReviewController.voidIssue(booking.id);
+                                if (res != null) {
+                                  booking = booking.copyWith(
+                                    status: BookingStatus.fromJson(res['booking']['status']),  
+                                  );
+                                  bookingStatus = booking.status.name; 
+                                  print("booking.status.name: $bookingStatus"); 
+                                } 
+                              } catch (e) {
+                                Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+                              }
+                              if (context.mounted) context.loaderOverlay.hide();
+                              setState(() {});
+            
+                            },
+                            child: Text("Void".tr),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -503,9 +628,23 @@ class StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color = cs.secondary;
     IconData icon = Icons.info;
-    if (bookingStatus == BookingStatus.confirmed.name) {
+    if(bookingStatus == BookingStatus.preBooking.name){
+      color = cs.secondary;
+      icon = Icons.info;
+    }
+    else if (bookingStatus == BookingStatus.confirmed.name) {
       color = cs.secondaryFixed;
       icon = Icons.check_circle;
+    }
+    else if (
+      bookingStatus == BookingStatus.canceled.name || 
+      bookingStatus == BookingStatus.expiry.name) {
+      color = cs.tertiary;
+      icon = Icons.error;
+    } 
+    else if (bookingStatus == BookingStatus.voided.name) {
+      color = cs.error;
+      icon = Icons.error;
     }
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),

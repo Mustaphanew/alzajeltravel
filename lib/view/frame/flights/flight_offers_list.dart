@@ -4,16 +4,12 @@ import 'dart:math' as math;
 import 'package:alzajeltravel/controller/flight/other_prices_controller.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
-import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/view/frame/flights/other_prices/other_prices_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:loader_overlay/loader_overlay.dart';
-
-import 'package:alzajeltravel/controller/airline_controller.dart';
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
 import 'package:alzajeltravel/model/flight/flight_leg_model.dart';
@@ -62,7 +58,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flight Offers'),
+        title: Text('Flight Offers'.tr),
         actions: [
           // IconButton(
           //   icon: const Icon(Icons.settings),
@@ -75,7 +71,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
           OutlinedButton.icon(
             style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
             icon: const Icon(Icons.filter_alt_outlined),
-            label: const Text('Filter', style: TextStyle(fontSize: AppConsts.lg)),
+            label: Text('Filter'.tr, style: TextStyle(fontSize: AppConsts.lg)),
             onPressed: () {},
           ),
           const SizedBox(width: 12),
@@ -156,7 +152,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
                 },
               ),
             )
-          : const Center(child: Text('No offers found')),
+          : Center(child: Text('No offers found'.tr)),
     );
   }
 }
@@ -196,8 +192,8 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
     final theme = Theme.of(context);
     final offer = widget.offer;
 
-    final timeFormat = DateFormat('hh:mm a', 'en');
-    final dateFormat = DateFormat('EEE, dd MMM', 'en');
+    final timeFormat = DateFormat('hh:mm a', AppVars.lang);
+    final dateFormat = DateFormat('EEE, dd MMM', AppVars.lang);
 
     // ===== شركات طيران مسار الذهاب فقط (للهيدر) =====
     final outboundLeg = offer.outbound;
@@ -284,7 +280,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
               // ====== مسار الذهاب ======
               _LegRow(
                 leg: outboundLeg,
-                type: "departure",
+                type: "departure".tr,
                 dateFormat: dateFormat,
                 timeFormat: timeFormat,
                 showLegAirlinesHeader: false, // شعارات الذهاب موجودة في الهيدر
@@ -425,10 +421,10 @@ class _LegRowState extends State<_LegRow> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final depTimeFull = widget.timeFormat.format(widget.leg.departureDateTime);
-    final arrTimeFull = widget.timeFormat.format(widget.leg.arrivalDateTime);
-    final depDate = widget.dateFormat.format(widget.leg.departureDateTime);
-    final arrDate = widget.dateFormat.format(widget.leg.arrivalDateTime);
+    final depTimeFull = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.departureDateTime));
+    final arrTimeFull = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.arrivalDateTime));
+    final depDate = AppFuns.replaceArabicNumbers(widget.dateFormat.format(widget.leg.departureDateTime));
+    final arrDate = AppFuns.replaceArabicNumbers(widget.dateFormat.format(widget.leg.arrivalDateTime));
 
     final justDepTime = depTimeFull.split(' ')[0];
     final periodDepTime = depTimeFull.split(' ')[1];
@@ -440,7 +436,7 @@ class _LegRowState extends State<_LegRow> {
     if (widget.leg.stops == 0) {
       stopsText = "Direct".tr;
     } else if (widget.leg.stops == 1) {
-      stopsText = "1 Stop".tr;
+      stopsText = "1 " + "Stop".tr;
     } else {
       stopsText = "${widget.leg.stops} ${"Stops".tr}";
     }

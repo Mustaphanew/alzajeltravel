@@ -10,7 +10,7 @@ enum BookingStatus {
   preBooking('pre-book'),
   canceled('canceled'),
   expiry('cancelled'),
-  voided('voided'),
+  voided('Voided'),
   notFound('not_found');
 
   const BookingStatus(this.apiValue);

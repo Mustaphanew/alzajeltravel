@@ -290,7 +290,7 @@ class PassportModel {
       dateOfExpiry: parseDate(json['dateOfExpiry']),
       optionalData: s(json['optionalData']),
       nationality: parseCountry(json['nationality']),
-      issuingCountry: parseCountry(json['issuingCountry']),
+      issuingCountry: parseCountry(json['issue_country']),
       mrzText: s(json['mrzText']) ?? s(json['mrz_text']),
     );
   }
