@@ -5,6 +5,11 @@ class AirportRepo {
   // يمكنك إضافة المزيد من المدن لاحقًا
   static const List<Map<String, dynamic>> _data = [
     {
+      "code": "NA",
+      "name": {"en": "Not Applicable", "ar": "غير محدد"},
+      "body": {"en": "Not Applicable", "ar": "غير محدد"},
+    },
+    {
       "code": "DXB",
       "name": {"en": "Dubai", "ar": "دبي"},
       "body": {"en": "Dubai, Emirates", "ar": "دبي، الامارات"},
@@ -879,16 +884,16 @@ class AirportRepo {
   }
 
   /// ترجع AirportModel حسب كود المطار (مثل DXB) أو null إذا غير موجود
-  static AirportModel? searchByCode(String code) {
+  static AirportModel searchByCode(String code) {
     final c = code.trim().toUpperCase();
-    if (c.isEmpty) return null;
+    if (c.isEmpty) return AirportModel.fromJson(_data.firstWhere((e) => e['code'] == 'NA'));
 
     final json = _data.firstWhere(
       (e) => (e['code'] ?? '').toString().trim().toUpperCase() == c,
       orElse: () => <String, dynamic>{},
     );
 
-    if (json.isEmpty) return null;
+    if (json.isEmpty) return AirportModel.fromJson(_data.firstWhere((e) => e['code'] == 'NA'));
     return AirportModel.fromJson(json);
   }
 

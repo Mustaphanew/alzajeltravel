@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/seat_model.dart';
@@ -5,6 +6,7 @@ import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class TravelersReviewController extends GetxController {
+  final FlightDetailApiController flightDetailApiController = Get.find();
   final List<TravelerReviewModel> travelers;
 
   TravelersReviewController(this.travelers);
@@ -40,6 +42,17 @@ class TravelersReviewController extends GetxController {
     // update(); // عشان تحدّث الواجهة
   }
 
+
+  DateTime? parseTktTimeLimit(dynamic v) {
+    final s = (v ?? '').toString().trim();
+    if (s.isEmpty) return null;
+
+    // يحول "2025-12-31 23:59:59" إلى "2025-12-31T23:59:59" عشان DateTime.parse يكون مضمون
+    final normalized = s.contains('T') ? s : s.replaceFirst(' ', 'T');
+    return DateTime.tryParse(normalized);
+  }
+
+
   dynamic preRes;
   String? prePnr;
   Future<dynamic> preBooking(String insertId) async {
@@ -72,6 +85,15 @@ class TravelersReviewController extends GetxController {
       Get.snackbar("Error".tr, "Could not pre-book".tr, snackPosition: SnackPosition.BOTTOM);
       return null;
     }
+
+      final tkt = preRes['flight']?['ticket_deadline'];
+      print('ticket_deadline: $tkt');
+      final c = flightDetailApiController.revalidatedDetails;
+      final current = c.value;
+      if (current != null) {
+        c.value = current.copyWith(timeLimit: parseTktTimeLimit(tkt));
+        print('timeLimit: ${flightDetailApiController.revalidatedDetails.value?.timeLimit}');
+      }
 
     return preRes;
   }

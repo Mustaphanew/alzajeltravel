@@ -89,6 +89,7 @@ class ProfileController extends GetxController {
 
   ProfileModel buildUpdatedModel() {
     return ProfileModel(
+      id: "0",
       companyRegistrationNumber: companyRegistrationNumberController.text.trim(),
       name: nameController.text.trim(),
       email: emailController.text.trim(),

@@ -2,6 +2,7 @@ import 'package:alzajeltravel/model/country_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
 
 class ProfileModel {
+  final String id;
   final String companyRegistrationNumber;
   final String name;
   final String email;
@@ -17,6 +18,7 @@ class ProfileModel {
   final double? remainingBalance;
 
   const ProfileModel({
+    required this.id,
     required this.companyRegistrationNumber,
     required this.name,
     required this.email,
@@ -54,6 +56,7 @@ class ProfileModel {
 
   factory ProfileModel.fromJson(Map<String, dynamic> map) {
     return ProfileModel(
+      id: _readString(map, ['id', 'Id', 'الرقم', 'الرقم:']),
       companyRegistrationNumber: _readString(map, [
         'companyRegistrationNumber',
         'Company Registration Number',

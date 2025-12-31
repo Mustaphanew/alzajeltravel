@@ -205,6 +205,7 @@ class LoginController extends GetxController {
   void goToProfile(Map<String, dynamic> agent, {required String agencyNumber}) {
     // مثال: هذا هو الـ Map القادم من السيرفر (بدّله بالـ response الحقيقي)
     final Map<String, dynamic> profileMap = {
+      "id": agent['id'], 
       "companyRegistrationNumber": "3343432282",
       "name": agent['agency_name'],
       "email": agent['email'],

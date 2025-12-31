@@ -1,6 +1,6 @@
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
-import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/app_vars.dart'; 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -114,8 +114,8 @@ class FlightMainCard extends StatelessWidget {
     final FlightLegModel? inbound = offer.inbound; // null في حالة one-way
 
     // فورمات الوقت والتاريخ
-    final timeFormat = DateFormat('hh:mm a', 'en');
-    final dateFormat = DateFormat('EEE, dd MMM', 'en');
+    final timeFormat = DateFormat('hh:mm a');
+    final dateFormat = DateFormat('EEE, dd MMM');
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -203,10 +203,10 @@ class _LegSummaryState extends State<_LegSummary> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final cs = theme.colorScheme;
-    final depTime = widget.timeFormat.format(widget.leg.departureDateTime).toUpperCase();
-    final arrTime = widget.timeFormat.format(widget.leg.arrivalDateTime).toUpperCase();
-    final depDate = widget.dateFormat.format(widget.leg.departureDateTime);
-    final arrDate = widget.dateFormat.format(widget.leg.arrivalDateTime);
+    final depTime = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.departureDateTime).toUpperCase());
+    final arrTime = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.arrivalDateTime).toUpperCase());
+    final depDate = AppFuns.replaceArabicNumbers(widget.dateFormat.format(widget.leg.departureDateTime));
+    final arrDate = AppFuns.replaceArabicNumbers(widget.dateFormat.format(widget.leg.arrivalDateTime));
 
     // ===== شركات هذا المسار (بدون تكرار) =====
     final legCodes = _uniqueMarketingCodesForLeg(widget.leg);
@@ -312,7 +312,7 @@ class _LegSummaryState extends State<_LegSummary> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(widget.leg.fromName, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text(AirportRepo.searchByCode(widget.leg.fromCode)!.name[AppVars.lang], style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),  
                               const SizedBox(height: 4),
                               Text(widget.leg.fromCode, style: textTheme.bodyMedium),
                             ],
@@ -351,7 +351,7 @@ class _LegSummaryState extends State<_LegSummary> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(widget.leg.toName, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text(AirportRepo.searchByCode(widget.leg.toCode)!.name[AppVars.lang], style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                               const SizedBox(height: 4),
                               Text(widget.leg.toCode, style: textTheme.bodyMedium),
                             ],

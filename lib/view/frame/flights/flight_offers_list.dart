@@ -324,7 +324,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                       ],
                     ),
                   if (widget.showSeatLeft && widget.showBaggage) const Spacer(),
-                  Text(offer.cabinClassText, style: theme.textTheme.bodySmall),
+                  Text(offer.cabinClassText.tr, style: theme.textTheme.bodySmall),
                 ],
               ),
 

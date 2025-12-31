@@ -1,6 +1,8 @@
 import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/routes.dart';
+import 'package:alzajeltravel/view/bookings_report/bookings_report_page.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -25,33 +27,34 @@ class Frame extends StatefulWidget {
 }
 
 class _FrameState extends State<Frame> with WidgetsBindingObserver {
-  GetStorage getStorage = GetStorage();
 
   TranslationController translationController = Get.put(TranslationController());
   // MainController mainController = Get.put(MainController());
   FrameController frameController = Get.put(FrameController());
 
-  DateTime? _leftAt;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppVars.profile = GetStorage().read('profile') != null ? ProfileModel.fromJson(GetStorage().read('profile')) : null;
+    AppVars.profile = AppVars.getStorage.read('profile') != null ? ProfileModel.fromJson(AppVars.getStorage.read('profile')) : null;
+    print("profile: ${AppVars.profile?.id}");
   }
 
+  DateTime? _leftAt;
+  int timeout = 20;
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      print("didChangeAppLifecycleState paused2");
+      print("paused");
       _leftAt = DateTime.now();
     } else if (state == AppLifecycleState.resumed) {
       final leftAt = _leftAt;
       _leftAt = null;
-      print("didChangeAppLifecycleState resumed2");
+      print("resumed");
       if (leftAt != null) {
         final diff = DateTime.now().difference(leftAt);
-        if (diff.inSeconds >= 20) {
+        print("diff: ${diff.inSeconds}");
+        if (diff.inSeconds >= timeout) {
           _goToLogin();
         }
       }
@@ -61,7 +64,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   void _goToLogin() {
     print("_goToLogin");
     // امنع التكرار
-    if (Get.currentRoute == "/login") return;
+    if (Get.currentRoute == Routes.login.path) return;
     Get.offAll(() => const LoginPage());
   }
 
@@ -77,7 +80,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     return [
       Home(persistentTabController: frameController.persistentTabController),
       SearchFlight(frameContext: context), 
-      const Center(child: Text("Bookings Screen")),
+      const BookingsReportPage(),
       AppVars.profile != null ? ProfilePage(data: AppVars.profile!) : const Center(child: Text("No Profile")),
       SettingsPage(),
     ];

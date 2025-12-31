@@ -1,4 +1,5 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
+import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -59,16 +60,16 @@ class _IssuingPageState extends State<IssuingPage> {
     summary = travelersReviewController.summary;
 
     if (summary.adultCount > 0) {
-      faringsData.add({"type": "Adult X${summary.adultCount}", "Total fare": "${summary.adultTotalFare}"});
-      baggagesData.add({"type": "Adult", "Weight": AppFuns.formatBaggageWeight(tmpBaggage)});
+      faringsData.add({"type": "Adult".tr + " ${summary.adultCount}", "Total fare": "${summary.adultTotalFare}"});
+      baggagesData.add({"type": "Adult".tr, "Weight": AppFuns.formatBaggageWeight(tmpBaggage)});
     }
     if (summary.childCount > 0) {
-      faringsData.add({"type": "Child X${summary.childCount}", "Total fare": "${summary.childTotalFare}"});
-      baggagesData.add({"type": "Child", "Weight": "10kg"});
+      faringsData.add({"type": "Child".tr + " ${summary.childCount}", "Total fare": "${summary.childTotalFare}"});
+      baggagesData.add({"type": "Child".tr, "Weight": "10kg"});
     }
     if (summary.infantLapCount > 0) {
-      faringsData.add({"type": "Infant X${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
-      baggagesData.add({"type": "Infant", "Weight": "5kg"});
+      faringsData.add({"type": "Infant".tr + " ${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
+      baggagesData.add({"type": "Infant".tr, "Weight": "5kg"});
     }
     bookingStatus = booking.status.name;
     timeLimit = widget.offerDetail.timeLimit;
@@ -81,7 +82,7 @@ class _IssuingPageState extends State<IssuingPage> {
       top: false,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Issuing"),
+          title: Text("Issuing".tr),
           leading: IconButton(
             tooltip: "Back".tr,
             icon: const Icon(Icons.arrow_back),
@@ -178,10 +179,10 @@ class _IssuingPageState extends State<IssuingPage> {
                                   child: IntrinsicWidth(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: const [
+                                      children: [
                                         SecondTitle(title: "PNR"),
                                         Divider(thickness: 1),
-                                        SecondTitle(title: "Number"),
+                                        SecondTitle(title: "Number".tr),
                                       ],
                                     ),
                                   ),
@@ -211,7 +212,7 @@ class _IssuingPageState extends State<IssuingPage> {
                     Divider(),
       
                     ...[
-                      FirstTitle(title: "Travelers"),
+                      FirstTitle(title: "Travelers".tr),
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -241,11 +242,11 @@ class _IssuingPageState extends State<IssuingPage> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           spacing: 3,
                                           children: [
-                                            SecondTitle(title: "Full Name"),
+                                            SecondTitle(title: "Full Name".tr),
                                             const Divider(thickness: 1),
-                                            SecondTitle(title: "Date of Birth"),
+                                            SecondTitle(title: "Date of Birth".tr),
                                             const Divider(thickness: 1),
-                                            SecondTitle(title: "Ticket"),
+                                            SecondTitle(title: "Ticket".tr),
                                           ],
                                         ),
                                       ),
@@ -294,7 +295,7 @@ class _IssuingPageState extends State<IssuingPage> {
                     const SizedBox(height: 16),
                     const Divider(),
                     ...[
-                      FirstTitle(title: "Flight"),
+                      FirstTitle(title: "Flight".tr),
                       const SizedBox(height: 4),
                       FlightOfferCard(
                         offer: widget.offerDetail.offer,
@@ -393,12 +394,12 @@ class _IssuingPageState extends State<IssuingPage> {
             
                               final dialog = await CustomDialog.success(
                                 context, 
-                                title: 'Confirm Booking', 
+                                title: 'Confirm Booking'.tr, 
                                 desc: 'Are you sure you want to confirm this booking?'.tr +
                                 '\n' +
                                 AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
                                 'will be deducted from your balance'.tr, 
-                                btnOkText: 'Confirm', 
+                                btnOkText: 'Confirm'.tr, 
                               );
             
                               if(dialog != DismissType.btnOk){
@@ -443,9 +444,9 @@ class _IssuingPageState extends State<IssuingPage> {
                             onPressed: () async {
                               final dialog = await CustomDialog.error(
                                 context, 
-                                title: 'Cancel Pre-Booking', 
+                                title: 'Cancel Pre-Booking'.tr, 
                                 desc: 'Are you sure you want to cancel this pre-booking?'.tr,
-                                btnOkText: 'Cancel',
+                                btnOkText: 'Cancel'.tr,
                               );
             
                               if(dialog != DismissType.btnOk){ 
@@ -490,9 +491,9 @@ class _IssuingPageState extends State<IssuingPage> {
                             onPressed: () async {
                               final dialog = await CustomDialog.error(
                                 context, 
-                                title: 'Void Issue', 
+                                title: 'Void Issue'.tr, 
                                 desc: 'Are you sure you want to void this issue?'.tr,
-                                btnOkText: 'Void',
+                                btnOkText: 'Void'.tr,
                               );
             
                               if(dialog != DismissType.btnOk){ 
@@ -602,13 +603,20 @@ class _IssuingPageState extends State<IssuingPage> {
                   DataColumn(
                     label: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(labelFromKey(key), style: TextStyle(color: cs.primaryContainer)),
+                      child: Text(labelFromKey(key).tr, style: TextStyle(color: cs.primaryContainer)),
                     ),
                     numeric: isNumericColumn(key),
                   ),
               ],
               rows: [
-                for (final row in data) DataRow(cells: [for (final key in columnsKeys) DataCell(Text('${row[key] ?? ''}'))]),
+                for (final row in data) DataRow(
+                  cells: [
+                    for (final key in columnsKeys) 
+                      DataCell(
+                        Text('${row[key] ?? ''}') 
+                      )
+                  ]
+                ),
               ],
             ),
           ],
@@ -655,7 +663,7 @@ class StatusCard extends StatelessWidget {
         children: [
           Icon(icon, size: 32, color: cs.onPrimary), 
           SizedBox(width: 12),
-          FirstTitle(title: "Status".tr + " " + bookingStatus, color: cs.onPrimary),
+          FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
         ],
       ),
     );

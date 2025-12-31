@@ -2,30 +2,10 @@
 
 import 'package:alzajeltravel/model/country_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
+import 'package:alzajeltravel/utils/enums.dart';
 
 
 
-enum BookingStatus {
-  confirmed('confirmed'),
-  preBooking('pre-book'),
-  canceled('canceled'),
-  expiry('cancelled'),
-  voided('Voided'),
-  notFound('not_found');
-
-  const BookingStatus(this.apiValue);
-  final String apiValue;
-
-  static BookingStatus fromJson(String v) {
-    try {
-      return BookingStatus.values.firstWhere((e) => e.apiValue == v);
-    } catch (e) {
-      return BookingStatus.notFound;
-    }
-  }
-
-  String toJson() => apiValue;
-}
 
 class BookingDataModel {
   final String id;
@@ -86,7 +66,7 @@ class BookingDataModel {
       companyId: (json['company_Id'] ?? '').toString(),
       customerId: (json['customer_id'] ?? '').toString(),
       module: (json['module'] ?? '').toString(),
-      status: BookingStatus.fromJson((json['status'] ?? '').toString()),
+      status: BookingStatus.fromJson((json['status'] ?? '').toString().toLowerCase()),
       createdOn: _parseDateTime(json['created_on']),
       travelDate: _parseDateTime(json['travel_date']),
       bookedBy: (json['booked_by'] ?? '').toString(),

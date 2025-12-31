@@ -329,8 +329,8 @@ Map<String, String> ar = {
   "Contact": "جهة الاتصال",
   "Title": "العنوان",
   "MR": "سيد",
-  "MRS": "انسة",
-  "MS": "سيدة",
+  "MRS": "سيدة",
+  "MISS": "آنسة",
   "Contact information": "معلومات الاتصال",
   "Codes": "كود",
   "Code": "كود",
@@ -369,6 +369,7 @@ Map<String, String> ar = {
   "Confirm Booking.": "تأكيد الحجز.",
   "Confirm": "تأكيد",
   "Void": "إلغاء الإصدار",
+  "void": "إلغاء الإصدار",
   "Cancel Pre-Booking": "إلغاء الحجز المبدئي",
   "Void Issue": "إلغاء إصدار التذكرة",
   "Are you sure you want to confirm this booking?": "هل أنت متأكد أنك تريد تأكيد هذا الحجز؟",
@@ -379,6 +380,16 @@ Map<String, String> ar = {
   "Could not cancel pre-booking": "تعذر إلغاء الحجز المبدئي",
   "Could not void issue": "تعذر إلغاء إصدار التذكرة",
   "Status": "الحالة",
+
+  "Total fare": "اجمالي التسعير",
+  "Type": "النوع",
+  "type": "النوع",
+  "Weight": "الوزن",
+  "Economic Standard": "المعيار الاقتصادي",
+  "Premium": "المعيار الممتاز",
+  "Close": "إغلاق",
+
+  "pre-book": "حجز مبدئي",
 
 
 };

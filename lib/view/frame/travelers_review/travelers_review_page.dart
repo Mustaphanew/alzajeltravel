@@ -77,31 +77,31 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if(timeLimit != null) ...[
-                          const SizedBox(height: 12),
-                          Card(
-                            margin: EdgeInsets.symmetric(horizontal: 8),
-                            child: Container(
-                              padding: EdgeInsets.only(top: 12, bottom: 16,),
-                              width: double.infinity,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    "Time Left".tr,
-                                    style: TextStyle(
-                                      fontSize: AppConsts.lg
-                                    ),
-                                  ),
-                                  SizedBox(height: 8), 
-                                  TimeRemaining(
-                                    timeLimit: timeLimit,
-                                    expiredText: 'Expired'.tr,
-                                  ),
-                                ],
-                              ),
-                            ), 
-                          ),
-                        ],
+                        // if(timeLimit != null) ...[
+                        //   const SizedBox(height: 12),
+                        //   Card(
+                        //     margin: EdgeInsets.symmetric(horizontal: 8),
+                        //     child: Container(
+                        //       padding: EdgeInsets.only(top: 12, bottom: 16,),
+                        //       width: double.infinity,
+                        //       child: Column(
+                        //         children: [
+                        //           Text(
+                        //             "Time Left".tr,
+                        //             style: TextStyle(
+                        //               fontSize: AppConsts.lg
+                        //             ),
+                        //           ),
+                        //           SizedBox(height: 8), 
+                        //           TimeRemaining(
+                        //             timeLimit: timeLimit,
+                        //             expiredText: 'Expired'.tr,
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ), 
+                        //   ),
+                        // ],
                         if (offerDetail != null) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 

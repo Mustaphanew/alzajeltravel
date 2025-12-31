@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/passport/passports_forms_controller.dart';
@@ -42,11 +43,11 @@ class _ContactInformationFormState extends State<ContactInformationForm> {
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildTitleButton(context: context, value: ContactTitle.mr, label: 'MR'),
+                _buildTitleButton(context: context, value: ContactTitle.mr, label: 'MR'.tr),
                 const SizedBox(width: 8),
-                _buildTitleButton(context: context, value: ContactTitle.miss, label: 'MISS'),
+                _buildTitleButton(context: context, value: ContactTitle.miss, label: 'MISS'.tr),
                 const SizedBox(width: 8),
-                _buildTitleButton(context: context, value: ContactTitle.mrs, label: 'MRS'),
+                _buildTitleButton(context: context, value: ContactTitle.mrs, label: 'MRS'.tr),
               ],
             ),
 
@@ -204,7 +205,7 @@ class _ContactInformationFormState extends State<ContactInformationForm> {
                   children: [
                     Expanded(
                       child: Text(
-                        c.contactNationalityCountry != null ? (c.contactNationalityCountry!.name['en'] ?? '') : 'Select nationality'.tr,
+                        c.contactNationalityCountry != null ? (c.contactNationalityCountry!.name[AppVars.lang] ?? '') : 'Select nationality'.tr,
                         style: TextStyle(fontSize: 16, color: c.contactNationalityCountry == null ? cs.outline : cs.onSurface),
                       ),
                     ),

@@ -85,3 +85,28 @@ enum AgeGroup {
 
   String toJson() => apiValue;
 }
+
+
+enum BookingStatus {
+  confirmed('confirmed'),
+  preBooking('pre-book'),
+  canceled('cancelled'),
+  expiry('canceled'),
+  voided('voided'),
+  voide('void'),
+  notFound('not_found');
+
+  final String apiValue;
+  const BookingStatus(this.apiValue);
+
+  static BookingStatus fromJson(String v) {
+    try {
+      return BookingStatus.values.firstWhere((e) => e.apiValue == v);
+    } catch (e) {
+      return BookingStatus.notFound;
+    }
+  }
+
+  String toJson() => apiValue;
+}
+
