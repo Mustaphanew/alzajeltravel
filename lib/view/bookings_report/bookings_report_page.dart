@@ -1,10 +1,16 @@
 import 'package:alzajeltravel/controller/bookings_report/bookings_report_controller.dart';
 import 'package:alzajeltravel/model/bookings_report/bookings_report_model.dart';
+import 'package:alzajeltravel/utils/app_consts.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
+import 'package:alzajeltravel/utils/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:jiffy/jiffy.dart';
 
 class BookingsReportPage extends StatefulWidget {
   const BookingsReportPage({super.key});
@@ -52,13 +58,13 @@ class _BookingsReportPageState extends State<BookingsReportPage> with SingleTick
     });
 
     // عند تغيير التبويب
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      _switchToStatus(tabs[_tabController.index].status);
-    });
+    // _tabController.addListener(() {
+    //   if (_tabController.indexIsChanging) return;
+    //   _switchToStatus(tabs[_tabController.index].status);
+    // });
   }
 
-  void _switchToStatus(BookingStatus status) {
+  Future<void> _switchToStatus(BookingStatus status) async {
     // مهم: نمسح البيانات ونظهر Loading بدل بيانات التبويب السابق
     c.bookingsReportData = null;
     c.error = null;
@@ -69,7 +75,8 @@ class _BookingsReportPageState extends State<BookingsReportPage> with SingleTick
     c.update();
 
     // نجلب بدون ما نعيد ضبط loading من جديد (لأننا ضبطناه هنا)
-    c.getDataServer(status: status, newLimit: 10, showLoading: false);
+    print('_switchToStatus status: $status');
+    await c.getDataServer(status: status, newLimit: 10, showLoading: false);
   }
 
   @override
@@ -80,16 +87,52 @@ class _BookingsReportPageState extends State<BookingsReportPage> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text('Bookings Report'.tr),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: tabs.map((t) => Tab(text: t.label.tr)).toList(),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Material(
+            color: AppConsts.primaryColor.withValues(alpha: 0.4),
+            child: TabBar(
+              controller: _tabController,
+            
+              indicatorSize: TabBarIndicatorSize.tab,
+              // indicatorWeight: 60,
+              dividerHeight: 0,
+              dividerColor: Colors.transparent,
+              padding: EdgeInsets.all(0),
+              indicator: BoxDecoration(color: AppConsts.primaryColor),
+              labelColor: cs.secondary,
+              unselectedLabelColor: cs.onPrimary,
+              unselectedLabelStyle: TextStyle(
+                fontSize: AppConsts.normal,
+                fontWeight: FontWeight.normal,
+                fontFamily: AppConsts.font,
+              ),
+              labelStyle: TextStyle(
+                fontSize: AppConsts.normal, 
+                fontWeight: FontWeight.w600, 
+                fontFamily: AppConsts.font,
+              ),
+            
+              physics: const NeverScrollableScrollPhysics(),
+              isScrollable: false,
+              tabs: tabs.map((t) => Tab(text: t.label.tr)).toList(),
+              onTap: (index) async { 
+                print("index: $index");
+                context.loaderOverlay.show();
+                await _switchToStatus(tabs[index].status);
+                if(context.mounted) context.loaderOverlay.hide();
+              },
+            ),
+          ),
         ),
       ),
       body: TabBarView(
+        physics: const NeverScrollableScrollPhysics(),
         controller: _tabController,
         children: List.generate(tabs.length, (_) => const _BookingsReportList()),
       ),
@@ -166,7 +209,7 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
           child: ListView.builder(
             controller: _scroll,
             padding: const EdgeInsets.only(top: 8, bottom: 16),
-            itemCount: controller.items.length + 1,
+            itemCount: controller.items.length + 1, 
             itemBuilder: (context, index) {
               if (index < controller.items.length) {
                 final item = controller.items[index];
@@ -182,7 +225,7 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
                       const SizedBox(height: 6),
                       const CircularProgressIndicator.adaptive(),
                       const SizedBox(height: 10),
-                      Text('Loading more...'.tr),
+                      Text('Loading more'.tr + " ..."),
                     ] else if (showLoadMoreButton) ...[
                       SizedBox(
                         width: double.infinity,
@@ -212,130 +255,325 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final created = _formatDateTime(item.createdAt);
+    final createdDetail = _formatDateTimeDetail(item.createdAt);
+    bool showCreatedAtDetail = false;
+
+    final cancelled = item.cancelOn != null ? _formatDate(item.cancelOn!) : null;
+    final cancelledDetail = item.cancelOn != null ? _formatDateTimeDetail(item.cancelOn!) : null;
+    bool showCancelledDetail = false;
+
+    final voided = item.voidOn != null ? _formatDate(item.voidOn!) : null;
+    final voidedDetail = item.voidOn != null ? _formatDateTimeDetail(item.voidOn!) : null;
+    bool showVoidedDetail = false;
+
     final travel = _formatDate(item.travelDate);
+    final travelDetail = _formatDate(item.travelDate);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Booking ID + Status
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _Field(
-                    label: 'Booking ID'.tr,
-                    value: item.bookingId,
+    final cs = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: () {
+
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // booking & amount
+              Row(
+                children: [
+                  Text(
+                    item.bookingId,
+                    style: TextStyle(
+                      fontSize: AppConsts.lg,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _ChipText(text: _statusLabel(item.reportStatus).tr),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            _Field(label: 'PNR'.tr, value: item.pnr),
-
-            const SizedBox(height: 10),
-
-            // Travel date + Created at
-            Row(
-              children: [
-                Expanded(child: _Field(label: 'Travel date'.tr, value: travel)),
-                const SizedBox(width: 12),
-                Expanded(child: _Field(label: 'Created at'.tr, value: created)),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // Route + Journey type
-            Row(
-              children: [
-                Expanded(
-                  child: _Field(
-                    label: 'Route'.tr,
-                    value: '${item.origin.name[AppVars.lang]} → ${item.destination.name[AppVars.lang]}',
+                  Spacer(),
+                  Text(
+                    AppFuns.priceWithCoin(item.totalAmount, item.currency),
+                    style: TextStyle(
+                      color: cs.error,
+                      fontSize: AppConsts.xlg,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _Field(
-                    label: 'Journey type'.tr,
-                    value: _journeyTypeLabel(item.journeyType).tr,
+                ],
+              ),
+              const SizedBox(height: 6),
+              // pnr
+              ...[
+                Text("PNR"),
+                Text(
+                  item.pnr, 
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // Travelers count + Amount
-            Row(
-              children: [
-                Expanded(
-                  child: _Field(
-                    label: 'Travelers'.tr,
-                    value: item.travelersCount.toString(),
+      
+              const SizedBox(height: 12),
+              // route
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.origin.name[AppVars.lang],
+                        style: TextStyle(
+                          color: cs.primaryContainer,
+                          fontWeight: FontWeight.bold,
+                          fontSize: AppConsts.lg,
+                        ),
+                      ),
+                      Text(
+                        item.origin.code,
+                        style: TextStyle( 
+                          fontSize: AppConsts.lg,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _Field(
-                    label: 'Amount'.tr,
-                    value: '${item.totalAmount.toStringAsFixed(2)} ${item.currency}',
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          DividerLine(),
+                          if(item.journeyType == JourneyType.oneWay)
+                            Icon(
+                              Icons.arrow_forward,
+                              color: cs.primaryContainer,
+                            ),
+                          if(item.journeyType == JourneyType.roundTrip)
+                            Container(
+                              color: cs.surfaceContainerHighest,
+                              padding: EdgeInsets.symmetric(horizontal: 4),
+                              child: Icon(
+                                Icons.swap_horiz,
+                                color: cs.primaryContainer,
+                                size: 28,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        item.destination.name[AppVars.lang],
+                        style: TextStyle(
+                          color: cs.primaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        item.destination.code,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            
+              const SizedBox(height: 8),
+              const Divider(),
+              const SizedBox(height: 8),
+      
+              // travel date (departure & return)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Departure Date".tr),
+                      Text( 
+                        travel,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if(item.journeyType == JourneyType.roundTrip)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text("Return Date".tr),
+                        Text(
+                          travel,
+                          style: TextStyle( 
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+      
+              const SizedBox(height: 8),
+      
+              //cancel_on
+              if(item.reportStatus == BookingStatus.canceled || 
+              item.reportStatus == BookingStatus.expiry)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Cancel On".tr),
+                    StatefulBuilder(
+                      builder: (context, internalSetState) {
+                        return GestureDetector(
+                          onTap: () {
+                            internalSetState(() {
+                              showCancelledDetail = !showCancelledDetail;
+                            });
+                          },
+                          child: Text(
+                            showCancelledDetail? cancelledDetail??'_' : cancelled??'_',
+                            style: TextStyle( 
+                              fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                      }
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              if(
+                item.reportStatus == BookingStatus.voided ||
+                item.reportStatus == BookingStatus.voide)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Void On".tr),
+                    StatefulBuilder(
+                      builder: (context, internalSetState) {
+                        return GestureDetector(
+                          onTap: () {
+                            internalSetState(() {
+                              showVoidedDetail = !showVoidedDetail;
+                            });
+                          },
+                          child: Text(
+                            showVoidedDetail? voidedDetail??'_' : voided??'_',
+                            style: TextStyle( 
+                              fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        );
+                      }
+                    ),
+                  ],
+                ),
+      
+      
+              const SizedBox(height: 8),
+
+              // count adult children and infants
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          color: cs.primaryFixed.withOpacity(0.6),
+                          size: 22,
+                        ),
+                        Text(
+                          item.adult.toString(),
+                          style: TextStyle(
+                            // fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.child_care_outlined,
+                          color: cs.primaryFixed.withOpacity(0.6),
+                          size: 22,
+                        ),
+                        Text(
+                          item.child.toString(),
+                          style: TextStyle(
+                            // fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.child_friendly_outlined, 
+                          color: cs.primaryFixed.withOpacity(0.6),
+                          size: 22,
+                        ),
+                        Text(
+                          item.inf.toString(),
+                          style: TextStyle(
+                            // fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // created at
+              StatefulBuilder(
+                builder: (context, internalSetState) {
+                  return GestureDetector(
+                    onTap: () {
+                      internalSetState(() {
+                        showCreatedAtDetail = !showCreatedAtDetail;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        if(showCreatedAtDetail == true)
+                          Text(
+                            createdDetail,
+                            style: TextStyle(
+                              fontSize: AppConsts.sm,
+                            ),
+                          ),
+                        Spacer(),
+                        if(showCreatedAtDetail == false)
+                          Text(
+                            created,
+                            style: TextStyle(
+                              fontSize: AppConsts.sm,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+              ),
+      
+            ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _Field({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final labelStyle = Theme.of(context).textTheme.labelMedium;
-    final valueStyle = Theme.of(context).textTheme.bodyMedium;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: labelStyle),
-        const SizedBox(height: 4),
-        SelectableText(value, style: valueStyle),
-      ],
-    );
-  }
-}
-
-class _ChipText extends StatelessWidget {
-  final String text;
-
-  const _ChipText({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(width: 1),
-      ),
-      child: Text(text),
     );
   }
 }
@@ -403,26 +641,23 @@ class _StatusTab {
 
 /// ---- Labels & Formatters ----
 
-String _statusLabel(BookingStatus s) {
-  final v = s.apiValue;
-  if (v == 'confirmed') return 'Confirmed';
-  if (v == 'pre-book') return 'Pre-book';
-  if (v == 'cancelled' || v == 'canceled') return 'Cancelled';
-  if (v == 'void' || v == 'voided') return 'Void';
-  return 'Unknown';
+
+
+String _formatDate(DateTime d) { 
+  final s = DateFormat('dd - MMM - yyyy', AppVars.lang).format(d);
+  return AppFuns.replaceArabicNumbers(s);
 }
 
-String _journeyTypeLabel(JourneyType t) {
-  switch (t) {
-    case JourneyType.oneWay:
-      return 'One way';
-    case JourneyType.roundTrip:
-      return 'Round trip';
-    case JourneyType.multiCity:
-      return 'Multi city';
-  }
+String _formatDateDetail(DateTime d) { 
+  final s = DateFormat('EEE, dd - MMM - yyyy', AppVars.lang).format(d);
+  return AppFuns.replaceArabicNumbers(s);
 }
 
-String _formatDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
-
-String _formatDateTime(DateTime d) => DateFormat('yyyy-MM-dd HH:mm').format(d);
+String _formatDateTime(DateTime d) {
+  final s = Jiffy.parseFromDateTime(d).fromNow();
+  return AppFuns.replaceArabicNumbers(s);
+}
+String _formatDateTimeDetail(DateTime d) {
+  final s = DateFormat('EEE, dd - MMM - yyyy h:mm a', AppVars.lang).format(d);
+  return AppFuns.replaceArabicNumbers(s);
+}

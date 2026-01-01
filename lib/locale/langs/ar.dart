@@ -308,7 +308,7 @@ Map<String, String> ar = {
   "Flight details": "تفاصيل الرحلة",
   "Flight Details": "تفاصيل الرحلة",
   "Travel time": "وقت الرحلة",
-  "More Details": "تفاصيل إضافية",
+  "More Details": "تفاصيل اكثر",
   "Trip total": "إجمالي الرحلة",
   "View price summary": "عرض ملخص الأسعار",
   "Terminal": "الصالة",
@@ -368,8 +368,8 @@ Map<String, String> ar = {
   "Confirm Booking,": "تأكيد الحجز،",
   "Confirm Booking.": "تأكيد الحجز.",
   "Confirm": "تأكيد",
-  "Void": "إلغاء الإصدار",
-  "void": "إلغاء الإصدار",
+  "Void": "فويد",
+  "void": "فويد",
   "Cancel Pre-Booking": "إلغاء الحجز المبدئي",
   "Void Issue": "إلغاء إصدار التذكرة",
   "Are you sure you want to confirm this booking?": "هل أنت متأكد أنك تريد تأكيد هذا الحجز؟",
@@ -389,7 +389,19 @@ Map<String, String> ar = {
   "Premium": "المعيار الممتاز",
   "Close": "إغلاق",
 
+  "Bookings Report": "تقرير الحجوزات",
   "pre-book": "حجز مبدئي",
+  "Pre-book": "حجز مبدئي",
+
+  "Confirmed": "مؤكدة",
+  "Cancelled": "ملغي",
+
+  "Cancel On": "الغيت في",
+  "Void On": "فويدت في",
+
+  "No more results": "لا توجد نتائج إضافية",
+  "Load more": "تحميل المزيد",
+  "Loading more": "تحميل المزيد",
 
 
 };

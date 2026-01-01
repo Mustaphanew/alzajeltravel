@@ -16,6 +16,7 @@ import 'package:alzajeltravel/view/frame/home.dart';
 import 'package:alzajeltravel/view/frame/my_drawer.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'dart:async';
 
@@ -38,6 +39,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     AppVars.profile = AppVars.getStorage.read('profile') != null ? ProfileModel.fromJson(AppVars.getStorage.read('profile')) : null;
     print("profile: ${AppVars.profile?.id}");
+    Jiffy.setLocale(AppVars.lang??'en');
   }
 
   DateTime? _leftAt;

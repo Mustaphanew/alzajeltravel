@@ -34,7 +34,7 @@ Future<void> main() async {
 
   // 2) تهيئاتك المتزامنة/المسبقة
   await GetStorage.init();
-  await Jiffy.setLocale('ar');
+  // await Jiffy.setLocale('ar');
 
   // 3) Firebase (يفضل قبل إظهار أي حوارات أذونات)
   try {
