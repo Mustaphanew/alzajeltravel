@@ -409,5 +409,35 @@ Map<String, String> ar = {
   "confirmed": "مؤكدة",
   "Return Date": "تاريخ العودة",
 
+  "More Flight details": "تفاصيل اكثر عن الرحلة",
+
+  "Search and Filter": "بحث وتصفية",
+
+
+  "Filter by date": "حسب تاريخ",
+  "Period": "الفترة",
+
+  "Created at": "تاريخ الإنشاء",
+  "Travel date": "تاريخ الرحلة",
+  "Cancel on": "تاريخ الإلغاء",
+  "Void on": "تاريخ الفويد",
+
+  "Within day": "خلال اليوم",
+  "Until day": "حتى اليوم",
+  "Within month": "خلال شهر",
+  "Within range": "خلال الفترة",
+
+  "Select date": "اختر التاريخ",
+  "From": "من",
+  "To": "إلى",
+
+
+
+  "Global search": "بحث شامل",
+  "Type keyword...": "اكتب كلمة البحث...",
+
+
+  "Cancel search": "إلغاء البحث"
+
 
 };
