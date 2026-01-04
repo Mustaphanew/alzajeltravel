@@ -1,5 +1,9 @@
+// traveler_review_model.dart
+
 import 'package:alzajeltravel/model/passport/passport_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/seat_model.dart';
+import 'package:alzajeltravel/utils/enums.dart';
+import 'package:get/get.dart';
 
 /// ===================================================================
 /// TravelerReviewModel
@@ -8,6 +12,9 @@ import 'package:alzajeltravel/model/passport/traveler_review/seat_model.dart';
 class TravelerReviewModel {
   /// بيانات جواز السفر للمسافر
   final PassportModel passport;
+
+  /// ✅ فئة المسافر (Adult / Child / Infant)
+  final AgeGroup? ageGroup;
 
   /// سعر التذكرة الأساسي (بدون إضافات)
   final double baseFare;
@@ -22,6 +29,7 @@ class TravelerReviewModel {
 
   const TravelerReviewModel({
     required this.passport,
+    this.ageGroup,
     required this.baseFare,
     required this.taxTotal,
     this.seat,
@@ -31,6 +39,7 @@ class TravelerReviewModel {
   /// نسخة جديدة مع إمكانية تعديل بعض الحقول
   TravelerReviewModel copyWith({
     PassportModel? passport,
+    AgeGroup? ageGroup,
     double? baseFare,
     double? taxTotal,
     Seat? seat,
@@ -38,6 +47,7 @@ class TravelerReviewModel {
   }) {
     return TravelerReviewModel(
       passport: passport ?? this.passport,
+      ageGroup: ageGroup ?? this.ageGroup,
       baseFare: baseFare ?? this.baseFare,
       taxTotal: taxTotal ?? this.taxTotal,
       seat: seat ?? this.seat,
@@ -54,10 +64,24 @@ class TravelerReviewModel {
   /// السعر النهائي = التذكرة + الضرائب + المقعد
   double get totalAll => baseFare + taxTotal + seatFare;
 
+  /// label جاهز للعرض
+  String get ageGroupLabel {
+    switch (ageGroup) {
+      case AgeGroup.infant:
+        return 'Infant'.tr;
+      case AgeGroup.child:
+        return 'Child'.tr;
+      case AgeGroup.adult:
+      default:
+        return 'Adult'.tr;
+    }
+  }
+
   /// تحويل إلى JSON
   Map<String, dynamic> toJson() {
     return {
       'passport': passport.toJson(),
+      'ageGroup': _ageGroupToKey(ageGroup),
       'baseFare': baseFare,
       'taxTotal': taxTotal,
       'seatFare': seatFare,
@@ -69,17 +93,49 @@ class TravelerReviewModel {
   }
 
   /// إنشاء الموديل من JSON
+  /// يدعم المفاتيح القديمة + الجديدة:
+  /// - baseFare / Base_Amount
+  /// - taxTotal / Tax_Total
+  /// - ticketNumber / eTicketNumber
   factory TravelerReviewModel.fromJson(Map<String, dynamic> json) {
+    double d(dynamic v) {
+      if (v is num) return v.toDouble();
+      final s = (v ?? '').toString().trim();
+      if (s.isEmpty) return 0.0;
+      return double.tryParse(s) ?? 0.0;
+    }
+
     return TravelerReviewModel(
-      passport: PassportModel.fromJson(
-          json['passport'] as Map<String, dynamic>),
-      baseFare: (json['Base_Amount'] as num?)?.toDouble() ?? 0.0,
-      taxTotal: (json['Tax_Total'] as num?)?.toDouble() ?? 0.0,
-      seat: json['seat'] != null
-          ? Seat.fromJson(json['seat'] as Map<String, dynamic>)
-          : null,
-      ticketNumber: json['ticketNumber'],
+      passport: PassportModel.fromJson(json['passport'] as Map<String, dynamic>),
+      ageGroup: _ageGroupFromAny(json['ageGroup'] ?? json['paxType'] ?? json['pax_type']),
+      baseFare: d(json['baseFare'] ?? json['Base_Amount']),
+      taxTotal: d(json['taxTotal'] ?? json['Tax_Total']),
+      seat: json['seat'] != null ? Seat.fromJson(json['seat'] as Map<String, dynamic>) : null,
+      ticketNumber: (json['ticketNumber'] ?? json['eTicketNumber'])?.toString(),
     );
+  }
+
+  // ================= helpers =================
+
+  static String _ageGroupToKey(AgeGroup? g) {
+    if (g == null) return 'adult';
+    switch (g) {
+      case AgeGroup.infant:
+        return 'infant';
+      case AgeGroup.child:
+        return 'child';
+      case AgeGroup.adult:
+      default:
+        return 'adult';
+    }
+  }
+
+  static AgeGroup _ageGroupFromAny(dynamic v) {
+    final s = (v ?? '').toString().trim().toLowerCase();
+    if (s == 'inf' || s == 'infant') return AgeGroup.infant;
+    if (s == 'cnn' || s == 'chd' || s == 'child') return AgeGroup.child;
+    if (s == 'adt' || s == 'adult') return AgeGroup.adult;
+    return AgeGroup.adult;
   }
 }
 
@@ -143,77 +199,46 @@ class TravelerFareSummary {
 
   /// ---------------- مجاميع الأسعار لكل فئة (عدد * متوسط) ----------------
 
-  /// مجموع (base + tax) لكل البالغين
-  double get adultsTotalFareAllPassengers =>
-      (adultTotalFare ?? 0.0) * adultCount;
+  double get adultsTotalFareAllPassengers => (adultTotalFare ?? 0.0) * adultCount;
+  double get childrenTotalFareAllPassengers => (childTotalFare ?? 0.0) * childCount;
+  double get infantsTotalFareAllPassengers => (infantLapTotalFare ?? 0.0) * infantLapCount;
 
-  /// مجموع (base + tax) لكل الأطفال
-  double get childrenTotalFareAllPassengers =>
-      (childTotalFare ?? 0.0) * childCount;
+  double get adultsTotalAllAllPassengers => (adultTotalAll ?? 0.0) * adultCount;
+  double get childrenTotalAllAllPassengers => (childTotalAll ?? 0.0) * childCount;
+  double get infantsTotalAllAllPassengers => (infantLapTotalAll ?? 0.0) * infantLapCount;
 
-  /// مجموع (base + tax) لكل الرضع
-  double get infantsTotalFareAllPassengers =>
-      (infantLapTotalFare ?? 0.0) * infantLapCount;
+  double get adultsTotalTaxAllPassengers => (adultTaxTotal ?? 0.0) * adultCount;
+  double get childrenTotalTaxAllPassengers => (childTaxTotal ?? 0.0) * childCount;
+  double get infantsTotalTaxAllPassengers => (infantLapTaxTotal ?? 0.0) * infantLapCount;
 
-  /// مجموع (base + tax + seatFare) لكل البالغين
-  double get adultsTotalAllAllPassengers =>
-      (adultTotalAll ?? 0.0) * adultCount;
-
-  /// مجموع (base + tax + seatFare) لكل الأطفال
-  double get childrenTotalAllAllPassengers =>
-      (childTotalAll ?? 0.0) * childCount;
-
-  /// مجموع (base + tax + seatFare) لكل الرضع
-  double get infantsTotalAllAllPassengers =>
-      (infantLapTotalAll ?? 0.0) * infantLapCount;
-
-  /// مجموع الضرائب لكل البالغين
-  double get adultsTotalTaxAllPassengers =>
-      (adultTaxTotal ?? 0.0) * adultCount;
-
-  /// مجموع الضرائب لكل الأطفال
-  double get childrenTotalTaxAllPassengers =>
-      (childTaxTotal ?? 0.0) * childCount;
-
-  /// مجموع الضرائب لكل الرضع
-  double get infantsTotalTaxAllPassengers =>
-      (infantLapTaxTotal ?? 0.0) * infantLapCount;
-
-  /// مجموع الـ baseFare لكل البالغين
-  double get adultsTotalBaseFareAllPassengers =>
-      (adultBaseFare ?? 0.0) * adultCount;
-
-  /// مجموع الـ baseFare لكل الأطفال
-  double get childrenTotalBaseFareAllPassengers =>
-      (childBaseFare ?? 0.0) * childCount;
-
-  /// مجموع الـ baseFare لكل الرضع
-  double get infantsTotalBaseFareAllPassengers =>
-      (infantLapBaseFare ?? 0.0) * infantLapCount;
+  double get adultsTotalBaseFareAllPassengers => (adultBaseFare ?? 0.0) * adultCount;
+  double get childrenTotalBaseFareAllPassengers => (childBaseFare ?? 0.0) * childCount;
+  double get infantsTotalBaseFareAllPassengers => (infantLapBaseFare ?? 0.0) * infantLapCount;
 
   /// المصنع الرئيسي: يبني الـ summary من قائمة المسافرين
+  /// ✅ يعتمد على ageGroup بدل passport.age
   factory TravelerFareSummary.fromTravelers(
     List<TravelerReviewModel> travelers,
   ) {
-    // نقسم المسافرين حسب الفئة العمرية (حسب العمر في PassportModel)
     final List<TravelerReviewModel> adults = [];
     final List<TravelerReviewModel> children = [];
     final List<TravelerReviewModel> infants = [];
 
     for (final t in travelers) {
-      final age = t.passport.age;
-      if (age == null) continue;
-
-      if (age <= 1) {
-        infants.add(t);
-      } else if (age >= 2 && age <= 11) {
-        children.add(t);
-      } else if (age >= 12) {
-        adults.add(t);
+      switch (t.ageGroup) {
+        case AgeGroup.infant:
+          infants.add(t);
+          break;
+        case AgeGroup.child:
+          children.add(t);
+          break;
+        case AgeGroup.adult:
+        default:
+          adults.add(t);
+          break;
       }
     }
 
-    // دوال لحساب المتوسط الحسابي لكل نوع مبلغ
     double? avgTotalFare(List<TravelerReviewModel> group) {
       if (group.isEmpty) return null;
       final sum = group.fold<double>(0.0, (s, t) => s + t.totalFare);
@@ -247,25 +272,20 @@ class TravelerFareSummary {
       adultCount: adults.length,
       childCount: children.length,
       infantLapCount: infants.length,
-
       totalPrice: totalPrice,
 
-      // متوسط (base + tax) لكل فئة
       adultTotalFare: avgTotalFare(adults),
       childTotalFare: avgTotalFare(children),
       infantLapTotalFare: avgTotalFare(infants),
 
-      // متوسط مع المقعد
       adultTotalAll: avgTotalAll(adults),
       childTotalAll: avgTotalAll(children),
       infantLapTotalAll: avgTotalAll(infants),
 
-      // متوسط الضرائب
       adultTaxTotal: avgTaxTotal(adults),
       childTaxTotal: avgTaxTotal(children),
       infantLapTaxTotal: avgTaxTotal(infants),
 
-      // متوسط baseFare
       adultBaseFare: avgBaseFare(adults),
       childBaseFare: avgBaseFare(children),
       infantLapBaseFare: avgBaseFare(infants),

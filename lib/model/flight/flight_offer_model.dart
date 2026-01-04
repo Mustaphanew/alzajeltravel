@@ -184,6 +184,14 @@ class FlightOfferModel {
 
     final validatingCode = _s(json['validatingAirlineCode']);
 
+    int countStops(List<FlightLegModel> legs) {
+      int count = 0;
+      for (final leg in legs) {
+        count += leg.stops;
+      }
+      return count;
+    }
+
     return FlightOfferModel(
       id: _s(json['id']),
       airlineCode: validatingCode, 
@@ -199,7 +207,7 @@ class FlightOfferModel {
       toName: lastSeg.toName, 
       departureDateTime: firstSeg.departureDateTime,
       arrivalDateTime: lastSeg.arrivalDateTime,
-      stops: legs.first.stops,
+      stops: countStops(legs),
       totalDurationText: legs.first.totalDurationText,
       totalAmount: _double(json['itineraryFares']?['totalFare']?['amount']),
       currency: _s(json['itineraryFares']?['totalFare']?['currency']),

@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -112,7 +113,7 @@ class AirlineIncludeDropDown extends StatelessWidget {
                     opacity: isDisabled ? 0.45 : 1,
                     child: ListTile(
                       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      leading: Container(width: 60, height: 60, child: CacheImg(item.image ?? '')),
+                      leading: Container(width: 60, height: 60, child: CacheImg(AppFuns.airlineImgURL(item.code))),
                       dense: false,
                       tileColor: Colors.transparent,
                       title: Text('${item.name[AppVars.lang]}', overflow: TextOverflow.ellipsis, maxLines: 2),
@@ -305,7 +306,7 @@ class AirlineExcludeDropDown extends StatelessWidget {
                     opacity: isDisabled ? 0.45 : 1,
                     child: ListTile(
                       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      leading: Container(width: 60, height: 60, child: CacheImg(item.image ?? '')),
+                      leading: Container(width: 60, height: 60, child: CacheImg(AppFuns.airlineImgURL(item.code))),
                       dense: false,
                       tileColor: Colors.transparent,
                       title: Text('${item.name[AppVars.lang]}', overflow: TextOverflow.ellipsis),

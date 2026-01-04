@@ -1,12 +1,19 @@
+import 'package:alzajeltravel/controller/airline_controller.dart';
 import 'package:alzajeltravel/controller/bookings_report/bookings_report_controller.dart';
+import 'package:alzajeltravel/controller/bookings_report/trip_detail/booking_detail.dart';
+import 'package:alzajeltravel/controller/bookings_report/trip_detail/flight_detail.dart';
+import 'package:alzajeltravel/controller/bookings_report/trip_detail/travelers_detail.dart';
+import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/model/bookings_report/bookings_report_model.dart';
+import 'package:alzajeltravel/model/contact_model.dart';
+import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
+import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -20,6 +27,9 @@ class BookingsReportPage extends StatefulWidget {
 }
 
 class _BookingsReportPageState extends State<BookingsReportPage> with SingleTickerProviderStateMixin {
+  FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
+  AirlineController airlineController = Get.put(AirlineController());
+  
   late final TabController _tabController;
   late final BookingsReportController c;
 
@@ -277,300 +287,336 @@ class _ReportCard extends StatelessWidget {
       onTap: () {
 
       },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // booking & amount
-              Row(
-                children: [
-                  Text(
-                    item.bookingId,
-                    style: TextStyle(
-                      fontSize: AppConsts.lg,
-                      fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        onTap: () async {
+          print("trip details: ${item.tripApi}");
+          try {
+            final insertId = item.tripApi.split("/").last;
+            final response = await AppVars.api.get(AppApis.tripDetail + insertId);
+            final pnr = response['flight']['UniqueID'];
+            print("pnr: $pnr");
+            print("response: ${response}");
+            final booking = BookingDetail.bookingDetail(response['booking']);
+            print("booking createdOn: ${booking.createdOn}");
+            final flight = FlightDetail.flightDetail(response['flight']);
+            print("flight: ${flight.offer.airlineCode}");
+            final travelers = TravelersDetail.travelersDetail(response['flight'], response['passengers']);
+            print("travelers: ${travelers.length}");
+            final contact = ContactModel.fromApiJson({
+              'title': "MR",
+              'first_name': booking.customerId.split("@").first, 
+              'last_name': "_",
+              'email': booking.customerId,
+              'phone': booking.mobileNo,
+              'country_code': booking.countryCode,
+              'nationality': "ye",
+            });
+            Get.to(() => IssuingPage(
+              offerDetail: flight, 
+              travelers: travelers, 
+              contact: contact, 
+              pnr: pnr, 
+              booking: booking,
+            ));
+          } catch (e) {
+            print("error: $e");
+          }
+        },
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // booking & amount
+                Row(
+                  children: [
+                    Text(
+                      item.bookingId,
+                      style: TextStyle(
+                        fontSize: AppConsts.lg,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Spacer(),
-                  Text(
-                    AppFuns.priceWithCoin(item.totalAmount, item.currency),
-                    style: TextStyle(
-                      color: cs.error,
-                      fontSize: AppConsts.xlg,
-                      fontWeight: FontWeight.bold,
+                    Spacer(),
+                    Text(
+                      AppFuns.priceWithCoin(item.totalAmount, item.currency),
+                      style: TextStyle(
+                        color: cs.error,
+                        fontSize: AppConsts.xlg,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              // pnr
-              ...[
-                Text("PNR"),
-                Text(
-                  item.pnr, 
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  ],
                 ),
-              ],
-      
-              const SizedBox(height: 12),
-              // route
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.origin.name[AppVars.lang],
-                        style: TextStyle(
-                          color: cs.primaryContainer,
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppConsts.lg,
-                        ),
-                      ),
-                      Text(
-                        item.origin.code,
-                        style: TextStyle( 
-                          fontSize: AppConsts.lg,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          DividerLine(),
-                          if(item.journeyType == JourneyType.oneWay)
-                            Icon(
-                              Icons.arrow_forward,
-                              color: cs.primaryContainer,
-                            ),
-                          if(item.journeyType == JourneyType.roundTrip)
-                            Container(
-                              color: cs.surfaceContainerHighest,
-                              padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                Icons.swap_horiz,
-                                color: cs.primaryContainer,
-                                size: 28,
-                              ),
-                            ),
-                        ],
-                      ),
+                const SizedBox(height: 6),
+                // pnr
+                ...[
+                  Text("PNR"),
+                  Text(
+                    item.pnr, 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        item.destination.name[AppVars.lang],
-                        style: TextStyle(
-                          color: cs.primaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        item.destination.code,
-                      ),
-                    ],
-                  ),
                 ],
-              ),
-            
-              const SizedBox(height: 8),
-              const Divider(),
-              const SizedBox(height: 8),
-      
-              // travel date (departure & return)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Departure Date".tr),
-                      Text( 
-                        travel,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+        
+                const SizedBox(height: 12),
+                // route
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.origin.name[AppVars.lang],
+                          style: TextStyle(
+                            color: cs.primaryContainer,
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppConsts.lg,
+                          ),
+                        ),
+                        Text(
+                          item.origin.code,
+                          style: TextStyle( 
+                            fontSize: AppConsts.lg,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            DividerLine(),
+                            if(item.journeyType == JourneyType.oneWay)
+                              Icon(
+                                Icons.arrow_forward,
+                                color: cs.primaryContainer,
+                              ),
+                            if(item.journeyType == JourneyType.roundTrip)
+                              Container(
+                                color: cs.surfaceContainerHighest,
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(
+                                  Icons.swap_horiz,
+                                  color: cs.primaryContainer,
+                                  size: 28,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  if(item.journeyType == JourneyType.roundTrip)
+                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text("Return Date".tr),
                         Text(
+                          item.destination.name[AppVars.lang],
+                          style: TextStyle(
+                            color: cs.primaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          item.destination.code,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              
+                const SizedBox(height: 8),
+                const Divider(),
+                const SizedBox(height: 8),
+        
+                // travel date (departure & return)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Departure Date".tr),
+                        Text( 
                           travel,
-                          style: TextStyle( 
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                ],
-              ),
-      
-              const SizedBox(height: 8),
-      
-              //cancel_on
-              if(item.reportStatus == BookingStatus.canceled || 
-              item.reportStatus == BookingStatus.expiry)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Cancel On".tr),
-                    StatefulBuilder(
-                      builder: (context, internalSetState) {
-                        return GestureDetector(
-                          onTap: () {
-                            internalSetState(() {
-                              showCancelledDetail = !showCancelledDetail;
-                            });
-                          },
-                          child: Text(
-                            showCancelledDetail? cancelledDetail??'_' : cancelled??'_',
+                    if(item.journeyType == JourneyType.roundTrip)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("Return Date".tr),
+                          Text(
+                            travel,
                             style: TextStyle( 
                               fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      );
-                      }
-                    ),
+                        ],
+                      ),
                   ],
                 ),
-              if(
-                item.reportStatus == BookingStatus.voided ||
-                item.reportStatus == BookingStatus.voide)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Void On".tr),
-                    StatefulBuilder(
-                      builder: (context, internalSetState) {
-                        return GestureDetector(
-                          onTap: () {
-                            internalSetState(() {
-                              showVoidedDetail = !showVoidedDetail;
-                            });
-                          },
-                          child: Text(
-                            showVoidedDetail? voidedDetail??'_' : voided??'_',
-                            style: TextStyle( 
-                              fontWeight: FontWeight.bold,
+        
+                const SizedBox(height: 8),
+        
+                //cancel_on
+                if(item.reportStatus == BookingStatus.canceled || 
+                item.reportStatus == BookingStatus.expiry)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Cancel On".tr),
+                      StatefulBuilder(
+                        builder: (context, internalSetState) {
+                          return GestureDetector(
+                            onTap: () {
+                              internalSetState(() {
+                                showCancelledDetail = !showCancelledDetail;
+                              });
+                            },
+                            child: Text(
+                              showCancelledDetail? cancelledDetail??'_' : cancelled??'_',
+                              style: TextStyle( 
+                                fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
                         );
-                      }
-                    ),
-                  ],
-                ),
-      
-      
-              const SizedBox(height: 8),
-
-              // count adult children and infants
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          color: cs.primaryFixed.withOpacity(0.6),
-                          size: 22,
-                        ),
-                        Text(
-                          item.adult.toString(),
-                          style: TextStyle(
-                            // fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Icon(
-                          Icons.child_care_outlined,
-                          color: cs.primaryFixed.withOpacity(0.6),
-                          size: 22,
-                        ),
-                        Text(
-                          item.child.toString(),
-                          style: TextStyle(
-                            // fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Icon(
-                          Icons.child_friendly_outlined, 
-                          color: cs.primaryFixed.withOpacity(0.6),
-                          size: 22,
-                        ),
-                        Text(
-                          item.inf.toString(),
-                          style: TextStyle(
-                            // fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              // created at
-              StatefulBuilder(
-                builder: (context, internalSetState) {
-                  return GestureDetector(
-                    onTap: () {
-                      internalSetState(() {
-                        showCreatedAtDetail = !showCreatedAtDetail;
-                      });
-                    },
-                    child: Row(
-                      children: [
-                        if(showCreatedAtDetail == true)
-                          Text(
-                            createdDetail,
-                            style: TextStyle(
-                              fontSize: AppConsts.sm,
+                        }
+                      ),
+                    ],
+                  ),
+                if(
+                  item.reportStatus == BookingStatus.voided ||
+                  item.reportStatus == BookingStatus.voide)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Void On".tr),
+                      StatefulBuilder(
+                        builder: (context, internalSetState) {
+                          return GestureDetector(
+                            onTap: () {
+                              internalSetState(() {
+                                showVoidedDetail = !showVoidedDetail;
+                              });
+                            },
+                            child: Text(
+                              showVoidedDetail? voidedDetail??'_' : voided??'_',
+                              style: TextStyle( 
+                                fontWeight: FontWeight.bold,
                             ),
                           ),
-                        Spacer(),
-                        if(showCreatedAtDetail == false)
+                          );
+                        }
+                      ),
+                    ],
+                  ),
+        
+        
+                const SizedBox(height: 8),
+        
+                // count adult children and infants
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            color: cs.primaryFixed.withOpacity(0.6),
+                            size: 22,
+                          ),
                           Text(
-                            created,
+                            item.adult.toString(),
                             style: TextStyle(
-                              fontSize: AppConsts.sm,
+                              // fontWeight: FontWeight.bold,
                             ),
                           ),
-                      ],
-                    ),
-                  );
-                }
-              ),
-      
-            ],
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Icon(
+                            Icons.child_care_outlined,
+                            color: cs.primaryFixed.withOpacity(0.6),
+                            size: 22,
+                          ),
+                          Text(
+                            item.child.toString(),
+                            style: TextStyle(
+                              // fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Icon(
+                            Icons.child_friendly_outlined, 
+                            color: cs.primaryFixed.withOpacity(0.6),
+                            size: 22,
+                          ),
+                          Text(
+                            item.inf.toString(),
+                            style: TextStyle(
+                              // fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // created at
+                StatefulBuilder(
+                  builder: (context, internalSetState) {
+                    return GestureDetector(
+                      onTap: () {
+                        internalSetState(() {
+                          showCreatedAtDetail = !showCreatedAtDetail;
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          if(showCreatedAtDetail == true)
+                            Text(
+                              createdDetail,
+                              style: TextStyle(
+                                fontSize: AppConsts.sm,
+                              ),
+                            ),
+                          Spacer(),
+                          if(showCreatedAtDetail == false)
+                            Text(
+                              created,
+                              style: TextStyle(
+                                fontSize: AppConsts.sm,
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  }
+                ),
+        
+              ],
+            ),
           ),
         ),
       ),

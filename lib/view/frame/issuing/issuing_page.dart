@@ -663,7 +663,8 @@ class StatusCard extends StatelessWidget {
         children: [
           Icon(icon, size: 32, color: cs.onPrimary), 
           SizedBox(width: 12),
-          FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
+          // FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
+          FirstTitle(title: bookingStatus.tr, color: cs.onPrimary),
         ],
       ),
     );

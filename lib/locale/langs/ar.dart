@@ -145,8 +145,6 @@ Map<String, String> ar = {
   'Passports': 'جوازات السفر',
   'Passport forms': 'نماذج جواز السفر',
   "Travelers'": 'المسافرون',
-  'Traveler': 'مسافر',
-  'Save': 'حفظ',
   'Save': 'حفظ',
 
   // حالة الجواز / الجنس
@@ -402,6 +400,14 @@ Map<String, String> ar = {
   "No more results": "لا توجد نتائج إضافية",
   "Load more": "تحميل المزيد",
   "Loading more": "تحميل المزيد",
+
+  "Trip route": "مسار الرحلة",
+  "Return": "العودة",
+  "of": "من",
+  "voided": "فويد",
+  "expiry": "حجز ملغي", 
+  "confirmed": "مؤكدة",
+  "Return Date": "تاريخ العودة",
 
 
 };

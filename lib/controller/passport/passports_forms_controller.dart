@@ -54,7 +54,7 @@ class PassportsFormsController extends GetxController {
         Get.put<PassportController>(PassportController(), tag: t.tag);
       }
     }
-    if(flightDetailApiController.revalidatedDetails.value != null){
+    if (flightDetailApiController.revalidatedDetails.value != null) {
       totalFlight = flightDetailApiController.revalidatedDetails.value!.offer.totalAmount;
       currency = flightDetailApiController.revalidatedDetails.value!.offer.currency;
     }
@@ -84,7 +84,7 @@ class PassportsFormsController extends GetxController {
     if (profile != null) {
       contactTitle = ContactTitle.mr;
       contactFirstNameController.text = profile.name;
-      contactLastNameController.text = (profile.name.split(" ").last.isEmpty)? profile.name : profile.name.split(" ").last; 
+      contactLastNameController.text = (profile.name.split(" ").last.isEmpty) ? profile.name : profile.name.split(" ").last;
       contactEmailController.text = profile.email;
       contactCodeController.text = profile.agencyNumber;
       contactPhoneController.text = profile.phone;
@@ -108,11 +108,27 @@ class PassportsFormsController extends GetxController {
     final now = DateTime.now();
     switch (group) {
       case AgeGroup.adult:
-        return DateTime(now.year - 120, 1, 1);
+        {
+          final y = now.year - 120;
+          final lastDay = DateTime(y, now.month + 1, 0).day;
+          return DateTime(y, now.month, now.day > lastDay ? lastDay : now.day);
+        }
+
       case AgeGroup.child:
-        return DateTime(now.year - 11, 1, 1);
+        {
+          // طفل: عمره أقل من 12 => DOB بعد (now - 12 سنة)
+          final y = now.year - 12;
+          final lastDay = DateTime(y, now.month + 1, 0).day;
+          return DateTime(y, now.month, now.day > lastDay ? lastDay : now.day).add(const Duration(days: 1));
+        }
+
       case AgeGroup.infant:
-        return DateTime(now.year - 1, 1, 1);
+        {
+          // رضيع: عمره أقل من 2 => DOB بعد (now - 2 سنة)
+          final y = now.year - 2;
+          final lastDay = DateTime(y, now.month + 1, 0).day;
+          return DateTime(y, now.month, now.day > lastDay ? lastDay : now.day).add(const Duration(days: 1));
+        }
     }
   }
 
@@ -120,10 +136,23 @@ class PassportsFormsController extends GetxController {
     final now = DateTime.now();
     switch (group) {
       case AgeGroup.adult:
-        return DateTime(now.year - 12, 12, 31);
+        {
+          // بالغ: 12+ => أحدث DOB = (now - 12 سنة) (يشمل من أكمل 12 اليوم)
+          final y = now.year - 12;
+          final lastDay = DateTime(y, now.month + 1, 0).day;
+          return DateTime(y, now.month, now.day > lastDay ? lastDay : now.day);
+        }
+
       case AgeGroup.child:
-        return DateTime(now.year - 2, 12, 31);
+        {
+          // طفل: 2..11 => أحدث DOB = (now - 2 سنة) (يشمل من أكمل 2 اليوم)
+          final y = now.year - 2;
+          final lastDay = DateTime(y, now.month + 1, 0).day;
+          return DateTime(y, now.month, now.day > lastDay ? lastDay : now.day);
+        }
+
       case AgeGroup.infant:
+        // رضيع: 0..<2 => أحدث DOB = اليوم
         return DateTime(now.year, now.month, now.day);
     }
   }
@@ -252,18 +281,16 @@ class PassportsFormsController extends GetxController {
       final double baseFare = _parseDouble(passengerJson?['Base_Amount']);
       final double taxTotal = _parseDouble(passengerJson?['Tax_Total']);
 
-      final PassportModel travelerPassport = PassportModel.fromJson(
-        {
-          "documentNumber": passengerJson?['passport_no'],
-          "givenNames": passengerJson?['first_name'],
-          "surnames": passengerJson?['last_name'],
-          "dateOfBirth": passengerJson?['dob'],
-          "sex": passengerJson?['gender'],
-          "nationality": passengerJson?['nationality'],
-          "issueCountry": passengerJson?['issue_country'],
-          "dateOfExpiry": passengerJson?['expiry_date'],
-        }
-      );
+      final PassportModel travelerPassport = PassportModel.fromJson({
+        "documentNumber": passengerJson?['passport_no'],
+        "givenNames": passengerJson?['first_name'],
+        "surnames": passengerJson?['last_name'],
+        "dateOfBirth": passengerJson?['dob'],
+        "sex": passengerJson?['gender'],
+        "nationality": passengerJson?['nationality'],
+        "issueCountry": passengerJson?['issue_country'],
+        "dateOfExpiry": passengerJson?['expiry_date'],
+      });
 
       Seat seat = Seat(name: "A12", fare: 12);
 
@@ -274,16 +301,13 @@ class PassportsFormsController extends GetxController {
           taxTotal: taxTotal,
           // لاحقًا لما تضيف اختيار مقعد فعلي، استبدل بـ المقعد الحقيقي
           seat: null,
+          ageGroup: null,
         ),
       );
     }
 
     // 6) الانتقال إلى صفحة مراجعة المسافرين فقط إذا كان الحجز انشأ بنجاح
-    Get.to(() => TravelersReviewPage(
-      travelers: travelersReviewList, 
-      insertId: insertId, 
-      contact: contactModel
-    ));
+    Get.to(() => TravelersReviewPage(travelers: travelersReviewList, insertId: insertId, contact: contactModel));
 
     // ______________________________________________________
     // 7) إشعار بسيط بعد التجميع (اختياري)
@@ -346,15 +370,15 @@ class PassportsFormsController extends GetxController {
 
   Future<Map<String, dynamic>?> createBookingServer(List<PassportModel> passports, ContactModel contact) async {
     // 1) حضّر بيانات الاتصال (contact) كما طلبت بالضبط
-  //  final Map<String, dynamic> contact = {
-  //     "title": "MR",
-  //     "first_name": "MOHAMMED",
-  //     "last_name": "TEST",
-  //     "email": "test@example.com",
-  //     "phone": "775775000",
-  //     "country_code": "+967",
-  //     "nationality": "YE_Yemen",
-  //   };
+    //  final Map<String, dynamic> contact = {
+    //     "title": "MR",
+    //     "first_name": "MOHAMMED",
+    //     "last_name": "TEST",
+    //     "email": "test@example.com",
+    //     "phone": "775775000",
+    //     "country_code": "+967",
+    //     "nationality": "YE_Yemen",
+    //   };
 
     // 2) حضّر passengers من List<PassportModel> + travelers (لنستخرج type)
     final List<Map<String, dynamic>> passengers = [];
@@ -400,10 +424,7 @@ class PassportsFormsController extends GetxController {
     };
 
     // 4) استدعاء API
-    final response = await AppVars.api.post(
-      AppApis.createBookingFlight, 
-      params: params,
-    );
+    final response = await AppVars.api.post(AppApis.createBookingFlight, params: params);
 
     if (response == null) {
       Get.snackbar('Error'.tr, 'Could not create booking'.tr, snackPosition: SnackPosition.BOTTOM);
@@ -419,7 +440,6 @@ class PassportsFormsController extends GetxController {
     // }
 
     if (response is Map<String, dynamic>) {
-
       final tkt = response['flight']?['TktTimeLimit'];
       final c = flightDetailApiController.revalidatedDetails;
       final current = c.value;
@@ -477,7 +497,7 @@ class PassportsFormsController extends GetxController {
   final TextEditingController contactEmailController = TextEditingController();
   final TextEditingController contactCodeController = TextEditingController();
   final TextEditingController contactPhoneController = TextEditingController();
-  CountryModel? contactDialCountry; 
+  CountryModel? contactDialCountry;
   CountryModel? contactNationalityCountry;
   String? get contactDialCode => (contactDialCountry == null) ? null : '+${contactDialCountry!.dialcode}';
   String? get contactNationality =>

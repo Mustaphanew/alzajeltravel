@@ -1,5 +1,5 @@
 class AppApis {
-  static const String baseUrl = 'https://deve.alzajeltravel.com/api/v1';
+  static const String baseUrl = 'https://www.alzajeltravel.com/api/v1';
   static const String login = '/flight/agent-login';
   static const String searchFlight = '/flight/search';
   static const String otherPricesFlight = '/flight/other-prices';
@@ -10,5 +10,6 @@ class AppApis {
   static const String cancelPnr = '/flight/cancel-pnr';
   static const String voidIssue = '/flight/void'; 
   static const String bookingsReport = '/flight/reports';
+  static const String tripDetail = '/flight/trip/'; 
   
 }

@@ -5,7 +5,6 @@ class AirlineModel {
   final String code; // IATA: TK, QR...
   final Map<String, dynamic> name; // Turkish Airlines
   final String countryCode;
-  final String? image; // logo URL (اختياري)
   final String? note; // الوصف
 
   const AirlineModel({
@@ -14,7 +13,6 @@ class AirlineModel {
     required this.name, 
     required this.countryCode,
     this.note, 
-    this.image,
     });
 
   factory AirlineModel.fromJson(Map<String, dynamic> json) {
@@ -25,7 +23,6 @@ class AirlineModel {
       countryCode: json['country_code'],
       note: json['note'],
       
-      image: AppConsts.imageAirlineUrl + json['image'].toString().toUpperCase() + '.png',
     );
   }
 
@@ -36,7 +33,6 @@ class AirlineModel {
       "name": name, 
       "country_code": countryCode,
       "note": note, 
-      "image": image,
     };
   }
 }

@@ -103,7 +103,7 @@ class MoreFlightDetailPage extends StatelessWidget {
 
           // عنوان المسار
           Text(
-            '${"Trip route:".tr} '
+            '${"Trip route".tr}: '
             '${legIndex == 0 ? "Departure".tr : "Return".tr}',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
@@ -199,10 +199,7 @@ class MoreFlightDetailPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'Flight @index of @total'.trParams({
-                    'index': '${index + 1}',
-                    'total': '${segments.length}',
-                  }),
+                  "Flight".tr + " " + (index + 1).toString() + " " + "of".tr + " " + segments.length.toString(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
