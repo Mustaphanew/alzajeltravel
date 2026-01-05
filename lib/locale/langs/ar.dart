@@ -22,8 +22,8 @@ Map<String, String> ar = {
   "Round Trip": "ذهاب وعودة",
   "One Way": "ذهاب فقط",
   "Multi City": "عدة مدن",
-  "Departing From": "من",
-  "Departing to": "إلى",
+  "Departing From": "من مطار",
+  "Departing to": "إلى مطار",
   "Departure Dates": "تاريخ الرحلة",
   "Departure Date": "تاريخ الذهاب",
   "Travelers and Cabin Class": "عدد المسافرين، نوع المقصورة",
@@ -353,7 +353,7 @@ Map<String, String> ar = {
   "Back": "رجوع",
   "Print": "طباعة",
   "Booking": "بيانات الحجز",
-  "PNR": "رمز الحجز",
+  "PNR": "PNR",
   "Number": "رقم الحجز",
   "N/A": "غير متوفر",
   "Full Name": "الاسم الكامل",
@@ -417,7 +417,7 @@ Map<String, String> ar = {
   "Filter by date": "حسب تاريخ",
   "Period": "الفترة",
 
-  "Created at": "تاريخ الإنشاء",
+  "Created at": "انشئ في",
   "Travel date": "تاريخ الرحلة",
   "Cancel on": "تاريخ الإلغاء",
   "Void on": "تاريخ الفويد",
@@ -437,7 +437,35 @@ Map<String, String> ar = {
   "Type keyword...": "اكتب كلمة البحث...",
 
 
-  "Cancel search": "إلغاء البحث"
+  "Cancel search": "إلغاء البحث",
+  "Search Airport": "البحث عن مطار",
+  'Clear': 'مسح',
+  'No results found': 'لم يتم العثور على نتائج',
+  'Enter Departing From': 'ادخل مطار المغادرة',
+  'Enter Departing to': 'ادخل مطار الوصول',
+  'Please enter some text': 'الرجاء إدخال نص',
+  'Enter Departure Dates': 'ادخل تواريخ الرحلة',
+  'Enter Departure Date': 'ادخل تاريخ الرحلة',
+  'Enter Travelers and Cabin Class': 'ادخل عدد المسافرين ونوع المقصورة',
+  'lncluded Airlines': 'شركات الطيران المضمنة',
+  'Airlines Excluded': 'شركات الطيران المستبعدة',
+  'No data found': 'لم يتم العثور على بيانات',
+  'Select Airlines': 'حدد شركات الطيران',
+
+  'Flight Date': 'تاريخ الرحلة',
+
+  'Booking copied to clipboard': 'تم نسخ الحجز إلى الحافظة',
+  'Copy booking': 'نسخ الحجز',
+
+
+  "days left": "متبقي أيام",
+  "Hours": "ساعات",
+  "Minutes": "دقائق",
+  "Seconds": "ثواني",
+  "Time Deadline": "موعد انتهاء الحجز المبدئي",
+  "Booking created at": "تاريخ إنشاء الحجز",
+
+
 
 
 };

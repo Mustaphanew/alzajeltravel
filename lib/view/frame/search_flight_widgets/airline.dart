@@ -65,9 +65,9 @@ class AirlineIncludeDropDown extends StatelessWidget {
 
           popupProps: PopupPropsMultiSelection.dialog(
             showSearchBox: true,
-            searchFieldProps: const TextFieldProps(
+            searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search ...',
+                hintText: 'Search'.tr + ' ...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -261,9 +261,9 @@ class AirlineExcludeDropDown extends StatelessWidget {
           popupProps: PopupPropsMultiSelection.dialog(
             showSearchBox: true,
             showSelectedItems: true,
-            searchFieldProps: const TextFieldProps(
+            searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search ...',
+                hintText: 'Search'.tr + ' ...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,

@@ -22,6 +22,8 @@ class BookingDataModel {
   final String currency;
   final String? pnr;
 
+  
+
   const BookingDataModel({
     required this.id,
     required this.companyId,

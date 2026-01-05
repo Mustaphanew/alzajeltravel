@@ -15,10 +15,13 @@ import 'package:alzajeltravel/utils/widgets.dart';
 import 'package:alzajeltravel/view/bookings_report/search_and_filter.dart';
 import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:jiffy/jiffy.dart';
+import 'dart:convert';
 
 class BookingsReportPage extends StatefulWidget {
   const BookingsReportPage({super.key});
@@ -353,10 +356,28 @@ class _ReportCardState extends State<_ReportCard> {
                     item.bookingId,
                     style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                   ),
+                  
+                  InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
+                      Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
+                    },
+                    child: Tooltip(
+                      message: "Copy booking".tr,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        child: Icon(Icons.copy_outlined, size: 18),
+                      ),
+                    ),
+                  ),
                   const Spacer(),
                   Text(
                     AppFuns.priceWithCoin(item.totalAmount, item.currency),
-                    style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: cs.error,
+                      fontSize: AppConsts.xxlg, 
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -421,18 +442,18 @@ class _ReportCardState extends State<_ReportCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Departure Date'.tr),
+                      Text('Flight Date'.tr),
                       Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
-                  if (item.journeyType == JourneyType.roundTrip)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Return Date'.tr),
-                        Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                  // if (item.journeyType == JourneyType.roundTrip)
+                  //   Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.end,
+                  //     children: [
+                  //       Text('Return Date'.tr),
+                  //       Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  //     ],
+                  //   ),
                 ],
               ),
 

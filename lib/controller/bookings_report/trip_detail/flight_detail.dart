@@ -323,6 +323,8 @@ class FlightDetail {
         paxNameCharacterLimit: 0,
         fareRules: _parseFareRules(flight['fare_rules']),
         timeLimit: _tryDt(flight['ticket_deadline']),
+        voidOn: _tryDt(flight['void_time']),
+        cancelOn: _tryDt(flight['cancelled_at']),
       );
     }
 
@@ -389,6 +391,8 @@ class FlightDetail {
       paxNameCharacterLimit: 0,
       fareRules: _parseFareRules(flight['fare_rules']),
       timeLimit: _tryDt(flight['ticket_deadline']),
+      voidOn: _tryDt(flight['void_time']),
+      cancelOn: _tryDt(flight['cancelled_at']),
     );
   }
 }

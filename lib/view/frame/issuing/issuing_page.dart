@@ -1,4 +1,5 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
@@ -50,6 +51,11 @@ class _IssuingPageState extends State<IssuingPage> {
   String bookingStatus = "";
 
   DateTime? timeLimit;
+  bool isExpired = false;
+
+  String createdOn = "";
+  String? voidOn;
+  String? cancelOn;
 
   @override
   void initState() {
@@ -73,6 +79,12 @@ class _IssuingPageState extends State<IssuingPage> {
     }
     bookingStatus = booking.status.name;
     timeLimit = widget.offerDetail.timeLimit;
+    if(timeLimit != null) {
+      isExpired = timeLimit!.isBefore(DateTime.now());
+    }
+    createdOn = _formatDateTime(booking.createdOn)!; 
+    voidOn = _formatDateTime(widget.offerDetail.voidOn);
+    cancelOn = _formatDateTime(widget.offerDetail.cancelOn);
   }
 
   @override
@@ -139,16 +151,34 @@ class _IssuingPageState extends State<IssuingPage> {
                           ),
                           child: Column(
                             children: [
-                              Text(
-                                "Time Left".tr,
-                                style: TextStyle(
-                                  fontSize: AppConsts.lg
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Time Left".tr,
+                                      style: TextStyle(
+                                        fontSize: AppConsts.lg,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Icon(Icons.access_time, color: cs.primary),
+                                  ],
                                 ),
                               ),
-                              SizedBox(height: 8), 
+                              const SizedBox(height: 8), 
+                              Divider(
+                                indent: 12,
+                                endIndent: 12,
+                                thickness: 2,
+                              ),
+
                               TimeRemaining(
                                 timeLimit: timeLimit,
+                                createdAt: widget.booking.createdOn,
                                 expiredText: 'Expired'.tr,
+                                showExpiredAsZeros: false,
                               ),
                             ],
                           ),
@@ -183,6 +213,17 @@ class _IssuingPageState extends State<IssuingPage> {
                                         SecondTitle(title: "PNR"),
                                         Divider(thickness: 1),
                                         SecondTitle(title: "Number".tr),
+                                        Divider(thickness: 1),
+                                        SecondTitle(title: "Created at".tr),
+
+                                        if(voidOn != null) ...[
+                                          Divider(thickness: 1),
+                                          SecondTitle(title: "Void On".tr),
+                                        ],
+                                        if(cancelOn != null && voidOn == null) ...[
+                                          Divider(thickness: 1),
+                                          SecondTitle(title: "Cancel On".tr),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -199,6 +240,16 @@ class _IssuingPageState extends State<IssuingPage> {
                                       SecondTitle(title: (widget.pnr.isNotEmpty ? widget.pnr : "N/A")),
                                       const Divider(thickness: 1),
                                       SecondTitle(title: booking.bookingId),
+                                      const Divider(thickness: 1),
+                                      SecondTitle(title: createdOn),
+                                      if(voidOn != null) ...[
+                                        const Divider(thickness: 1),
+                                        SecondTitle(title: voidOn!),
+                                      ],
+                                      if(cancelOn != null && voidOn == null) ...[
+                                        const Divider(thickness: 1),
+                                        SecondTitle(title: cancelOn!),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -384,7 +435,7 @@ class _IssuingPageState extends State<IssuingPage> {
                       ],
                     ),
                   ), 
-                  if(booking.status == BookingStatus.preBooking)
+                  if(booking.status == BookingStatus.preBooking && !isExpired)
                     IntrinsicWidth(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -696,4 +747,12 @@ class SecondTitle extends StatelessWidget {
       style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
     );
   }
+}
+
+
+
+String? _formatDateTime(DateTime? d) {
+  if(d == null) return null;
+  final s = DateFormat('dd - MMM - yyyy HH:mm:ss', AppVars.lang).format(d);
+  return AppFuns.replaceArabicNumbers(s);
 }

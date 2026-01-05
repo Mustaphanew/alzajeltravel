@@ -24,6 +24,8 @@ class RevalidatedFlightModel {
   final List<FareRule> fareRules;
 
   final DateTime? timeLimit; // ✅ جديد
+  final DateTime? voidOn; // ✅ جديد
+  final DateTime? cancelOn; // ✅ جديد
 
   RevalidatedFlightModel({
     required this.offer,
@@ -34,6 +36,8 @@ class RevalidatedFlightModel {
     required this.paxNameCharacterLimit,
     required this.fareRules,
     this.timeLimit, // ✅ optional
+    this.voidOn, // ✅ optional
+    this.cancelOn, // ✅ optional
   });
 
   RevalidatedFlightModel copyWith({
@@ -45,6 +49,8 @@ class RevalidatedFlightModel {
     int? paxNameCharacterLimit,
     List<FareRule>? fareRules,
     DateTime? timeLimit,
+    DateTime? voidOn,
+    DateTime? cancelOn,
   }) {
     return RevalidatedFlightModel(
       offer: offer ?? this.offer,
@@ -55,6 +61,8 @@ class RevalidatedFlightModel {
       paxNameCharacterLimit: paxNameCharacterLimit ?? this.paxNameCharacterLimit,
       fareRules: fareRules ?? this.fareRules,
       timeLimit: timeLimit ?? this.timeLimit,
+      voidOn: voidOn ?? this.voidOn,
+      cancelOn: cancelOn ?? this.cancelOn,
     );
   }
 
@@ -79,6 +87,8 @@ class RevalidatedFlightModel {
       paxNameCharacterLimit: (revalidateJson['paxNameCharacterLimit'] ?? 0) as int,
       fareRules: rulesJson.map((e) => FareRule.fromJson(e as Map<String, dynamic>)).toList(),
       timeLimit: null, // ✅ أول مرة فاضي
+      voidOn: null, // ✅ أول مرة فاضي
+      cancelOn: null, // ✅ أول مرة فاضي
     );
   }
 }
