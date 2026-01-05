@@ -360,7 +360,7 @@ const RESOURCES = {"flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "assets/assets/fonts/Almaria/Almarai-Bold.ttf": "1c7b8f3e50a7ca693dc27d3f1314167f",
 "assets/assets/fonts/Almaria/Almarai-Light.ttf": "5b0dec05feae02fef51afd517af94d4c",
 "assets/fonts/MaterialIcons-Regular.otf": "9754a5443fb36370ab95e86206424c38",
-"assets/NOTICES": "30cdd8b2cb65d21a397fe7dee919d22b",
+"assets/NOTICES": "6693ba9f84e890f30c804c7a0f8074bb",
 "assets/packages/awesome_dialog/assets/flare/succes.flr": "ebae20460b624d738bb48269fb492edf",
 "assets/packages/awesome_dialog/assets/flare/error.flr": "e3b124665e57682dab45f4ee8a16b3c9",
 "assets/packages/awesome_dialog/assets/flare/succes_without_loop.flr": "3d8b3b3552370677bf3fb55d0d56a152",
@@ -665,9 +665,9 @@ const RESOURCES = {"flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "canvaskit/skwasm.js.symbols": "3a4aadf4e8141f284bd524976b1d6bdc",
 "favicon.png": "90823f84f6800400a987c3d7886d1b9a",
 "sqlite3.wasm": "a4fe605c530a5e5dfd4819303dc75829",
-"flutter_bootstrap.js": "c47717bba9e59e92bd695a38c1c41fdc",
+"flutter_bootstrap.js": "70f0a983c608ea60f01908d278b5b9ca",
 "version.json": "1bbfd7fc654161fa5a0f58627b0a3481",
-"main.dart.js": "0e3a8117b871143719536c4d42b1be50"};
+"main.dart.js": "a43f6c37d847237bbfc4201788e6222d"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
