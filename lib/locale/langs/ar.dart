@@ -239,7 +239,6 @@ Map<String, String> ar = {
   'Select seat': 'اختر المقعد',
   'Total': 'المجموع',
 
-
   // login
   "Login": "تسجيل الدخول",
   "Access to competitive global airfare content through the New Horizons system.":
@@ -305,7 +304,6 @@ Map<String, String> ar = {
   "Flights": "رحلات",
   "Flight details": "تفاصيل الرحلة",
   "Flight Details": "تفاصيل الرحلة",
-  "Travel time": "وقت الرحلة",
   "More Details": "تفاصيل اكثر",
   "Trip total": "إجمالي الرحلة",
   "View price summary": "عرض ملخص الأسعار",
@@ -341,13 +339,12 @@ Map<String, String> ar = {
   "Full name": "الاسم الكامل",
   "Passport number": "رقم الجواز",
 
-  "Pre-Booking": "حجز مبدئي", 
-  "preBooking": "حجز مبدئي", 
-  "pre-booking": "حجز مبدئي", 
+  "Pre-Booking": "حجز مبدئي",
+  "preBooking": "حجز مبدئي",
+  "pre-booking": "حجز مبدئي",
 
   "Continue": "مواصلة",
   "Fare rules": "شروط الأسعار",
-
 
   "Issuing": "إصدار التذاكر",
   "Back": "رجوع",
@@ -405,14 +402,13 @@ Map<String, String> ar = {
   "Return": "العودة",
   "of": "من",
   "voided": "فويد",
-  "expiry": "حجز ملغي", 
+  "expiry": "حجز ملغي",
   "confirmed": "مؤكدة",
   "Return Date": "تاريخ العودة",
 
   "More Flight details": "تفاصيل اكثر عن الرحلة",
 
   "Search and Filter": "بحث وتصفية",
-
 
   "Filter by date": "حسب تاريخ",
   "Period": "الفترة",
@@ -431,11 +427,8 @@ Map<String, String> ar = {
   "From": "من",
   "To": "إلى",
 
-
-
   "Global search": "بحث شامل",
   "Type keyword...": "اكتب كلمة البحث...",
-
 
   "Cancel search": "إلغاء البحث",
   "Search Airport": "البحث عن مطار",
@@ -457,7 +450,6 @@ Map<String, String> ar = {
   'Booking copied to clipboard': 'تم نسخ الحجز إلى الحافظة',
   'Copy booking': 'نسخ الحجز',
 
-
   "days left": "متبقي أيام",
   "Hours": "ساعات",
   "Minutes": "دقائق",
@@ -465,7 +457,43 @@ Map<String, String> ar = {
   "Time Deadline": "موعد انتهاء الحجز المبدئي",
   "Booking created at": "تاريخ إنشاء الحجز",
 
+  "Done": "تم",
 
+  "Non-stop": "مباشر",
+  "1 Stop": "توقف واحد",
+  "2 Stops": "توقفان",
 
+  "Airlines": "شركات الطيران",
+  "No airlines found": "لا توجد شركات طيران",
 
+  "Departure time": "وقت الإقلاع",
+  "Arrival time": "وقت الوصول",
+
+  "Early Morning": "صباحًا باكرًا",
+  "Morning": "صباحًا",
+  "Afternoon": "بعد الظهر",
+  "Evening": "مساءً",
+
+  "(12:00am - 4:59am)": "(12:00 ص - 4:59 ص)",
+  "(5:00am - 11:59am)": "(5:00 ص - 11:59 ص)",
+  "(12:00pm - 5:59pm)": "(12:00 م - 5:59 م)",
+  "(6:00pm - 11:59pm)": "(6:00 م - 11:59 م)",
+
+  "Early Morning (12:00 am - 4:59 am)": "صباحًا باكرًا (12:00 ص - 4:59 ص)",
+  "Morning (5:00 am - 11:59 am)": "صباحًا (5:00 ص - 11:59 ص)",
+  "Afternoon (12:00 pm - 5:59 pm)": "بعد الظهر (12:00 م - 5:59 م)",
+  "Evening (6:00 pm - 11:59 pm)": "مساءً (6:00 م - 11:59 م)",
+
+  "Price range": "نطاق السعر",
+  "Travel time": "مدة الرحلة",
+
+  "USD": "دولار",
+
+  "Sort": "الفرز",
+  "Select sort": "اختر طريقة الفرز",
+  "No sorting": "بدون فرز",
+  "Price (Lowest)": "السعر (الأقل)",
+  "Price (Highest)": "السعر (الأكثر)",
+  "Travel time (Lowest)": "مدة الرحلة (الأقل)",
+  "Travel time (Highest)": "مدة الرحلة (الأكثر)",
 };

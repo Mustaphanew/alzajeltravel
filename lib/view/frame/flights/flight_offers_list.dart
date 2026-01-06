@@ -1,9 +1,11 @@
 // lib/view/frame/flights/flight_offers_list.dart
 import 'dart:math' as math;
 
+import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
 import 'package:alzajeltravel/controller/flight/other_prices_controller.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
+import 'package:alzajeltravel/view/frame/flights/filter_offers_page.dart';
 import 'package:alzajeltravel/view/frame/flights/other_prices/other_prices_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -36,11 +38,18 @@ class _FlightOffersListState extends State<FlightOffersList> {
   late final FlightDetailApiController detailCtrl;
   late final OtherPricesController otherPricesCtrl;
 
+  FilterOffersState filterState = const FilterOffersState();
+  late List<FlightOfferModel> allOffers;
+  List<FlightOfferModel> offers = [];
+
   @override
   void initState() {
     super.initState();
     detailCtrl = Get.put(FlightDetailApiController(), permanent: false);
     otherPricesCtrl = Get.put(OtherPricesController(), permanent: false);
+
+    allOffers = widget.flightOffers.map((e) => FlightOfferModel.fromJson(e)).toList();
+    offers = allOffers;
   }
 
   @override
@@ -54,39 +63,60 @@ class _FlightOffersListState extends State<FlightOffersList> {
     super.dispose();
   }
 
+  bool isFilter = false;
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flight Offers'.tr),
+        title: Text('Flight Offers'.tr + " (${offers.length})"),
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.settings),
-          //   tooltip: 'Setting',
-          //   onPressed: () {
-          //     Get.to(() => const SettingsPage());
-          //   },
-          // ),
-          // fillter button
           OutlinedButton.icon(
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              backgroundColor: isFilter ? cs.secondary : Colors.transparent,
+            ),
             icon: const Icon(Icons.filter_alt_outlined),
-            label: Text('Filter'.tr, style: TextStyle(fontSize: AppConsts.lg)),
-            onPressed: () {},
+            label: Text('Filter'.tr + (isFilter ? " (${filterState.countFiltersActive})" : ""), style: TextStyle(fontSize: AppConsts.lg)),
+            onPressed: () async {
+             
+              try {
+                final result = await Get.to<FilterOffersResult>(() => FilterOffersPage(offers: allOffers, state: filterState));
+
+                if (result != null) {
+                  setState(() {
+                    isFilter = result.state.isFilter;
+                    filterState = result.state;
+                    offers = result.filteredOffers; // لو ما في فلاتر -> يرجع allOffers تلقائيًا
+                  });
+                  if(result.filteredOffers.isNotEmpty){
+                    await Future.delayed(const Duration(milliseconds: 250));
+                    scrollController.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
+                  }
+                
+                }
+              } catch (e) {
+                Get.snackbar('Error', e.toString());
+              } finally {
+               
+              }
+            },
           ),
+
           const SizedBox(width: 12),
         ],
       ),
-      body: (widget.flightOffers.isNotEmpty)
+      body: (offers.isNotEmpty)
           ? CupertinoScrollbar(
               controller: scrollController,
               child: ListView.separated(
                 controller: scrollController,
-                itemCount: widget.flightOffers.length,
+                itemCount: offers.length,
                 separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (context, index) {
-                  final offerJson = widget.flightOffers[index] as Map<String, dynamic>;
-                  final offer = FlightOfferModel.fromJson(offerJson);
+                  final offer = offers[index];
+                  // final offerModel = FlightOfferModel.fromJson(offer);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -235,18 +265,10 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   Expanded(
                     child: Row(
                       children: [
-                        SizedBox(
-                          height: 32,
-                          width: 32,
-                          child: CacheImg(AppFuns.airlineImgURL(primaryCode), sizeCircleLoading: 14),
-                        ),
+                        SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(primaryCode), sizeCircleLoading: 14)),
                         const SizedBox(width: 4),
                         if (secondaryCode != null) ...[
-                          SizedBox(
-                            height: 32,
-                            width: 32,
-                            child: CacheImg(AppFuns.airlineImgURL(secondaryCode), sizeCircleLoading: 14),
-                          ),
+                          SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(secondaryCode), sizeCircleLoading: 14)),
                           const SizedBox(width: 4),
                         ],
                         Expanded(
@@ -411,10 +433,9 @@ class _LegRowState extends State<_LegRow> {
     }
     if (AirportRepo.searchByCode(widget.leg.toCode) != null) {
       toName = AirportRepo.searchByCode(widget.leg.toCode)!.name[AppVars.lang];
-    } else { 
+    } else {
       toName = widget.leg.toCode;
     }
-
   }
 
   @override
@@ -464,18 +485,10 @@ class _LegRowState extends State<_LegRow> {
               Row(
                 children: [
                   if (legCodes.isNotEmpty)
-                    SizedBox(
-                      height: 32,
-                      width: 32,
-                      child: CacheImg(AppFuns.airlineImgURL(legCodes.first), sizeCircleLoading: 14),
-                    ),
+                    SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(legCodes.first), sizeCircleLoading: 14)),
                   if (legCodes.length > 1) ...[
                     const SizedBox(width: 4),
-                    SizedBox(
-                      height: 32,
-                      width: 32,
-                      child: CacheImg(AppFuns.airlineImgURL(legCodes[1]), sizeCircleLoading: 14),
-                    ),
+                    SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(legCodes[1]), sizeCircleLoading: 14)),
                   ],
                 ],
               ),
@@ -595,13 +608,7 @@ class _LegRowState extends State<_LegRow> {
                   const SizedBox(height: 4),
                   Text(widget.leg.toCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 2),
-                  Text(
-                    toName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: theme.textTheme.bodySmall,
-                  ),
+                  Text(toName, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: theme.textTheme.bodySmall),
                 ],
               ),
             ),

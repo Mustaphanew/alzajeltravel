@@ -512,6 +512,8 @@ class _IssuingPageState extends State<IssuingPage> {
                                     status: BookingStatus.fromJson(res['booking']['status']),  
                                   );
                                   bookingStatus = booking.status.name; 
+                                  cancelOn = _formatDateTime(res['flight']['cancelled_at']);
+                                  voidOn = _formatDateTime(res['flight']['void_time']);
                                   print("booking.status.name: $bookingStatus"); 
                                 } 
                               } catch (e) {
@@ -559,6 +561,8 @@ class _IssuingPageState extends State<IssuingPage> {
                                     status: BookingStatus.fromJson(res['booking']['status']),  
                                   );
                                   bookingStatus = booking.status.name; 
+                                  cancelOn = _formatDateTime(res['flight']['cancelled_at']);
+                                  voidOn = _formatDateTime(res['flight']['void_time']);
                                   print("booking.status.name: $bookingStatus"); 
                                 } 
                               } catch (e) {

@@ -76,7 +76,7 @@ class CacheImg extends StatelessWidget {
   final String url;
   final BoxFit? boxFit;
   final imgWidth;
-  double sizeCircleLoading = 30;
+  double sizeCircleLoading = 25;
 
   CacheImg(this.url, {super.key, this.boxFit = BoxFit.cover, this.sizeCircleLoading = 30, this.imgWidth});
 

@@ -116,6 +116,8 @@ class FlightOfferModel {
     return false;
   }
 
+  int get totalStops => legs.fold(0, (sum, leg) => sum + leg.stops);
+
   factory FlightOfferModel.fromJson(Map<String, dynamic> json) {
     final airlineController = Get.find<AirlineController>();
 
@@ -184,13 +186,15 @@ class FlightOfferModel {
 
     final validatingCode = _s(json['validatingAirlineCode']);
 
-    int countStops(List<FlightLegModel> legs) {
-      int count = 0;
-      for (final leg in legs) {
-        count += leg.stops;
-      }
-      return count;
-    }
+    // int countStops(List<FlightLegModel> legs) {
+    //   int count = 0;
+    //   for (final leg in legs) {
+    //     count += leg.stops;
+    //   }
+    //   return count;
+    // }
+
+    
 
     return FlightOfferModel(
       id: _s(json['id']),
@@ -207,7 +211,7 @@ class FlightOfferModel {
       toName: lastSeg.toName, 
       departureDateTime: firstSeg.departureDateTime,
       arrivalDateTime: lastSeg.arrivalDateTime,
-      stops: countStops(legs),
+      stops: legs.first.stops,
       totalDurationText: legs.first.totalDurationText,
       totalAmount: _double(json['itineraryFares']?['totalFare']?['amount']),
       currency: _s(json['itineraryFares']?['totalFare']?['currency']),
