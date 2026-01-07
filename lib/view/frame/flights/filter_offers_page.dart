@@ -249,12 +249,12 @@ class _AirlineCheckboxRow extends StatelessWidget {
           children: [
             Checkbox(value: value, onChanged: onChanged),
             const SizedBox(width: 6),
-            SizedBox(width: 30, height: 30, child: CacheImg(AppFuns.airlineImgURL(code))),
+            SizedBox(width: 30, height: 30, child: CacheImg(AppFuns.airlineImgURL(code), sizeCircleLoading: 10,)),
             const SizedBox(width: 12),
             if (AirlineRepo.searchByCode(code) != null)
               Expanded(
                 child: Text(
-                  AirlineRepo.searchByCode(code)!.name[AppVars.lang] + ' (${code})',
+                  AirlineRepo.searchByCode(code)!.name[AppVars.lang] + ' ($code)',
                   style: theme.textTheme.titleMedium,
                 ),
               ),

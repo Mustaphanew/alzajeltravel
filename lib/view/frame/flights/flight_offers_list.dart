@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:loader_overlay/loader_overlay.dart';
+
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
 import 'package:alzajeltravel/model/flight/flight_leg_model.dart';
@@ -24,7 +25,7 @@ import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_pag
 import 'package:alzajeltravel/view/frame/flights/flight_detail/more_flight_detail_page.dart';
 
 class FlightOffersList extends StatefulWidget {
-  final List flightOffers;
+  final List<dynamic> flightOffers;
 
   const FlightOffersList({super.key, required this.flightOffers});
 
@@ -33,23 +34,27 @@ class FlightOffersList extends StatefulWidget {
 }
 
 class _FlightOffersListState extends State<FlightOffersList> {
-  ScrollController scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController();
 
   late final FlightDetailApiController detailCtrl;
   late final OtherPricesController otherPricesCtrl;
 
   FilterOffersState filterState = const FilterOffersState();
+
   late List<FlightOfferModel> allOffers;
   List<FlightOfferModel> offers = [];
 
   @override
   void initState() {
     super.initState();
+
     detailCtrl = Get.put(FlightDetailApiController(), permanent: false);
     otherPricesCtrl = Get.put(OtherPricesController(), permanent: false);
 
     allOffers = widget.flightOffers.map((e) => FlightOfferModel.fromJson(e)).toList();
-    offers = allOffers;
+    offers = List<FlightOfferModel>.from(allOffers);
+
+    _rebuildOffersFromState();
   }
 
   @override
@@ -63,96 +68,259 @@ class _FlightOffersListState extends State<FlightOffersList> {
     super.dispose();
   }
 
-  bool isFilter = false;
+  // =========================
+  // Filtering + Sorting (same logic as FilterOffersController)
+  // =========================
+
+  int? _parseDurationToMinutes(String text) {
+    final s = text.trim();
+    if (s.isEmpty) return null;
+
+    final m = RegExp(r'(\d+)\s*h\s*:\s*(\d+)\s*m', caseSensitive: false).firstMatch(s);
+    if (m == null) return null;
+
+    final h = int.tryParse(m.group(1) ?? '');
+    final mm = int.tryParse(m.group(2) ?? '');
+    if (h == null || mm == null) return null;
+
+    return (h * 60) + mm;
+  }
+
+  int? _offerTotalDurationMinutes(FlightOfferModel offer) {
+    int sum = 0;
+    for (final leg in offer.legs) {
+      final m = _parseDurationToMinutes(leg.totalDurationText);
+      if (m == null) return null;
+      sum += m;
+    }
+    return sum;
+  }
+
+  bool _matchStops(FlightOfferModel offer) {
+    if (filterState.stops.isEmpty) return true;
+
+    // OR between legs
+    for (final leg in offer.legs) {
+      final normalized = leg.stops >= 2 ? 2 : leg.stops;
+      if (filterState.stops.contains(normalized)) return true;
+    }
+    return false;
+  }
+
+  bool _matchAirlines(FlightOfferModel offer) {
+    if (filterState.airlineCodes.isEmpty) return true;
+
+    final codesInOffer = offer.segments
+        .map((s) => s.marketingAirlineCode.trim())
+        .where((c) => c.isNotEmpty)
+        .toSet();
+
+    return codesInOffer.intersection(filterState.airlineCodes).isNotEmpty;
+  }
+
+  bool _matchDepartureBuckets(FlightOfferModel offer) {
+    if (filterState.departureBuckets.isEmpty) return true;
+
+    for (final leg in offer.legs) {
+      final b = FilterOffersController.bucketOf(leg.departureDateTime);
+      if (filterState.departureBuckets.contains(b)) return true;
+    }
+    return false;
+  }
+
+  bool _matchArrivalBuckets(FlightOfferModel offer) {
+    if (filterState.arrivalBuckets.isEmpty) return true;
+
+    for (final leg in offer.legs) {
+      final b = FilterOffersController.bucketOf(leg.arrivalDateTime);
+      if (filterState.arrivalBuckets.contains(b)) return true;
+    }
+    return false;
+  }
+
+  bool _matchPrice(FlightOfferModel offer) {
+    final from = filterState.priceFrom;
+    final to = filterState.priceTo;
+    if (from == null && to == null) return true;
+
+    final v = offer.totalAmount;
+    if (from != null && v < from) return false;
+    if (to != null && v > to) return false;
+    return true;
+  }
+
+  bool _matchTravelTime(FlightOfferModel offer) {
+    final from = filterState.travelTimeFrom;
+    final to = filterState.travelTimeTo;
+    if (from == null && to == null) return true;
+
+    // match if ANY leg duration is within range
+    for (final leg in offer.legs) {
+      final m = _parseDurationToMinutes(leg.totalDurationText);
+      if (m == null) continue;
+      if ((from == null || m >= from) && (to == null || m <= to)) return true;
+    }
+    return false;
+  }
+
+  void _applySort(List<FlightOfferModel> list) {
+    final s = filterState.sort; // requires sort in FilterOffersState
+    if (s == null) return;
+
+    int cmpNullableInt(int? a, int? b, {required bool asc}) {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1; // null last
+      if (b == null) return -1;
+      return asc ? a.compareTo(b) : b.compareTo(a);
+    }
+
+    list.sort((a, b) {
+      switch (s) {
+        case SortOffersOption.priceLow:
+          final r = a.totalAmount.compareTo(b.totalAmount);
+          if (r != 0) return r;
+          return cmpNullableInt(_offerTotalDurationMinutes(a), _offerTotalDurationMinutes(b), asc: true);
+
+        case SortOffersOption.priceHigh:
+          final r = b.totalAmount.compareTo(a.totalAmount);
+          if (r != 0) return r;
+          return cmpNullableInt(_offerTotalDurationMinutes(a), _offerTotalDurationMinutes(b), asc: false);
+
+        case SortOffersOption.travelTimeLow:
+          return cmpNullableInt(_offerTotalDurationMinutes(a), _offerTotalDurationMinutes(b), asc: true);
+
+        case SortOffersOption.travelTimeHigh:
+          return cmpNullableInt(_offerTotalDurationMinutes(a), _offerTotalDurationMinutes(b), asc: false);
+      }
+    });
+  }
+
+  Future<void> _rebuildOffersFromState({bool scrollTop = false}) async {
+    final filtered = allOffers.where((offer) {
+      if (!_matchStops(offer)) return false;
+      if (!_matchPrice(offer)) return false;
+      if (!_matchTravelTime(offer)) return false;
+      if (!_matchDepartureBuckets(offer)) return false;
+      if (!_matchArrivalBuckets(offer)) return false;
+      if (!_matchAirlines(offer)) return false;
+      return true;
+    }).toList();
+
+    _applySort(filtered);
+
+    setState(() {
+      offers = filtered;
+    });
+
+    if (scrollTop && filtered.isNotEmpty) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+      scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  // =========================
+  // UI
+  // =========================
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final bool isFilter = filterState.isFilter;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flight Offers'.tr + " (${offers.length})"),
+        title: Text('${'Flight Offers'.tr} (${offers.length})'),
         actions: [
           OutlinedButton.icon(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              backgroundColor: isFilter ? cs.secondary : Colors.transparent,
             ),
             icon: const Icon(Icons.filter_alt_outlined),
-            label: Text('Filter'.tr + (isFilter ? " (${filterState.countFiltersActive})" : ""), style: TextStyle(fontSize: AppConsts.lg)),
+            label: Text(
+              'Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
+              style: TextStyle(fontSize: AppConsts.lg),
+            ),
             onPressed: () async {
-             
               try {
-                final result = await Get.to<FilterOffersResult>(() => FilterOffersPage(offers: allOffers, state: filterState));
+                final result = await Get.to<FilterOffersResult>(
+                  () => FilterOffersPage(offers: allOffers, state: filterState),
+                );
 
                 if (result != null) {
-                  setState(() {
-                    isFilter = result.state.isFilter;
-                    filterState = result.state;
-                    offers = result.filteredOffers; // لو ما في فلاتر -> يرجع allOffers تلقائيًا
-                  });
-                  if(result.filteredOffers.isNotEmpty){
-                    await Future.delayed(const Duration(milliseconds: 250));
-                    scrollController.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
-                  }
-                
+                  filterState = result.state;
+                  await _rebuildOffersFromState(scrollTop: true);
                 }
               } catch (e) {
-                Get.snackbar('Error', e.toString());
-              } finally {
-               
+                Get.snackbar('Error'.tr, e.toString());
               }
             },
           ),
-
           const SizedBox(width: 12),
         ],
       ),
       body: (offers.isNotEmpty)
-          ? CupertinoScrollbar(
-              controller: scrollController,
-              child: ListView.separated(
-                controller: scrollController,
-                itemCount: offers.length,
-                separatorBuilder: (_, __) => const SizedBox.shrink(),
-                itemBuilder: (context, index) {
-                  final offer = offers[index];
-                  // final offerModel = FlightOfferModel.fromJson(offer);
+          ? Column(
+              children: [
+                // ===== Sort dropdown (same value synced with FilterOffersPage) =====
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: DropdownButtonFormField<SortOffersOption?>(
+                    value: filterState.sort,
+                    decoration: InputDecoration(
+                      hintText: 'Select sort'.tr,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      isDense: true,
+                    ),
+                    items: <DropdownMenuItem<SortOffersOption?>>[
+                      DropdownMenuItem<SortOffersOption?>(
+                        value: null,
+                        child: Text('No sorting'.tr),
+                      ),
+                      DropdownMenuItem(
+                        value: SortOffersOption.priceLow,
+                        child: Text(FilterOffersController.sortLabel(SortOffersOption.priceLow).tr),
+                      ),
+                      DropdownMenuItem(
+                        value: SortOffersOption.priceHigh,
+                        child: Text(FilterOffersController.sortLabel(SortOffersOption.priceHigh).tr),
+                      ),
+                      DropdownMenuItem(
+                        value: SortOffersOption.travelTimeLow,
+                        child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeLow).tr),
+                      ),
+                      DropdownMenuItem(
+                        value: SortOffersOption.travelTimeHigh,
+                        child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeHigh).tr),
+                      ),
+                    ],
+                    onChanged: (v) async {
+                      setState(() {
+                        // requires copyWith supports sort + setSortNull
+                        filterState = filterState.copyWith(sort: v, setSortNull: v == null);
+                      });
+                      await _rebuildOffersFromState(scrollTop: true);
+                    },
+                  ),
+                ),
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: FlightOfferCard(
-                      offer: offer,
-                      onBook: () async {
-                        context.loaderOverlay.show();
-                        await detailCtrl.revalidateAndOpen(offer: offer);
-                        if (context.mounted) context.loaderOverlay.hide();
-                      },
-                      onOtherPrices: () async {
-                        context.loaderOverlay.show();
-                        try {
-                          final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                          if (!ok) {
-                            Get.snackbar('Error', '${otherPricesCtrl.errorMessage}');
-                          } else {
-                            Get.to(() => OtherPricesPage());
-                          }
-                        } finally {
-                          if (context.mounted) context.loaderOverlay.hide();
-                        }
-                      },
-                      onDetails: () {
-                        Get.to(
-                          () => FlightDetailPage(
-                            detail: RevalidatedFlightModel(
-                              offer: offer,
-                              isRefundable: offer.isRefundable,
-                              isPassportMandatory: false,
-                              firstNameCharacterLimit: 0,
-                              lastNameCharacterLimit: 0,
-                              paxNameCharacterLimit: 0,
-                              fareRules: const [],
-                            ),
-                            showContinueButton: false,
+                Expanded(
+                  child: CupertinoScrollbar(
+                    controller: scrollController,
+                    child: ListView.separated(
+                      controller: scrollController,
+                      itemCount: offers.length,
+                      separatorBuilder: (_, __) => const SizedBox.shrink(),
+                      itemBuilder: (context, index) {
+                        final offer = offers[index];
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: FlightOfferCard(
+                            offer: offer,
                             onBook: () async {
                               context.loaderOverlay.show();
                               await detailCtrl.revalidateAndOpen(offer: offer);
@@ -163,24 +331,56 @@ class _FlightOffersListState extends State<FlightOffersList> {
                               try {
                                 final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
                                 if (!ok) {
-                                  Get.snackbar('Error', '${otherPricesCtrl.errorMessage}');
+                                  Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
                                 } else {
-                                  // Get.to(() => OtherPricesPage());
+                                  Get.to(() => OtherPricesPage());
                                 }
                               } finally {
                                 if (context.mounted) context.loaderOverlay.hide();
                               }
                             },
+                            onDetails: () {
+                              Get.to(
+                                () => FlightDetailPage(
+                                  detail: RevalidatedFlightModel(
+                                    offer: offer,
+                                    isRefundable: offer.isRefundable,
+                                    isPassportMandatory: false,
+                                    firstNameCharacterLimit: 0,
+                                    lastNameCharacterLimit: 0,
+                                    paxNameCharacterLimit: 0,
+                                    fareRules: const [],
+                                  ),
+                                  showContinueButton: false,
+                                  onBook: () async {
+                                    context.loaderOverlay.show();
+                                    await detailCtrl.revalidateAndOpen(offer: offer);
+                                    if (context.mounted) context.loaderOverlay.hide();
+                                  },
+                                  onOtherPrices: () async {
+                                    context.loaderOverlay.show();
+                                    try {
+                                      final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                      if (!ok) {
+                                        Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                      }
+                                    } finally {
+                                      if (context.mounted) context.loaderOverlay.hide();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                            onMoreDetails: () {
+                              Get.to(() => MoreFlightDetailPage(flightOffer: offer));
+                            },
                           ),
                         );
                       },
-                      onMoreDetails: () {
-                        Get.to(() => MoreFlightDetailPage(flightOffer: offer));
-                      },
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             )
           : Center(child: Text('No offers found'.tr)),
     );
@@ -214,11 +414,8 @@ class FlightOfferCard extends StatefulWidget {
 }
 
 class _FlightOfferCardState extends State<FlightOfferCard> {
-  // final AirlineController airlineController = Get.find();
-
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
     final offer = widget.offer;
 
@@ -231,44 +428,49 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
     final headerCodes = outboundCodes.isNotEmpty ? outboundCodes : <String>[offer.airlineCode];
 
     final primaryCode = headerCodes.first;
-    String primaryName = "";
-    if (AirlineRepo.searchByCode(primaryCode) != null) {
-      final airline = AirlineRepo.searchByCode(primaryCode);
-      primaryName = airline!.name[AppVars.lang] + " ($primaryCode)";
-    }
+
+    final a1 = AirlineRepo.searchByCode(primaryCode);
+    final primaryName = a1 != null ? '${a1.name[AppVars.lang]} ($primaryCode)' : primaryCode;
 
     String? secondaryCode;
     if (headerCodes.length > 1) secondaryCode = headerCodes[1];
-    final String? secondaryName = secondaryCode != null
-        ? AirlineRepo.searchByCode(secondaryCode)!.name[AppVars.lang] + " ($secondaryCode)"
-        : null;
+
+    String? secondaryName;
+    if (secondaryCode != null) {
+      final a2 = AirlineRepo.searchByCode(secondaryCode);
+      if (a2 != null) secondaryName = '${a2.name[AppVars.lang]} ($secondaryCode)';
+    }
 
     final String airlineNamesText = secondaryName == null ? primaryName : '$primaryName, $secondaryName';
-
-    // final String airlineNamesTextWithCode = secondaryName == null ? '$primaryName ($primaryCode)' : '$primaryName ($primaryCode), $secondaryName ($secondaryCode)';
 
     return GestureDetector(
       onTap: widget.onDetails,
       child: Card(
-        // margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ====== الهيدر: شعارات + أسماء الذهاب + السعر ======
+              // ====== header ======
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // شعارات + أسماء الذهاب
                   Expanded(
                     child: Row(
                       children: [
-                        SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(primaryCode), sizeCircleLoading: 14)),
+                        SizedBox(
+                          height: 32,
+                          width: 32,
+                          child: CacheImg(AppFuns.airlineImgURL(primaryCode), sizeCircleLoading: 14),
+                        ),
                         const SizedBox(width: 4),
                         if (secondaryCode != null) ...[
-                          SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(secondaryCode), sizeCircleLoading: 14)),
+                          SizedBox(
+                            height: 32,
+                            width: 32,
+                            child: CacheImg(AppFuns.airlineImgURL(secondaryCode), sizeCircleLoading: 14),
+                          ),
                           const SizedBox(width: 4),
                         ],
                         Expanded(
@@ -283,14 +485,13 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // السعر
                   if (widget.showFare ?? true)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           AppFuns.priceWithCoin(offer.totalAmount, offer.currency),
-                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: cs.error),
+                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -299,32 +500,29 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
 
               const SizedBox(height: 12),
 
-              // ====== مسار الذهاب ======
               _LegRow(
                 leg: outboundLeg,
-                type: "departure".tr,
+                type: 'departure'.tr,
                 dateFormat: dateFormat,
                 timeFormat: timeFormat,
-                showLegAirlinesHeader: false, // شعارات الذهاب موجودة في الهيدر
+                showLegAirlinesHeader: false,
               ),
 
-              // ====== مسار العودة (إن وجد) مع شعارات خاصة به ======
               if (offer.isRoundTrip && offer.inbound != null) ...[
                 const SizedBox(height: 8),
                 const Divider(),
                 const SizedBox(height: 8),
                 _LegRow(
                   leg: offer.inbound!,
-                  type: "return",
+                  type: 'return'.tr,
                   dateFormat: dateFormat,
                   timeFormat: timeFormat,
-                  showLegAirlinesHeader: true, // نعرض شعارات وأسماء العودة هنا
+                  showLegAirlinesHeader: true,
                 ),
               ],
 
               const SizedBox(height: 12),
 
-              // ====== المعلومات أسفل الكرت ======
               Row(
                 children: [
                   if (widget.showSeatLeft)
@@ -332,7 +530,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                       children: [
                         const Icon(Icons.event_seat, size: 18),
                         const SizedBox(width: 4),
-                        Text("${offer.seatsRemaining} ${"Seats left".tr}", style: theme.textTheme.bodySmall),
+                        Text('${offer.seatsRemaining} ${'Seats left'.tr}', style: theme.textTheme.bodySmall),
                       ],
                     ),
                   const SizedBox(width: 12),
@@ -341,7 +539,6 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                       children: [
                         const Icon(Icons.luggage, size: 18),
                         const SizedBox(width: 4),
-
                         Text((offer.baggageInfo ?? '').split(',').first, style: theme.textTheme.bodySmall),
                       ],
                     ),
@@ -352,7 +549,6 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
 
               const SizedBox(height: 12),
 
-              // ====== الأزرار ======
               if (widget.onBook != null || widget.onOtherPrices != null)
                 Row(
                   children: [
@@ -361,19 +557,18 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                         child: ElevatedButton.icon(
                           onPressed: widget.onBook!,
                           icon: const Icon(Icons.flight_takeoff),
-                          label: Text("Book now".tr),
+                          label: Text('Book now'.tr),
                         ),
                       ),
                     if (widget.onBook != null && widget.onOtherPrices != null) ...[const SizedBox(width: 8)],
-                    if (widget.onOtherPrices != null) ...[
+                    if (widget.onOtherPrices != null)
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: widget.onOtherPrices!,
                           icon: const Icon(Icons.attach_money),
-                          label: Text("Other Prices".tr),
+                          label: Text('Other Prices'.tr),
                         ),
                       ),
-                    ],
                   ],
                 ),
             ],
@@ -402,8 +597,6 @@ class _LegRow extends StatefulWidget {
   final DateFormat dateFormat;
   final DateFormat timeFormat;
   final String type;
-
-  /// هل نعرض شعارات وأسماء شركات هذا المسار؟
   final bool showLegAirlinesHeader;
 
   const _LegRow({
@@ -419,23 +612,18 @@ class _LegRow extends StatefulWidget {
 }
 
 class _LegRowState extends State<_LegRow> {
-  String fromName = "";
-  String toName = "";
+  String fromName = '';
+  String toName = '';
 
   @override
   void initState() {
     super.initState();
 
-    if (AirportRepo.searchByCode(widget.leg.fromCode) != null) {
-      fromName = AirportRepo.searchByCode(widget.leg.fromCode)!.name[AppVars.lang];
-    } else {
-      fromName = widget.leg.fromCode;
-    }
-    if (AirportRepo.searchByCode(widget.leg.toCode) != null) {
-      toName = AirportRepo.searchByCode(widget.leg.toCode)!.name[AppVars.lang];
-    } else {
-      toName = widget.leg.toCode;
-    }
+    final from = AirportRepo.searchByCode(widget.leg.fromCode);
+    fromName = from != null ? from.name[AppVars.lang] : widget.leg.fromCode;
+
+    final to = AirportRepo.searchByCode(widget.leg.toCode);
+    toName = to != null ? to.name[AppVars.lang] : widget.leg.toCode;
   }
 
   @override
@@ -452,43 +640,50 @@ class _LegRowState extends State<_LegRow> {
     final justArrTime = arrTimeFull.split(' ')[0];
     final periodArrTime = arrTimeFull.split(' ')[1];
 
-    // نص التوقفات
     String stopsText;
     if (widget.leg.stops == 0) {
-      stopsText = "Direct".tr;
+      stopsText = 'Direct'.tr;
     } else if (widget.leg.stops == 1) {
-      stopsText = "1 " + "Stop".tr;
+      stopsText = '1 ${'Stop'.tr}';
     } else {
-      stopsText = "${widget.leg.stops} ${"Stops".tr}";
+      stopsText = '${widget.leg.stops} ${'Stops'.tr}';
     }
 
-    // شركات هذا المسار (بدون تكرار)
     final legCodes = _uniqueMarketingCodesForLeg(widget.leg);
     final legNames = legCodes
-        .map((c) => (AirlineRepo.searchByCode(c) != null) ? AirlineRepo.searchByCode(c)!.name[AppVars.lang] + " ($c)" : "")
+        .map((c) {
+          final a = AirlineRepo.searchByCode(c);
+          if (a == null) return '';
+          return '${a.name[AppVars.lang]} ($c)';
+        })
         .where((name) => name.isNotEmpty)
         .toList();
     final legNamesText = legNames.join(', ');
 
-    // اتجاه الطائرة ثابت حسب اللغة (نفسه في الذهاب والعودة)
-    final bool isArabic = AppVars.lang == "ar";
+    final bool isArabic = AppVars.lang == 'ar';
     final double planeAngle = isArabic ? -math.pi / 2 : math.pi / 2;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ===== صف شعارات وأسماء شركات هذا المسار (يظهر فقط في العودة) =====
         if (widget.showLegAirlinesHeader) ...[
           Row(
             children: [
-              // الشعارات بحجم 32 مثل الهيدر
               Row(
                 children: [
                   if (legCodes.isNotEmpty)
-                    SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(legCodes.first), sizeCircleLoading: 14)),
+                    SizedBox(
+                      height: 32,
+                      width: 32,
+                      child: CacheImg(AppFuns.airlineImgURL(legCodes.first), sizeCircleLoading: 14),
+                    ),
                   if (legCodes.length > 1) ...[
                     const SizedBox(width: 4),
-                    SizedBox(height: 32, width: 32, child: CacheImg(AppFuns.airlineImgURL(legCodes[1]), sizeCircleLoading: 14)),
+                    SizedBox(
+                      height: 32,
+                      width: 32,
+                      child: CacheImg(AppFuns.airlineImgURL(legCodes[1]), sizeCircleLoading: 14),
+                    ),
                   ],
                 ],
               ),
@@ -506,12 +701,10 @@ class _LegRowState extends State<_LegRow> {
           const SizedBox(height: 6),
         ],
 
-        // ===== الصف الرئيسي (من / مدة / إلى) =====
-        // return Directionality inverted
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // المغادرة
+            // Departure
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,7 +712,7 @@ class _LegRowState extends State<_LegRow> {
                   Text(depDate, style: theme.textTheme.bodySmall),
                   Row(
                     children: [
-                      if (AppVars.lang == "en") ...[
+                      if (AppVars.lang == 'en') ...[
                         Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 2),
                         Padding(
@@ -550,11 +743,13 @@ class _LegRowState extends State<_LegRow> {
               ),
             ),
 
-            // المنتصف (مدة الرحلة + الخط + الطائرة فوقه)
+            // Middle
             Column(
               children: [
-                Text(widget.leg.totalDurationText, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
-                // const SizedBox(height: 4),
+                Text(
+                  widget.leg.totalDurationText,
+                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 SizedBox(
                   width: 140,
                   child: Stack(
@@ -566,14 +761,13 @@ class _LegRowState extends State<_LegRow> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 4),
                 Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 26),
               ],
             ),
 
-            // الوصول
+            // Arrival
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -582,7 +776,7 @@ class _LegRowState extends State<_LegRow> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (AppVars.lang == "en") ...[
+                      if (AppVars.lang == 'en') ...[
                         Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 2),
                         Padding(
@@ -608,7 +802,13 @@ class _LegRowState extends State<_LegRow> {
                   const SizedBox(height: 4),
                   Text(widget.leg.toCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 2),
-                  Text(toName, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: theme.textTheme.bodySmall),
+                  Text(
+                    toName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ],
               ),
             ),
