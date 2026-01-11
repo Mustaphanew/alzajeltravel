@@ -133,49 +133,32 @@
 
     <!-- Capture PWA install prompt event -->
     <script>
-      let deferredPrompt = null;
+      let deferredPrompt;
 
       window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault(); // مهم
         deferredPrompt = e;
-
-        // مهم للباكدج: يخبر Flutter أن الـ prompt صار متاح
-        hasPrompt();
-
-        console.log("PWA install prompt captured");
       });
 
       function promptInstall() {
-        if (!deferredPrompt) return;
         deferredPrompt.prompt();
-
-        deferredPrompt.userChoice.then((choiceResult) => {
-          console.log("User choice:", choiceResult.outcome);
-          deferredPrompt = null;
-        });
       }
 
+      // Listen for app install event
       window.addEventListener("appinstalled", () => {
         deferredPrompt = null;
-
-        // مهم للباكدج: callback إلى Flutter
         appInstalled();
-
-        console.log("PWA installed");
       });
 
-      // مهم للباكدج (كما في التوثيق)
+      // Track how PWA was launched (either from browser or as PWA)
       function getLaunchMode() {
         const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-
         if (deferredPrompt) hasPrompt();
-
         if (document.referrer.startsWith("android-app://")) {
           appLaunchedAsTWA();
-        } else if (window.navigator.standalone || isStandalone) {
+        } else if (navigator.standalone || isStandalone) {
           appLaunchedAsPWA();
         } else {
-          appLaunchedInBrowser();
+          window.appLaunchedInBrowser();
         }
       }
     </script>
