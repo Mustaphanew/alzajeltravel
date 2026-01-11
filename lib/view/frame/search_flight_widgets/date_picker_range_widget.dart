@@ -99,6 +99,7 @@ class _DatePickerRangeWidgetState extends State<DatePickerRangeWidget>
                 headerHeight: 50,
                 view: DateRangePickerView.month,
                 minDate: DateTime.now(),
+                maxDate: DateTime.now().add(const Duration(days: 360)),
                 selectionMode: DateRangePickerSelectionMode.single,
                 onSelectionChanged:
                     (DateRangePickerSelectionChangedArgs value) async {

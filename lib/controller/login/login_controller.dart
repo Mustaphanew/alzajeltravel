@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
@@ -77,7 +78,7 @@ class LoginController extends GetxController {
 
   Future<void> login(BuildContext context, {required bool validateForm}) async {
     // إغلاق الكيبورد
-    FocusManager.instance.primaryFocus?.unfocus();
+    AppFuns.hideKeyboard();
 
     if (!validateForm) return;
 

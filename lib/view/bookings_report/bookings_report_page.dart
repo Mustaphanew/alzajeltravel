@@ -77,6 +77,8 @@ class _BookingsReportPageState extends State<BookingsReportPage> with SingleTick
     //   _switchToStatus(tabs[_tabController.index].status);
     // });
     _filterTileController.addListener(() {
+      // hide keyboard when filter tile is collapsed
+      AppFuns.hideKeyboard();
       if (_filterTileController.isExpanded == false) {
         setState(() {});
       }
@@ -294,6 +296,8 @@ class _ReportCardState extends State<_ReportCard> {
   bool showCreatedAtDetail = false;
   bool showCancelledDetail = false;
   bool showVoidedDetail = false;
+  bool showTimeDeadlineDetail = false;
+  bool showIssueOnDetail = false;
 
   BookingReportItem get item => widget.item;
 
@@ -311,6 +315,12 @@ class _ReportCardState extends State<_ReportCard> {
     final voidedDetail = item.voidOn != null ? _formatDateTimeDetail(item.voidOn!) : null;
 
     final travel = _formatDate(item.travelDate);
+
+    final timeDeadline = item.timeDeadline != null ? _formatDate(item.timeDeadline!) : null;
+    final timeDeadlineDetail = item.timeDeadline != null ? _formatDateTimeDetail(item.timeDeadline!) : null;
+
+    final issueOn = item.issueOn != null ? _formatDate(item.issueOn!) : null;
+    final issueOnDetail = item.issueOn != null ? _formatDateTimeDetail(item.issueOn!) : null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -445,15 +455,29 @@ class _ReportCardState extends State<_ReportCard> {
                       Text('Flight Date'.tr),
                       Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
-                  ),
-                  // if (item.journeyType == JourneyType.roundTrip)
-                  //   Column(
-                  //     crossAxisAlignment: CrossAxisAlignment.end,
-                  //     children: [
-                  //       Text('Return Date'.tr),
-                  //       Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  //     ],
-                  //   ),
+                  ), 
+                  if (item.reportStatus == BookingStatus.preBooking)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Time Deadline'.tr),
+                        GestureDetector(
+                          onTap: () => setState(() => showTimeDeadlineDetail = !showTimeDeadlineDetail),
+                          child: Text(showTimeDeadlineDetail ? (timeDeadlineDetail ?? '_') : (timeDeadline ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  if (item.reportStatus == BookingStatus.confirmed)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Issue On'.tr),
+                        GestureDetector(
+                          onTap: () => setState(() => showIssueOnDetail = !showIssueOnDetail),
+                          child: Text(showIssueOnDetail ? (issueOnDetail ?? '_') : (issueOn ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
                 ],
               ),
 

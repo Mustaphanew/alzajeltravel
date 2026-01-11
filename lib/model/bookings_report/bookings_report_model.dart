@@ -80,16 +80,19 @@ class BookingReportItem {
 
   final String tripApi;
 
-  /// Airport code only (between parentheses)
   final AirportModel origin;
-
-  /// Airport code only (between parentheses)
   final AirportModel destination;
 
   final JourneyType journeyType;
 
+  /// ✅ New (nullable)
+  final DateTime? timeDeadline;
+
   final DateTime? voidOn;
   final DateTime? cancelOn;
+
+  /// ✅ New (nullable)
+  final DateTime? issueOn;
 
   final int adult;
   final int child;
@@ -114,8 +117,10 @@ class BookingReportItem {
     required this.origin,
     required this.destination,
     required this.journeyType,
+    required this.timeDeadline,
     required this.voidOn,
     required this.cancelOn,
+    required this.issueOn,
     required this.adult,
     required this.child,
     required this.inf,
@@ -124,6 +129,9 @@ class BookingReportItem {
   factory BookingReportItem.fromJson(Map<String, dynamic> json) {
     final createdAt = _parseDateTime(json['created_at']);
     final travelDate = _parseDateTime(json['travel_date']);
+
+    final originCode = _extractAirportCode((json['origin'] ?? '').toString());
+    final destinationCode = _extractAirportCode((json['destination'] ?? '').toString());
 
     return BookingReportItem(
       insertId: _asInt(json['insert_id']),
@@ -142,13 +150,19 @@ class BookingReportItem {
 
       tripApi: (json['trip_api'] ?? '').toString(),
 
-      origin: AirportRepo.searchByCode(_extractAirportCode((json['origin'] ?? '').toString())),
-      destination: AirportRepo.searchByCode(_extractAirportCode((json['destination'] ?? '').toString())),
+      origin: AirportRepo.searchByCode(originCode),
+      destination: AirportRepo.searchByCode(destinationCode),
 
       journeyType: _parseJourneyType((json['journey_type'] ?? '').toString()),
 
+      // ✅ New
+      timeDeadline: _parseDateTime(json['time_deadline']),
+
       voidOn: _parseDateTime(json['void_on']),
       cancelOn: _parseDateTime(json['cancel_on']),
+
+      // ✅ New
+      issueOn: _parseDateTime(json['issue_on']),
 
       adult: _asInt(json['adult']),
       child: _asInt(json['child']),
@@ -168,11 +182,22 @@ class BookingReportItem {
         'currency': currency,
         'total_amount': totalAmount,
         'trip_api': tripApi,
-        'origin': origin,
-        'destination': destination,
+
+        // نخزن الأكواد فقط (أسلم من تمرير AirportModel كامل)
+        'origin': origin.code,
+        'destination': destination.code,
+
         'journey_type': journeyType.toJson(),
+
+        // ✅ New
+        'time_deadline': timeDeadline?.toIso8601String(),
+
         'void_on': voidOn?.toIso8601String(),
         'cancel_on': cancelOn?.toIso8601String(),
+
+        // ✅ New
+        'issue_on': issueOn?.toIso8601String(),
+
         'adult': adult,
         'child': child,
         'Inf': inf,
@@ -196,8 +221,8 @@ double _asDouble(dynamic v) {
 }
 
 /// Handles:
-/// - "2025-12-31 17:02:19" (space -> T)
-/// - "2026-01-07"
+/// - "2026-01-08 22:57:28" (space -> T)
+/// - "2026-02-20"
 /// - null
 DateTime? _parseDateTime(dynamic v) {
   if (v == null) return null;
@@ -208,7 +233,8 @@ DateTime? _parseDateTime(dynamic v) {
   return DateTime.tryParse(normalized);
 }
 
-/// Extract between parentheses: "(RUH)" -> "RUH"
+/// Extract between parentheses: "عمان (AMM), الاردن" -> "AMM"
+/// If no parentheses found, returns original trimmed string.
 String _extractAirportCode(String v) {
   final s = v.trim();
   if (s.isEmpty) return s;

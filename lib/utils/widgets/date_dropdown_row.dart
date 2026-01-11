@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+// date_dropdown_row.dart
 
+import 'package:flutter/material.dart';
 import '../app_consts.dart';
 import 'package:get/get.dart';
 
@@ -45,11 +45,8 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
   late DateTime _minDate;
   late DateTime _maxDate;
 
-  // الأيام 01..31 (تتغيّر حسب الشهر/السنة)
-  List<String> days = List.generate(31, (i) => (i + 1).toString().padLeft(2, '0'));
-
-  // الأشهر
-  final List<Map<String, String>> months = const [
+  // الأشهر (الأساس)
+  static const List<Map<String, String>> _monthsAll = [
     {'value': '01', 'name': 'Jan'},
     {'value': '02', 'name': 'Feb'},
     {'value': '03', 'name': 'Mar'},
@@ -64,8 +61,14 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     {'value': '12', 'name': 'Dec'},
   ];
 
+  // الأشهر المتاحة حسب السنة
+  List<Map<String, String>> availableMonths = [];
+
+  // الأيام المتاحة حسب الشهر/السنة + min/max
+  List<String> days = [];
+
   // السنوات
-  late final List<String> years;
+  late List<String> years;
 
   String? selectedDay;
   String? selectedMonth;
@@ -74,11 +77,44 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
   @override
   void initState() {
     super.initState();
+    _rebuildLimitsAndLists(applyInitialDate: true);
+  }
 
+  @override
+  void didUpdateWidget(covariant DateDropdownRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final limitsChanged = widget.minDate != oldWidget.minDate || widget.maxDate != oldWidget.maxDate;
+    final initialChanged = widget.initialDate != oldWidget.initialDate;
+
+    if (limitsChanged || initialChanged) {
+      setState(() {
+        _rebuildLimitsAndLists(applyInitialDate: true);
+      });
+    }
+  }
+
+  // -------------------- Helpers --------------------
+
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  bool _isInRange(DateTime d, DateTime min, DateTime max) {
+    final dd = _dateOnly(d);
+    final mn = _dateOnly(min);
+    final mx = _dateOnly(max);
+    return !dd.isBefore(mn) && !dd.isAfter(mx);
+  }
+
+  int _daysInMonth(int year, int month) {
+    // يوم 0 من الشهر التالي = آخر يوم في هذا الشهر
+    return DateTime(year, month + 1, 0).day;
+  }
+
+  void _rebuildLimitsAndLists({required bool applyInitialDate}) {
     final now = DateTime.now();
 
-    _minDate = widget.minDate ?? DateTime(now.year - 120, 1, 1);
-    _maxDate = widget.maxDate ?? now;
+    _minDate = _dateOnly(widget.minDate ?? DateTime(now.year - 120, 1, 1));
+    _maxDate = _dateOnly(widget.maxDate ?? now);
 
     // لو minDate > maxDate نبدّلهم
     if (_maxDate.isBefore(_minDate)) {
@@ -87,92 +123,132 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       _maxDate = tmp;
     }
 
-    // توليد السنوات من الأعلى (maxYear) إلى الأدنى (minYear)
-    years = List.generate(_maxDate.year - _minDate.year + 1, (index) => (_maxDate.year - index).toString());
+    years = List.generate(
+      _maxDate.year - _minDate.year + 1,
+      (index) => (_maxDate.year - index).toString(),
+    );
 
-    // تطبيق initialDate لو موجودة وفي النطاق
-    final init = widget.initialDate;
-    if (init != null && _isInRange(init, _minDate, _maxDate)) {
-      selectedYear = init.year.toString();
-      selectedMonth = init.month.toString().padLeft(2, '0');
-      _updateDaysForMonthYear(selectedMonth, selectedYear);
-      selectedDay = init.day.toString().padLeft(2, '0');
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant DateDropdownRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialDate != oldWidget.initialDate) {
-      setState(() {
-        final init = widget.initialDate;
-        if (init != null && _isInRange(init, _minDate, _maxDate)) {
-          selectedYear = init.year.toString();
-          selectedMonth = init.month.toString().padLeft(2, '0');
-          _updateDaysForMonthYear(selectedMonth, selectedYear);
-          selectedDay = init.day.toString().padLeft(2, '0');
-        }
-      });
-    }
-  }
-
-  bool _isInRange(DateTime d, DateTime min, DateTime max) {
-    return !d.isBefore(min) && !d.isAfter(max);
-  }
-
-  bool _isLeapYear(int year) {
-    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-  }
-
-  void _updateDaysForMonthYear(String? month, String? year) {
-    if (month == null) {
-      days = List.generate(31, (i) => (i + 1).toString().padLeft(2, '0'));
+    if (applyInitialDate) {
+      selectedYear = null;
+      selectedMonth = null;
       selectedDay = null;
-      return;
-    }
 
-    final m = int.parse(month);
-    final y = year != null ? int.tryParse(year) : null;
-
-    int maxDay;
-    if (m == 1 || m == 3 || m == 5 || m == 7 || m == 8 || m == 10 || m == 12) {
-      maxDay = 31;
-    } else if (m == 4 || m == 6 || m == 9 || m == 11) {
-      maxDay = 30;
-    } else {
-      // February
-      if (y == null || _isLeapYear(y)) {
-        maxDay = 29;
-      } else {
-        maxDay = 28;
+      final init = widget.initialDate;
+      if (init != null && _isInRange(init, _minDate, _maxDate)) {
+        selectedYear = init.year.toString();
+        selectedMonth = init.month.toString().padLeft(2, '0');
+        selectedDay = init.day.toString().padLeft(2, '0');
       }
     }
 
-    days = List.generate(maxDay, (i) => (i + 1).toString().padLeft(2, '0'));
+    _updateAvailableMonthsForYear(selectedYear);
 
-    // لو اليوم الحالي خارج الرينج الجديد نخليه null
+    // لو الشهر المختار صار خارج المتاح (بعد تغيير min/max أو السنة)
+    if (selectedMonth != null && !availableMonths.any((m) => m['value'] == selectedMonth)) {
+      selectedMonth = null;
+      selectedDay = null;
+    }
+
+    _updateAvailableDaysForMonthYear(selectedMonth, selectedYear);
+
+    // لو اليوم المختار صار خارج المتاح
     if (selectedDay != null && !days.contains(selectedDay)) {
       selectedDay = null;
     }
   }
 
-  // ___________ دوال التغيير ___________
+  void _updateAvailableMonthsForYear(String? yearStr) {
+    if (yearStr == null) {
+      // غير مهم لأن dropdown سيكون disabled
+      availableMonths = List<Map<String, String>>.from(_monthsAll);
+      return;
+    }
+
+    final y = int.tryParse(yearStr);
+    if (y == null) {
+      availableMonths = List<Map<String, String>>.from(_monthsAll);
+      return;
+    }
+
+    int startMonth = 1;
+    int endMonth = 12;
+
+    if (y == _minDate.year) startMonth = _minDate.month;
+    if (y == _maxDate.year) endMonth = _maxDate.month;
+
+    availableMonths = _monthsAll.where((m) {
+      final mv = int.parse(m['value']!);
+      return mv >= startMonth && mv <= endMonth;
+    }).toList();
+  }
+
+  void _updateAvailableDaysForMonthYear(String? month, String? year) {
+    if (month == null || year == null) {
+      days = [];
+      selectedDay = null;
+      return;
+    }
+
+    final m = int.tryParse(month);
+    final y = int.tryParse(year);
+
+    if (m == null || y == null) {
+      days = [];
+      selectedDay = null;
+      return;
+    }
+
+    int startDay = 1;
+    int endDay = _daysInMonth(y, m);
+
+    if (y == _minDate.year && m == _minDate.month) {
+      startDay = _minDate.day;
+    }
+    if (y == _maxDate.year && m == _maxDate.month) {
+      endDay = _maxDate.day;
+    }
+
+    if (startDay > endDay) {
+      days = [];
+      selectedDay = null;
+      return;
+    }
+
+    days = List.generate(endDay - startDay + 1, (i) => (startDay + i).toString().padLeft(2, '0'));
+
+    if (selectedDay != null && !days.contains(selectedDay)) {
+      selectedDay = null;
+    }
+  }
+
+  // -------------------- Change Handlers --------------------
 
   void changeYear(String value) {
     setState(() {
       selectedYear = value;
-      // selectedMonth = null;
+
+      // بعد تغيير السنة لازم نعيد فلترة الشهور
+      _updateAvailableMonthsForYear(selectedYear);
+
+      // لو الشهر الحالي صار خارج المتاح نخليه null
+      if (selectedMonth != null && !availableMonths.any((m) => m['value'] == selectedMonth)) {
+        selectedMonth = null;
+      }
+
       selectedDay = null;
-      _updateDaysForMonthYear(selectedMonth, selectedYear);
+      _updateAvailableDaysForMonthYear(selectedMonth, selectedYear);
     });
+
     widget.onDateChanged?.call(selectedDateOrNull);
   }
 
   void changeMonth(String value) {
     setState(() {
       selectedMonth = value;
-      _updateDaysForMonthYear(selectedMonth, selectedYear);
+      selectedDay = null;
+      _updateAvailableDaysForMonthYear(selectedMonth, selectedYear);
     });
+
     widget.onDateChanged?.call(selectedDateOrNull);
   }
 
@@ -180,6 +256,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     setState(() {
       selectedDay = value;
     });
+
     widget.onDateChanged?.call(selectedDateOrNull);
   }
 
@@ -205,7 +282,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       return null;
     }
 
-    return date;
+    return _dateOnly(date);
   }
 
   /// يستخدم داخل الـ validator (مثل TextFormField)
@@ -213,9 +290,8 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     if (widget.validator != null) {
       return widget.validator!(date);
     }
-    // الافتراضي لو ما في validator مخصّص
     if (date == null) {
-      return widget.defaultValidationMessage;
+      return widget.defaultValidationMessage.tr;
     }
     return null;
   }
@@ -229,12 +305,11 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
         '${date.day.toString().padLeft(2, '0')}';
   }
 
-  // _______________________________ UI _______________________________
+  // -------------------- UI --------------------
 
   @override
   Widget build(BuildContext context) {
     return FormField<DateTime?>(
-      // نفس TextFormField: نمرر التاريخ للـ validator
       validator: (_) => _runValidator(selectedDateOrNull),
       builder: (state) {
         final cs = Theme.of(context).colorScheme;
@@ -255,7 +330,6 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                     value: selectedYear,
                     disabled: false,
                     label: 'Year'.tr,
-                    textColor: Colors.black,
                     items: years
                         .map(
                           (y) => DropdownMenuItem<String>(
@@ -280,14 +354,16 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                   child: _buildDropdownContainer(
                     context: context,
                     value: selectedMonth,
-                    disabled: false,
+                    disabled: (selectedYear == null),
                     label: 'Month'.tr,
-                    textColor: Colors.black,
-                    items: months
+                    items: availableMonths
                         .map(
                           (m) => DropdownMenuItem<String>(
                             value: m['value'],
-                            child: Text('${m['value']} - ${m['name']!.tr}', style: TextStyle(color: cs.onSurface)),
+                            child: Text(
+                              '${m['value']} - ${m['name']!.tr}',
+                              style: TextStyle(color: cs.onSurface),
+                            ),
                           ),
                         )
                         .toList(),
@@ -309,7 +385,6 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                     value: selectedDay,
                     disabled: (selectedYear == null || selectedMonth == null),
                     label: 'Day'.tr,
-                    textColor: Colors.black,
                     items: days
                         .map(
                           (d) => DropdownMenuItem<String>(
@@ -329,12 +404,12 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
               ],
             ),
             Text(
-              "You must specify the first year, then the month, then the day".tr, 
-              style: const TextStyle(
+              'You must specify the first year, then the month, then the day'.tr,
+              style: TextStyle(
                 fontSize: AppConsts.sm,
-                color: Colors.grey,
-              )),
-
+                color: cs.onSurface.withOpacity(0.6),
+              ),
+            ),
             if (errorText != null)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
@@ -356,22 +431,21 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     required String label,
     required List<DropdownMenuItem<String>> items,
     required void Function(String?) onChanged,
-    required Color textColor,
     required String? error,
   }) {
     final cs = Theme.of(context).colorScheme;
-    final borderColor = (error != null) ? cs.error : (disabled ? Colors.grey[300]! : Colors.grey);
+
+    final borderColor = (error != null)
+        ? cs.error
+        : (disabled ? cs.outline.withOpacity(0.4) : cs.outline);
 
     return DropdownButtonFormField<String>(
-      // 👈 المهم: استخدم value بدل initialValue
       value: value,
-
-      // initialValue: value,  // احذف هذه السطر
       validator: (_) => null, // الفاليديشن الحقيقي في FormField الخارجي
       decoration: InputDecoration(
-        contentPadding: EdgeInsetsDirectional.only(start: 8),
+        contentPadding: const EdgeInsetsDirectional.only(start: 8),
         labelText: label,
-        labelStyle: TextStyle(fontSize: 14),
+        labelStyle: const TextStyle(fontSize: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(width: 1, color: borderColor),

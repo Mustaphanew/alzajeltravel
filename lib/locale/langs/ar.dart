@@ -413,7 +413,7 @@ Map<String, String> ar = {
   "Filter by date": "حسب تاريخ",
   "Period": "الفترة",
 
-  "Created at": "انشئ في",
+  "Created at": "تاريخ الانشاء",
   "Travel date": "تاريخ الرحلة",
   "Cancel on": "تاريخ الإلغاء",
   "Void on": "تاريخ الفويد",

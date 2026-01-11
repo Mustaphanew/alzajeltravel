@@ -1,4 +1,5 @@
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
+import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ import 'package:alzajeltravel/utils/widgets/country_picker.dart'; // عدّل ا
 
 class PassportsFormsController extends GetxController {
   final FlightDetailApiController flightDetailApiController = Get.find();
+  final SearchFlightController searchFlightController = Get.find();
+  DateTime lastDateInSearch = DateTime.now();
   double totalFlight = 0;
   String currency = '';
   final int adultsCounter;
@@ -41,6 +44,17 @@ class PassportsFormsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    if (searchFlightController.forms.isNotEmpty && searchFlightController.forms[0].returnDatePickerController.selectedDate != null) {
+      lastDateInSearch = searchFlightController.forms[0].returnDatePickerController.selectedDate!;
+    } else if (searchFlightController.forms.isNotEmpty && searchFlightController.forms[0].departureDatePickerController.selectedDate != null) {
+      lastDateInSearch = searchFlightController.forms[0].departureDatePickerController.selectedDate!;
+    }
+
+    print('lastDateInSearch: $lastDateInSearch');
+    print('searchFlightController.forms[0].returnDatePickerController.selectedDate: ${searchFlightController.forms[0].returnDatePickerController.selectedDate}');
+    print('searchFlightController.forms[0].departureDatePickerController.selectedDate: ${searchFlightController.forms[0].departureDatePickerController.selectedDate}');
+    
     travelers = _buildTravelers();
 
     setContactDataFromProfile();
@@ -105,7 +119,7 @@ class PassportsFormsController extends GetxController {
   }
 
   DateTime minDob(AgeGroup group) {
-    final now = DateTime.now();
+    final now = lastDateInSearch;
     switch (group) {
       case AgeGroup.adult:
         {
@@ -133,7 +147,7 @@ class PassportsFormsController extends GetxController {
   }
 
   DateTime maxDob(AgeGroup group) {
-    final now = DateTime.now();
+    final now = lastDateInSearch;
     switch (group) {
       case AgeGroup.adult:
         {

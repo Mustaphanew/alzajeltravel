@@ -288,9 +288,17 @@ class AppFuns {
 
   static String formatBaggageWeight(String baggage) {
     // 20 Kilograms
-    final weight = baggage.trim().split(' ')[0];
-    final unit = baggage.trim().split(' ')[1];
-    return '$weight' + ' ' + unit.tr;
+    try {
+      final weight = baggage.trim().split(' ')[0];
+      final unit = baggage.trim().split(' ')[1];
+      return '$weight ' + unit.tr;
+    } catch (e) {
+      return baggage;
+    }
+  }
+
+  static void hideKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
 }

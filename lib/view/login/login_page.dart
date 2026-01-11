@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:pwa_install/pwa_install.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -141,8 +142,11 @@ class _LoginPageState extends State<LoginPage> {
                           child: SizedBox(
                             height: 58,
                             child: ElevatedButton(
-                              onPressed: c.isLoading ? null : () {
-                                login(context);
+                              onPressed: c.isLoading ? null : () async {
+                                await login(context);
+                                if(PWAInstall().installPromptEnabled) {
+                                  PWAInstall().promptInstall_();
+                                }
                               },
                               child: c.isLoading
                                   ? const SizedBox(

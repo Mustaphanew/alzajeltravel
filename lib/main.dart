@@ -26,6 +26,7 @@ import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/intro.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pwa_install/pwa_install.dart';
 
 Future<void> main() async {
   // 1) أساسيات التمهيد
@@ -54,6 +55,11 @@ Future<void> main() async {
 
   // تهيئة مبكرة (خصوصًا للويب لأن تحميل wasm يأخذ لحظة)
   await AppVars.dbHelper.createDatabase();
+
+  // لازم قبل runApp
+  PWAInstall().setup(installCallback: () {
+    debugPrint('APP INSTALLED!');
+  });
 
   runApp(
     GlobalLoaderOverlay(

@@ -1,8 +1,10 @@
+import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:alzajeltravel/model/passport/passport_model.dart';
 import 'package:alzajeltravel/model/country_model.dart';
+import 'package:jiffy/jiffy.dart';
 
 /// =================================================================
 /// PassportController
@@ -22,6 +24,8 @@ class PassportController extends GetxController {
 
   /// الموديل الذي يحتوي على جميع بيانات جواز السفر
   PassportModel model = PassportModel();
+  final SearchFlightController searchFlightController = Get.find();
+  DateTime lastDateInSearch = DateTime.now();
 
   // -----------------------------------------------------------------
   // TextEditingControllers للحقول النصية التي يحررها المستخدم
@@ -34,6 +38,13 @@ class PassportController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    if (searchFlightController.forms.isNotEmpty && searchFlightController.forms[0].returnDatePickerController.selectedDate != null) {
+      lastDateInSearch = searchFlightController.forms[0].returnDatePickerController.selectedDate!;
+    } else if (searchFlightController.forms.isNotEmpty && searchFlightController.forms[0].departureDatePickerController.selectedDate != null) {
+      lastDateInSearch = searchFlightController.forms[0].departureDatePickerController.selectedDate!;
+    }
+
 
     // 1) تهيئة الـ TextEditingController من قيم الموديل (إن وجدت)
     givenNamesCtr     = TextEditingController(text: model.givenNames ?? '');
@@ -117,17 +128,21 @@ class PassportController extends GetxController {
   // =================================================================
 
   /// دالة مساعدة لفتح DatePicker لتاريخ الانتهاء
-  Future<void> pickExpiryDate(BuildContext context) async { 
-    final now = DateTime.now();
+  Future<void> pickExpiryDate(BuildContext context) async {
+    // lastDateInSearch afer 6 months
+    final minExpiryDate =
+    Jiffy.parseFromDateTime(lastDateInSearch)
+        .add(months: 6)
+        .dateTime;
 
     // لو ما فيه تاريخ سابق، نخلي الافتراضي بعد 5 سنوات
-    DateTime? initial = model.dateOfExpiry ?? DateTime(now.year + 5, now.month, now.day);
+    DateTime? initial = model.dateOfExpiry ?? DateTime(minExpiryDate.year + 5, minExpiryDate.month, minExpiryDate.day);
 
-    final picked = await showDatePicker( 
+    final picked = await showDatePicker(
       context: context,
-      firstDate: DateTime.now(), 
-      lastDate: DateTime(now.year + 50, 12, 31),
-      initialDate: initial.isBefore(now) ? now : initial,
+      firstDate: minExpiryDate,
+      lastDate: DateTime(minExpiryDate.year + 50, 12, 31),
+      initialDate: initial.isBefore(minExpiryDate) ? minExpiryDate : initial,
       helpText: 'Select Date of Expiry'.tr,
     );
 
