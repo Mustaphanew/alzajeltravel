@@ -496,4 +496,5 @@ Map<String, String> ar = {
   "Price (Highest)": "السعر (الأكثر)",
   "Travel time (Lowest)": "مدة الرحلة (الأقل)",
   "Travel time (Highest)": "مدة الرحلة (الأكثر)",
+  "Not currently available": "غير متاح حاليا",
 };

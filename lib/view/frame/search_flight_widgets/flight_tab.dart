@@ -343,7 +343,7 @@ class DepartureWidget extends StatelessWidget {
                   labelText: " ${'Departure Dates'.tr} ",
                 ),
                 validator: (String? value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.isEmpty || value.endsWith("⇄ ")) {
                     return 'Please enter some text'.tr;
                   }
                   return null;

@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/view/profile/change_password.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -48,7 +49,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   Divider(height: 0, thickness: 2),
                   Form(
                     key: c.formKey,
-
                     child: ExpansionTile(
                       initiallyExpanded: true,
                       tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
@@ -68,8 +68,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         //   textInputAction: TextInputAction.next,
                         // ),
                         // const SizedBox(height: 12),
-
                         TextFormField(
+                          readOnly: true,
                           controller: c.nameController,
                           decoration: InputDecoration(labelText: 'Name'.tr, hintText: 'Enter Name'.tr),
                           validator: (v) => c.validateRequired(v, 'Name Required'),
@@ -78,6 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 12),
 
                         TextFormField(
+                          readOnly: true,
                           controller: c.emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(labelText: 'Email'.tr, hintText: 'Enter Email'.tr),
@@ -87,6 +88,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 12),
 
                         TextFormField(
+                          readOnly: true,
                           controller: c.agencyNumberController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(labelText: 'Agency Number'.tr, hintText: 'Enter Agency Number'.tr),
@@ -96,6 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 12),
 
                         TextFormField(
+                          readOnly: true,
                           controller: c.phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(labelText: 'Phone'.tr, hintText: 'Enter Phone'.tr),
@@ -163,6 +166,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
+
+                  ChangePassword(), 
+                  
                 ],
               ),
             ),
@@ -171,15 +177,10 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
 }
 
 class BalanceCard extends StatefulWidget {
-  const BalanceCard({
-    super.key,
-    required this.data,
-    required this.context,
-  });
+  const BalanceCard({super.key, required this.data, required this.context});
 
   final ProfileModel data;
   final BuildContext context;
@@ -201,12 +202,7 @@ class _BalanceCardState extends State<BalanceCard> {
         side: BorderSide(color: cs.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsetsDirectional.only(
-          start: 16,
-          end: 8,
-          top: 8,
-          bottom: 8,
-        ),
+        padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 8, bottom: 8),
         child: Row(
           children: [
             Expanded(
@@ -217,52 +213,39 @@ class _BalanceCardState extends State<BalanceCard> {
                     'Account Balance'.tr,
                     style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.normal),
                   ),
+
                   // const SizedBox(height: 4),
-              
-                  Text('Remaining Balance'.tr, 
-                    style: TextStyle(
-                      color: cs.primaryFixed, 
-                      fontSize: AppConsts.xlg,
-                      fontWeight: FontWeight.bold
-                    ),
+                  Text(
+                    'Remaining Balance'.tr,
+                    style: TextStyle(color: cs.primaryFixed, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   if (showValue)
                     Row(
                       children: [
                         SelectableText(
-                          AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"), 
+                          AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"),
                           textDirection: TextDirection.ltr,
-                          style: TextStyle(
-                            color: cs.secondaryFixed,
-                            fontSize: AppConsts.xlg,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: cs.secondaryFixed, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                   if (!showValue)
                     Text(
                       '******',
-                      style: TextStyle(
-                        color: cs.secondaryFixed, 
-                        fontWeight: FontWeight.bold,
-                        fontSize: AppConsts.xlg, 
-                      ),
+                      style: TextStyle(color: cs.secondaryFixed, fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
                     ),
-              
-              
-              
+
                   // const Divider(height: 16),
-              
+
                   // balanceRow(
-                  //   'Used Balance'.tr, 
-                  //   fmt(data.usedBalance ?? 0), 
+                  //   'Used Balance'.tr,
+                  //   fmt(data.usedBalance ?? 0),
                   //   styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
                   // ),
-              
+
                   // const Divider(height: 16, thickness: 3),
-              
+
                   // balanceRow(
                   //   'Total Balance'.tr,
                   //   fmt(data.totalBalance ?? 0),
@@ -278,10 +261,7 @@ class _BalanceCardState extends State<BalanceCard> {
                   showValue = !showValue;
                 });
               },
-              icon: Icon(
-                showValue ? Icons.visibility : Icons.visibility_off,
-                color: cs.primaryFixed,
-              ),
+              icon: Icon(showValue ? Icons.visibility : Icons.visibility_off, color: cs.primaryFixed),
             ),
           ],
         ),

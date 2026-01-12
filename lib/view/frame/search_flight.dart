@@ -138,9 +138,13 @@ class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderSt
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.roundTrip),
                     ),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                    //   child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.multiCity),
+                    // ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.multiCity),
+                      child: Center(child: Text("Not currently available".tr)),
                     ),
                   ],
                 ),

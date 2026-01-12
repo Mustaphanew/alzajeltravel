@@ -110,18 +110,18 @@ class _MyDrawerState extends State<MyDrawer> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        AppFuns.priceWithCoin(profileModel!.remainingBalance, "\$"),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontFamily: AppConsts.font,
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppConsts.xlg,
-                        ),
-                      ),
+                      // Text(
+                      //   AppFuns.priceWithCoin(profileModel!.remainingBalance, "\$"),
+                      //   textAlign: TextAlign.center,
+                      //   maxLines: 2,
+                      //   overflow: TextOverflow.ellipsis,
+                      //   style: TextStyle(
+                      //     color: Colors.green,
+                      //     fontFamily: AppConsts.font,
+                      //     fontWeight: FontWeight.bold,
+                      //     fontSize: AppConsts.xlg,
+                      //   ),
+                      // ),
 
                     ],
                     // ],
