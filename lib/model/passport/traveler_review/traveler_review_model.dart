@@ -199,6 +199,14 @@ class TravelerFareSummary {
 
   /// ---------------- مجاميع الأسعار لكل فئة (عدد * متوسط) ----------------
 
+  double get adultsTotalBaseFareAllPassengers => (adultBaseFare ?? 0.0) * adultCount;
+  double get childrenTotalBaseFareAllPassengers => (childBaseFare ?? 0.0) * childCount;
+  double get infantsTotalBaseFareAllPassengers => (infantLapBaseFare ?? 0.0) * infantLapCount;
+  
+  double get adultsTotalTaxAllPassengers => (adultTaxTotal ?? 0.0) * adultCount;
+  double get childrenTotalTaxAllPassengers => (childTaxTotal ?? 0.0) * childCount;
+  double get infantsTotalTaxAllPassengers => (infantLapTaxTotal ?? 0.0) * infantLapCount;
+
   double get adultsTotalFareAllPassengers => (adultTotalFare ?? 0.0) * adultCount;
   double get childrenTotalFareAllPassengers => (childTotalFare ?? 0.0) * childCount;
   double get infantsTotalFareAllPassengers => (infantLapTotalFare ?? 0.0) * infantLapCount;
@@ -206,14 +214,6 @@ class TravelerFareSummary {
   double get adultsTotalAllAllPassengers => (adultTotalAll ?? 0.0) * adultCount;
   double get childrenTotalAllAllPassengers => (childTotalAll ?? 0.0) * childCount;
   double get infantsTotalAllAllPassengers => (infantLapTotalAll ?? 0.0) * infantLapCount;
-
-  double get adultsTotalTaxAllPassengers => (adultTaxTotal ?? 0.0) * adultCount;
-  double get childrenTotalTaxAllPassengers => (childTaxTotal ?? 0.0) * childCount;
-  double get infantsTotalTaxAllPassengers => (infantLapTaxTotal ?? 0.0) * infantLapCount;
-
-  double get adultsTotalBaseFareAllPassengers => (adultBaseFare ?? 0.0) * adultCount;
-  double get childrenTotalBaseFareAllPassengers => (childBaseFare ?? 0.0) * childCount;
-  double get infantsTotalBaseFareAllPassengers => (infantLapBaseFare ?? 0.0) * infantLapCount;
 
   /// المصنع الرئيسي: يبني الـ summary من قائمة المسافرين
   /// ✅ يعتمد على ageGroup بدل passport.age

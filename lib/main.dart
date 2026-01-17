@@ -8,6 +8,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -28,9 +29,9 @@ import 'package:pwa_install/pwa_install.dart';
 
 Future<void> main() async {
   // 1) أساسيات التمهيد
-  setupHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
-
+  setupHttpOverrides();
+  
   // 2) تهيئاتك المتزامنة/المسبقة
   await GetStorage.init();
   // await Jiffy.setLocale('ar');
@@ -48,17 +49,15 @@ Future<void> main() async {
 
   // 4) إشعارات: تهيئة القناة + المستمعات + طلب إذن إذا لزم
   await NotificationService.init();
-
   initDio(); // 👈 مهم عشان الكوكيز تشتغل
-
   // تهيئة مبكرة (خصوصًا للويب لأن تحميل wasm يأخذ لحظة)
   await AppVars.dbHelper.createDatabase();
-
-  // لازم قبل runApp
-  PWAInstall().setup(installCallback: () {
-    debugPrint('APP INSTALLED!');
-  });
-
+  // لازم قبل runApp 
+  if (kIsWeb) {
+    PWAInstall().setup(installCallback: () {
+      debugPrint('APP INSTALLED!');
+    });
+  }
   runApp(
     GlobalLoaderOverlay(
       overlayColor: Colors.black.withValues(alpha: 0.3),

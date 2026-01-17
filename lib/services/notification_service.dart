@@ -27,7 +27,7 @@ class NotificationService {
 
           // على الويب عطّل/اتركها null
           playSound: !kIsWeb,
-          soundSource: kIsWeb ? null : 'resource://raw/notify',
+          // soundSource: kIsWeb ? null : 'resource://raw/notify',
           icon: kIsWeb ? null : 'resource://drawable/ic_notify',
         ),
       ],

@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -23,7 +24,7 @@ class ChangePasswordController extends GetxController {
     currentPassword = TextEditingController();
     newPassword = TextEditingController();
     confirmNewPassword = TextEditingController();
-    expandableController.expand();
+    expandableController.collapse();
   }
 
   @override
@@ -87,7 +88,7 @@ class ChangePasswordController extends GetxController {
     }
 
     try {
-      FocusManager.instance.primaryFocus?.unfocus();
+      AppFuns.hideKeyboard();
       loading = true;
       update();
 

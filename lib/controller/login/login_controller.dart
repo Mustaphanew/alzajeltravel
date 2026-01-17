@@ -1,21 +1,27 @@
-import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
-import 'package:alzajeltravel/view/frame.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../services/biometric/biometric_service.dart'; 
+import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 
-class LoginController extends GetxController {
-  final _storage = const FlutterSecureStorage();
-  final _biometric = BiometricService();
+import '../../services/biometric/biometric_service.dart';
 
-  final emailController = TextEditingController(text: AppVars.getStorage.read('profile') != null ? AppVars.getStorage.read('profile')['email'] : '');
+class LoginController extends GetxController {
+  // ✅ Keys (keep them consistent across app)
+  static const String _kAccessToken = 'access_token';
+  static const String _kBiometricEnabled = 'Biometric Enabled';
+
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final BiometricService _biometric = BiometricService();
+
+  final emailController = TextEditingController(
+    text: AppVars.getStorage.read('profile') != null ? AppVars.getStorage.read('profile')['email'] : '',
+  );
   final passwordController = TextEditingController();
   final agencyNumberController = TextEditingController(
     text: AppVars.getStorage.read('profile') != null ? AppVars.getStorage.read('profile')['agencyNumber'] : '',
@@ -28,12 +34,14 @@ class LoginController extends GetxController {
   bool isPasswordHidden = true;
   bool isLoading = false;
 
+  bool biometricEnabled = false;
+
+  bool get showBiometrics => !kIsWeb;
+
   void togglePasswordVisibility() {
     isPasswordHidden = !isPasswordHidden;
     update();
   }
-
-  bool biometricEnabled = false;
 
   @override
   void onInit() {
@@ -42,7 +50,7 @@ class LoginController extends GetxController {
   }
 
   Future<void> checkBiometricEnabled() async {
-    biometricEnabled = await _storage.read(key: 'Biometric Enabled') == 'true';
+    biometricEnabled = (await _storage.read(key: _kBiometricEnabled)) == 'true';
     update();
   }
 
@@ -69,17 +77,19 @@ class LoginController extends GetxController {
     final v = (value ?? '').trim();
     if (v.isEmpty) return 'Agency Number Required'.tr;
 
-    if (!RegExp(r'^\d+$').hasMatch(v)) return 'Agency Number Must Be Digits Only'.tr;
+    if (!RegExp(r'^\d+$').hasMatch(v)) {
+      return 'Agency Number Must Be Digits Only'.tr;
+    }
 
-    if (v.length < 3 || v.length > 10) return 'Agency Number Length Is Invalid'.tr;
+    if (v.length < 3 || v.length > 10) {
+      return 'Agency Number Length Is Invalid'.tr;
+    }
 
     return null;
   }
 
   Future<void> login(BuildContext context, {required bool validateForm}) async {
-    // إغلاق الكيبورد
     AppFuns.hideKeyboard();
-
     if (!validateForm) return;
 
     isLoading = true;
@@ -90,46 +100,83 @@ class LoginController extends GetxController {
       final password = passwordController.text.trim();
       final agencyNumber = agencyNumberController.text.trim();
 
-      // TODO: Connect Dio API here
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      // after success login from API
-      // await AppVars.api.get('/'); // يجيب ci_session غالباً
-      final response = await AppVars.api.post( 
+      final response = await AppVars.api.post(
         AppApis.login,
-        params: {"username": email, "password": password, "company_code": agencyNumber.toString()},
+        params: {"username": email, "password": password, "company_code": agencyNumber},
         asJson: true,
       );
-      print("response login: $response");
-      if (response != null) {
-        if (response is Map<String, dynamic>) {
-          final Map<String, dynamic> agent = response['agent'];
-          if (agent['email'] != null) {
-            await _storage.write(key: 'Auth Token', value: password);
-            await _storage.write(key: 'Biometric Enabled', value: 'true');
-            Get.snackbar('Success'.tr, 'Login Successful'.tr);
-            goToProfile(agent, agencyNumber: agencyNumber);
-          } else {
-            Get.snackbar('Error'.tr, 'agent email is null'.tr);
-          }
-        } else {
-          Get.snackbar('Error'.tr, 'response type is not map'.tr);
+
+      if (response == null) {
+        if (context.mounted) {
+          CustomSnackBar.error(context, 'Response Is Null'.tr);
         }
-      } else {
-        // Get.snackbar('Error'.tr, 'response is null'.tr);
-        if(context.mounted) CustomSnackBar.error(context, 'response is null'.tr);
+        return;
       }
-      // end after success login from API
-    } catch (e) {
-      Get.snackbar('Error'.tr, 'Login Failed'.tr);
+
+      if (response is! Map<String, dynamic>) {
+        if (context.mounted) {
+          CustomSnackBar.error(context, 'Unexpected Response Type'.tr);
+        }
+        return;
+      }
+
+      if (response['status']?.toString() != 'success') {
+        if (context.mounted) {
+          CustomSnackBar.error(context, 'Login Failed'.tr);
+        }
+        return;
+      }
+
+      final accessToken = response['access_token']?.toString();
+      if (accessToken == null || accessToken.isEmpty) {
+        if (context.mounted) {
+          CustomSnackBar.error(context, 'Missing Token'.tr);
+        }
+        return;
+      }
+
+      final agent = (response['agent'] is Map<String, dynamic>) ? (response['agent'] as Map<String, dynamic>) : <String, dynamic>{};
+
+      if ((agent['email']?.toString() ?? '').isEmpty) {
+        if (context.mounted) {
+          CustomSnackBar.error(context, 'Agent Email Is Null'.tr);
+        }
+        return;
+      }
+
+      // ✅ Save token (NOT password)
+      await _storage.write(key: _kAccessToken, value: accessToken);
+
+      // Optional: save for hints / auto fill
+      AppVars.getStorage.write('email', email);
+      AppVars.getStorage.write('agencyNumber', agencyNumber);
+
+      // Optional: enable biometrics after first successful login (you can move this to settings)
+      await _storage.write(key: _kBiometricEnabled, value: 'true');
+      biometricEnabled = true;
+
+      Get.snackbar('Success'.tr, 'Login Successful'.tr);
+
+      goToProfile(agent, agencyNumber: agencyNumber);
+    } catch (_) {
+      if (context.mounted) {
+        CustomSnackBar.error(context, 'Login Failed'.tr);
+      }
     } finally {
       isLoading = false;
       update();
     }
   }
 
-  Future<void> loginWithBiometrics() async {
-    final enabled = await _storage.read(key: 'Biometric Enabled');
+  Future<void> loginWithBiometrics(BuildContext context) async {
+    if (kIsWeb) {
+      if (context.mounted) {
+        CustomSnackBar.error(context, 'Biometrics Not Supported On Web'.tr);
+      }
+      return;
+    }
+
+    final enabled = await _storage.read(key: _kBiometricEnabled);
     if (enabled != 'true') {
       Get.snackbar('Info'.tr, 'Login First Then Enable Biometrics'.tr);
       return;
@@ -143,70 +190,39 @@ class LoginController extends GetxController {
 
     try {
       final ok = await _biometric.authenticate();
-      if (!ok) return; // احتياط (لو رجعت false بدون Exception)
+      if (!ok) return;
 
-      final token = await _storage.read(key: 'Auth Token');
-      if (token == null || token.isEmpty) {
-        Get.snackbar('Error'.tr, 'No Saved Login Found'.tr);
-        return;
-      }
-
-      // هنا تعتبره "Logged in" بالتوكن
-      // TODO: اعمل request تحقق بالتوكن أو انتقل للصفحة الرئيسية مباشرة
-
-      final email = AppVars.getStorage.read('email');
-      final password = token;
-      final agencyNumber = AppVars.getStorage.read('agencyNumber');
-      // after success login from API
-      final response = await AppVars.api.post(
-        AppApis.login,
-        params: {'username': email, 'password': password, 'company_code': agencyNumber},
-      );
-      if (response != null) {
-        if (response is Map<String, dynamic>) {
-          final agent = response['agent'];
-          if (agent['email'] != null) {
-            await _storage.write(key: 'Auth Token', value: password);
-            await _storage.write(key: 'Biometric Enabled', value: 'true');
-            Get.snackbar('Success'.tr, 'Login Successful'.tr);
-            goToProfile(agent, agencyNumber: agencyNumber);
-          } else {
-            Get.snackbar('Error'.tr, 'agent email is null'.tr);
-          }
-        } else {
-          Get.snackbar('Error'.tr, 'response type is not map'.tr);
-        }
-      } else {
-        Get.snackbar('Error'.tr, 'response is null'.tr);
-      }
-      // end after success login from API
+      // ✅ مؤقتًا: بمجرد نجاح البصمة ادخل مباشرة
+      Get.offAllNamed(Routes.frame.path);
     } on LocalAuthException catch (e) {
-      // المستخدم ضغط Cancel -> هذا طبيعي، تجاهله
       if (e.code == LocalAuthExceptionCode.userCanceled) return;
 
-      // لو ما فيه بيانات بيومترية مسجلة على الجهاز
       if (e.code == LocalAuthExceptionCode.noBiometricsEnrolled) {
         Get.snackbar('Info'.tr, 'No Biometrics Enrolled'.tr);
         return;
       }
 
-      // لو الجهاز ما يدعم البيومتريك
       if (e.code == LocalAuthExceptionCode.noBiometricHardware) {
         Get.snackbar('Error'.tr, 'Biometrics Not Available On This Device'.tr);
         return;
       }
 
-      // أي حالة أخرى
       Get.snackbar('Error'.tr, 'Biometric Login Failed'.tr);
     } catch (_) {
       Get.snackbar('Error'.tr, 'Biometric Login Failed'.tr);
     }
   }
 
+  // Future<bool> _validateTokenWithServer() async {
+  //   // ✅ اختر endpoint محمي عندك يرجع 200 إذا التوكن صحيح
+  //   // إذا ما عندك me endpoint، استبدله بأي endpoint protected موجود.
+  //   final res = await AppVars.api.get(AppApis.me);
+  //   return res != null;
+  // }
+
   void goToProfile(Map<String, dynamic> agent, {required String agencyNumber}) {
-    // مثال: هذا هو الـ Map القادم من السيرفر (بدّله بالـ response الحقيقي)
     final Map<String, dynamic> profileMap = {
-      "id": agent['id'], 
+      "id": agent['id'],
       "companyRegistrationNumber": "3343432282",
       "name": agent['agency_name'],
       "email": agent['email'],
@@ -221,8 +237,8 @@ class LoginController extends GetxController {
       "usedBalance": 0,
       "totalBalance": 0,
     };
+
     AppVars.getStorage.write('profile', profileMap);
-    // Get.offAll(() => Frame());
     Get.offAllNamed(Routes.frame.path);
   }
 

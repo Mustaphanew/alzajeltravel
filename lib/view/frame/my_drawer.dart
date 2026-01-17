@@ -181,9 +181,7 @@ class _MyDrawerState extends State<MyDrawer> {
                     ),
                     title: "About Us".tr,
                     onClick: () async {
-                      if (widget.persistentTabController != null) {
-                        widget.persistentTabController!.jumpToTab(1);
-                      }
+                      AppFuns.openUrl(AppConsts.aboutUsUrl);
                       Navigator.of(context).pop();
                     },
                   ),

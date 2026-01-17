@@ -79,12 +79,21 @@ class _IssuingPageState extends State<IssuingPage> {
     }
     bookingStatus = booking.status.name;
     timeLimit = widget.offerDetail.timeLimit;
-    if(timeLimit != null) {
+    if (timeLimit != null) {
       isExpired = timeLimit!.isBefore(DateTime.now());
     }
-    createdOn = _formatDateTime(booking.createdOn)!; 
+    createdOn = _formatDateTime(booking.createdOn)!;
     voidOn = _formatDateTime(widget.offerDetail.voidOn);
     cancelOn = _formatDateTime(widget.offerDetail.cancelOn);
+  }
+
+  bool allowVoid() {
+    final createdOn = booking.createdOn;
+    final now = DateTime.now();
+    final diff = now.difference(createdOn);
+
+    // أقل من 23 ساعة => مسموح
+    return diff.inMinutes < 23 * 60; 
   }
 
   @override
@@ -115,16 +124,16 @@ class _IssuingPageState extends State<IssuingPage> {
               onPressed: () {
                 Get.to(
                   PrintIssuing(
-                    bookingData: {},
+                    pnr: widget.pnr,
+                    bookingData: booking,
                     offerDetail: widget.offerDetail,
-                    travelers: widget.travelers,
+                    travelersReviewController: travelersReviewController,
                     contact: widget.contact,
                     baggagesData: baggagesData,
-                    faringsData: faringsData,
                   ),
                 );
               },
-      
+
               icon: const Icon(Icons.print),
               label: Text("Print".tr),
             ),
@@ -140,7 +149,7 @@ class _IssuingPageState extends State<IssuingPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if(timeLimit != null && booking.status == BookingStatus.preBooking) ...[
+                    if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
                       const SizedBox(height: 12),
                       Card(
                         child: Container(
@@ -158,21 +167,14 @@ class _IssuingPageState extends State<IssuingPage> {
                                   children: [
                                     Text(
                                       "Time Left".tr,
-                                      style: TextStyle(
-                                        fontSize: AppConsts.lg,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                                     ),
                                     Icon(Icons.access_time, color: cs.primary),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 8), 
-                              Divider(
-                                indent: 12,
-                                endIndent: 12,
-                                thickness: 2,
-                              ),
+                              const SizedBox(height: 8),
+                              Divider(indent: 12, endIndent: 12, thickness: 2),
 
                               TimeRemaining(
                                 timeLimit: timeLimit,
@@ -190,7 +192,7 @@ class _IssuingPageState extends State<IssuingPage> {
                     ...[
                       FirstTitle(title: "Booking".tr),
                       const SizedBox(height: 4),
-      
+
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -216,11 +218,8 @@ class _IssuingPageState extends State<IssuingPage> {
                                         Divider(thickness: 1),
                                         SecondTitle(title: "Created at".tr),
 
-                                        if(voidOn != null) ...[
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Void On".tr),
-                                        ],
-                                        if(cancelOn != null && voidOn == null) ...[
+                                        if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
+                                        if (cancelOn != null && voidOn == null) ...[
                                           Divider(thickness: 1),
                                           SecondTitle(title: "Cancel On".tr),
                                         ],
@@ -229,7 +228,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                   ),
                                 ),
                               ),
-      
+
                               // RIGHT (values)
                               Expanded(
                                 child: Container(
@@ -242,11 +241,8 @@ class _IssuingPageState extends State<IssuingPage> {
                                       SecondTitle(title: booking.bookingId),
                                       const Divider(thickness: 1),
                                       SecondTitle(title: createdOn),
-                                      if(voidOn != null) ...[
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: voidOn!),
-                                      ],
-                                      if(cancelOn != null && voidOn == null) ...[
+                                      if (voidOn != null) ...[const Divider(thickness: 1), SecondTitle(title: voidOn!)],
+                                      if (cancelOn != null && voidOn == null) ...[
                                         const Divider(thickness: 1),
                                         SecondTitle(title: cancelOn!),
                                       ],
@@ -261,7 +257,7 @@ class _IssuingPageState extends State<IssuingPage> {
                     ],
                     const SizedBox(height: 16),
                     Divider(),
-      
+
                     ...[
                       FirstTitle(title: "Travelers".tr),
                       Container(
@@ -342,7 +338,7 @@ class _IssuingPageState extends State<IssuingPage> {
                         ),
                       ),
                     ],
-      
+
                     const SizedBox(height: 16),
                     const Divider(),
                     ...[
@@ -388,33 +384,23 @@ class _IssuingPageState extends State<IssuingPage> {
                         ),
                       ),
                     ],
-      
+
                     const SizedBox(height: 30),
                     const SizedBox(height: 30),
                   ],
                 ),
               ),
             ),
-      
+
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               width: double.infinity,
               // height: 80,
               decoration: BoxDecoration(
                 color: cs.surfaceContainer,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
                 // shadow
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 5,
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 5, blurRadius: 10, offset: const Offset(0, 2))],
               ),
               child: Row(
                 children: [
@@ -423,41 +409,38 @@ class _IssuingPageState extends State<IssuingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          "Total".tr,
-                          style: const TextStyle(fontSize: AppConsts.lg),
-                        ),
+                        Text("Total".tr, style: const TextStyle(fontSize: AppConsts.lg)),
                         const SizedBox(height: 8),
                         SelectableText(
-                          AppFuns.priceWithCoin(summary.totalPrice, booking.currency), 
+                          AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
                         ),
                       ],
                     ),
-                  ), 
-                  if(booking.status == BookingStatus.preBooking && !isExpired)
+                  ),
+                  if (booking.status == BookingStatus.preBooking && !isExpired)
                     IntrinsicWidth(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           ElevatedButton(
                             onPressed: () async {
-            
                               final dialog = await CustomDialog.success(
-                                context, 
-                                title: 'Confirm Booking'.tr, 
-                                desc: 'Are you sure you want to confirm this booking?'.tr +
-                                '\n' +
-                                AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
-                                'will be deducted from your balance'.tr, 
-                                btnOkText: 'Confirm'.tr, 
+                                context,
+                                title: 'Confirm Booking'.tr,
+                                desc:
+                                    'Are you sure you want to confirm this booking?'.tr +
+                                    '\n' +
+                                    AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
+                                    'will be deducted from your balance'.tr,
+                                btnOkText: 'Confirm'.tr,
                               );
-            
-                              if(dialog != DismissType.btnOk){
+
+                              if (dialog != DismissType.btnOk) {
                                 return;
                               }
 
-                              if(context.mounted) context.loaderOverlay.show();
+                              if (context.mounted) context.loaderOverlay.show();
                               try {
                                 final res = await travelersReviewController.confirmBooking(booking.id);
                                 if (res != null) {
@@ -467,18 +450,15 @@ class _IssuingPageState extends State<IssuingPage> {
                                     travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
                                   }
                                   print("res['booking']['status'] ${res['booking']['status']}");
-                                  booking = booking.copyWith(
-                                    status: BookingStatus.fromJson(res['booking']['status']),  
-                                  );
-                                  bookingStatus = booking.status.name; 
-                                  print("booking.status.name: $bookingStatus"); 
-                                } 
+                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                  bookingStatus = booking.status.name;
+                                  print("booking.status.name: $bookingStatus");
+                                }
                               } catch (e) {
                                 Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
                               }
                               if (context.mounted) context.loaderOverlay.hide();
                               setState(() {});
-                          
                             },
                             child: Text("Confirm Booking".tr),
                           ),
@@ -491,46 +471,43 @@ class _IssuingPageState extends State<IssuingPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 side: BorderSide(color: cs.error),
                               ),
-                            ), 
+                            ),
                             onPressed: () async {
                               final dialog = await CustomDialog.error(
-                                context, 
-                                title: 'Cancel Pre-Booking'.tr, 
+                                context,
+                                title: 'Cancel Pre-Booking'.tr,
                                 desc: 'Are you sure you want to cancel this pre-booking?'.tr,
                                 btnOkText: 'Cancel'.tr,
                               );
-            
-                              if(dialog != DismissType.btnOk){ 
+
+                              if (dialog != DismissType.btnOk) {
                                 return;
                               }
-            
-                              if(context.mounted) context.loaderOverlay.show();
+
+                              if (context.mounted) context.loaderOverlay.show();
                               try {
                                 final res = await travelersReviewController.cancelPreBooking(booking.id);
                                 if (res != null) {
-                                  booking = booking.copyWith(
-                                    status: BookingStatus.fromJson(res['booking']['status']),  
-                                  );
-                                  bookingStatus = booking.status.name; 
+                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                  bookingStatus = booking.status.name;
                                   cancelOn = _formatDateTime(res['flight']['cancelled_at']);
                                   voidOn = _formatDateTime(res['flight']['void_time']);
-                                  print("booking.status.name: $bookingStatus"); 
-                                } 
+                                  print("booking.status.name: $bookingStatus");
+                                }
                               } catch (e) {
                                 Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
                               }
                               if (context.mounted) context.loaderOverlay.hide();
                               setState(() {});
-            
                             },
                             child: Text("Cancel".tr),
                           ),
                         ],
                       ),
                     ),
-                  if(booking.status == BookingStatus.confirmed)
-                    IntrinsicWidth(
-                      child: Column( 
+                  if (booking.status == BookingStatus.confirmed && allowVoid())
+                    IntrinsicWidth( 
+                      child: Column(
                         children: [
                           // void
                           TextButton(
@@ -540,37 +517,34 @@ class _IssuingPageState extends State<IssuingPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 side: BorderSide(color: cs.error),
                               ),
-                            ), 
+                            ),
                             onPressed: () async {
                               final dialog = await CustomDialog.error(
-                                context, 
-                                title: 'Void Issue'.tr, 
+                                context,
+                                title: 'Void Issue'.tr,
                                 desc: 'Are you sure you want to void this issue?'.tr,
                                 btnOkText: 'Void'.tr,
                               );
-            
-                              if(dialog != DismissType.btnOk){ 
+
+                              if (dialog != DismissType.btnOk) {
                                 return;
                               }
-            
-                              if(context.mounted) context.loaderOverlay.show();
+
+                              if (context.mounted) context.loaderOverlay.show();
                               try {
                                 final res = await travelersReviewController.voidIssue(booking.id);
                                 if (res != null) {
-                                  booking = booking.copyWith(
-                                    status: BookingStatus.fromJson(res['booking']['status']),  
-                                  );
-                                  bookingStatus = booking.status.name; 
+                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                  bookingStatus = booking.status.name;
                                   cancelOn = _formatDateTime(res['flight']['cancelled_at']);
                                   voidOn = _formatDateTime(res['flight']['void_time']);
-                                  print("booking.status.name: $bookingStatus"); 
-                                } 
+                                  print("booking.status.name: $bookingStatus");
+                                }
                               } catch (e) {
                                 Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
                               }
                               if (context.mounted) context.loaderOverlay.hide();
                               setState(() {});
-            
                             },
                             child: Text("Void".tr),
                           ),
@@ -580,7 +554,6 @@ class _IssuingPageState extends State<IssuingPage> {
                 ],
               ),
             ),
-      
           ],
         ),
       ),
@@ -664,14 +637,7 @@ class _IssuingPageState extends State<IssuingPage> {
                   ),
               ],
               rows: [
-                for (final row in data) DataRow(
-                  cells: [
-                    for (final key in columnsKeys) 
-                      DataCell(
-                        Text('${row[key] ?? ''}') 
-                      )
-                  ]
-                ),
+                for (final row in data) DataRow(cells: [for (final key in columnsKeys) DataCell(Text('${row[key] ?? ''}'))]),
               ],
             ),
           ],
@@ -681,7 +647,7 @@ class _IssuingPageState extends State<IssuingPage> {
   }
 }
 
-class StatusCard extends StatelessWidget { 
+class StatusCard extends StatelessWidget {
   const StatusCard({super.key, required this.cs, required this.bookingStatus});
 
   final ColorScheme cs;
@@ -691,21 +657,16 @@ class StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color = cs.secondary;
     IconData icon = Icons.info;
-    if(bookingStatus == BookingStatus.preBooking.name){
+    if (bookingStatus == BookingStatus.preBooking.name) {
       color = cs.secondary;
       icon = Icons.info;
-    }
-    else if (bookingStatus == BookingStatus.confirmed.name) {
+    } else if (bookingStatus == BookingStatus.confirmed.name) {
       color = cs.secondaryFixed;
       icon = Icons.check_circle;
-    }
-    else if (
-      bookingStatus == BookingStatus.canceled.name || 
-      bookingStatus == BookingStatus.expiry.name) {
+    } else if (bookingStatus == BookingStatus.canceled.name || bookingStatus == BookingStatus.expiry.name) {
       color = cs.tertiary;
       icon = Icons.error;
-    } 
-    else if (bookingStatus == BookingStatus.voided.name) {
+    } else if (bookingStatus == BookingStatus.voided.name) {
       color = cs.error;
       icon = Icons.error;
     }
@@ -716,7 +677,7 @@ class StatusCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: cs.onPrimary), 
+          Icon(icon, size: 32, color: cs.onPrimary),
           SizedBox(width: 12),
           // FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
           FirstTitle(title: bookingStatus.tr, color: cs.onPrimary),
@@ -753,10 +714,8 @@ class SecondTitle extends StatelessWidget {
   }
 }
 
-
-
 String? _formatDateTime(DateTime? d) {
-  if(d == null) return null;
+  if (d == null) return null;
   final s = DateFormat('dd - MMM - yyyy HH:mm:ss', AppVars.lang).format(d);
   return AppFuns.replaceArabicNumbers(s);
 }

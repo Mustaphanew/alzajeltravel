@@ -13,6 +13,9 @@ class FlightSegmentModel {
   final String toName;
   final DateTime arrivalDateTime;
 
+  final String? fromTerminal;
+  final String? toTerminal;
+
   final String equipmentNumber;
   final String cabinClassText;
   final String bookingClassCode;
@@ -36,6 +39,8 @@ class FlightSegmentModel {
     required this.toCode,
     required this.toName,
     required this.arrivalDateTime,
+    this.fromTerminal,
+    this.toTerminal,
     required this.equipmentNumber,
     required this.cabinClassText,
     required this.bookingClassCode,
@@ -47,7 +52,7 @@ class FlightSegmentModel {
   });
 
   // ========= helpers داخل الموديل =========
-  static String _s(dynamic v) => v == null ? '' : v.toString();
+  static String _s(dynamic v) => v == null ? '_' : v.toString();
 
   static int? _intOrNull(dynamic v) {
     if (v is int) return v;
@@ -72,6 +77,8 @@ class FlightSegmentModel {
       toCode: _s(seg['arrivalAirportCode']),
       toName: _s(seg['arrivalAirportName']),
       arrivalDateTime: DateTime.parse(_s(seg['arrivalDateTime'])),
+      fromTerminal: _s(seg['departureTerminal']),
+      toTerminal: _s(seg['arrivalTerminal']),
       equipmentNumber: _s(seg['equipmentNumber']),
       cabinClassText: _s(seg['cabinClassText']),
       bookingClassCode: _s(seg['bookingClassCode']),

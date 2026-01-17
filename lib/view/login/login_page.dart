@@ -2,9 +2,11 @@ import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
+import 'package:alzajeltravel/view/tmp/my_mrz/my_mrz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:pwa_install/pwa_install.dart';
 
@@ -135,6 +137,31 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 20),
 
+                    Wrap(
+                      children: [
+                        Icon(Bootstrap.printer),
+
+                      ],
+                    ),
+
+                    if(!kIsWeb)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            String? uuid = await AppVars.secureStorage.read(key: 'uuid');
+                            if(uuid == null) {
+                              uuid = AppVars.uuid.v4();
+                              await AppVars.secureStorage.write(key: 'uuid', value: uuid);
+                            }
+                            print(uuid);
+
+                            Get.to(() => MyMrzPage());
+                          }, 
+                          child: Text('Scan Passport'.tr),
+                        ),
+                      ),
+
                     // Login Button
                     Row(
                       children: [
@@ -170,7 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                                       child: CircularProgressIndicator(strokeWidth: 2, color: cs.primaryContainer,),
                                     ),
                                   );
-                                  await c.loginWithBiometrics();
+                                  await c.loginWithBiometrics(context);
                                   if(context.mounted) context.loaderOverlay.hide();
                                 },
                                 child: Icon(Icons.fingerprint_outlined, size: 32,),
