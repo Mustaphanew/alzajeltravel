@@ -98,7 +98,12 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
                   if (state.status == null) return;
 
                   context.loaderOverlay.show();
-                  await c.search(status: state.status!, initialLimit: 10);
+                  await c.search(
+                    status: state.status!,
+                    dateFrom: state.dateFrom,
+                    dateTo: state.dateTo,
+                    fullDetails: 0,
+                  );
                   if (context.mounted) context.loaderOverlay.hide();
                 },
               ),
@@ -145,7 +150,7 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
     final threshold = 200.0;
     final pos = _scroll.position;
 
-    final canLoadMore = c.searched && !c.loading && !c.loadingMore && (c.items.length >= c.limit);
+    final canLoadMore = c.searched && !c.loading && !c.loadingMore && c.hasMore;
 
     if (canLoadMore && pos.pixels >= pos.maxScrollExtent - threshold) {
       c.loadMore();
@@ -170,19 +175,19 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
         if (controller.error != null && controller.items.isEmpty) {
           return _ErrorView(
             message: controller.error!,
-            onRetry: () => controller.refreshData(initialLimit: 10),
+            onRetry: () => controller.refreshData(),
           );
         }
 
         if (controller.items.isEmpty) {
-          return _EmptyView(onRefresh: () => controller.refreshData(initialLimit: 10));
+          return _EmptyView(onRefresh: () => controller.refreshData());
         }
 
         final showLoadMoreButton =
             !controller.loadingMore && !controller.loading && (controller.items.length >= controller.limit);
 
         return RefreshIndicator(
-          onRefresh: () => controller.refreshData(initialLimit: 10),
+          onRefresh: () => controller.refreshData(),
           child: ListView.builder(
             controller: _scroll,
             padding: const EdgeInsets.only(top: 8, bottom: 16),
@@ -197,7 +202,7 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Column(
                   children: [
-                    if (controller.loadingMore) ...[
+                    if (controller.hasMore) ...[
                       const SizedBox(height: 6),
                       const CircularProgressIndicator.adaptive(),
                       const SizedBox(height: 10),

@@ -155,6 +155,8 @@ class LoginController extends GetxController {
       await _storage.write(key: _kBiometricEnabled, value: 'true');
       biometricEnabled = true;
 
+      AppVars.apiSessionId = response['api_session_id']?.toString();
+
       Get.snackbar('Success'.tr, 'Login Successful'.tr);
 
       goToProfile(agent, agencyNumber: agencyNumber);

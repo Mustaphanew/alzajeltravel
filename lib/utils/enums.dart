@@ -94,6 +94,7 @@ enum BookingStatus {
   expiry('canceled'),
   voided('voided'),
   voide('void'),
+  refund('refund'),
   notFound('not_found');
 
   final String apiValue;

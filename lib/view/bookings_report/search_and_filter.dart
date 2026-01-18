@@ -1,40 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:jiffy/jiffy.dart';
 
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 
-enum ReportDateField { createdAt, travelDate, cancelOn, voidOn }
+enum ReportDateField { createdAt } // ✅ fixed for now
 enum ReportPeriod { withinDay, untilDay, withinMonth, withinRange }
 
 class SearchAndFilterState {
   final bool applied;
-  final BookingStatus? status; // ✅ new
+  final BookingStatus? status;
+
+  /// ✅ ready for API (createdAt range)
+  final DateTime dateFrom;
+  final DateTime dateTo;
+
+  /// UI only (ignored by API for now)
   final String keyword;
 
   final ReportDateField dateField;
   final ReportPeriod period;
 
-  final DateTime? singleDate;
-  final int? year;
-  final int? month;
-
-  final DateTime? from;
-  final DateTime? to;
-
   const SearchAndFilterState({
     required this.applied,
     required this.status,
+    required this.dateFrom,
+    required this.dateTo,
     required this.keyword,
     required this.dateField,
     required this.period,
-    this.singleDate,
-    this.year,
-    this.month,
-    this.from,
-    this.to,
   });
 }
 
@@ -55,7 +52,7 @@ class SearchAndFilter extends StatefulWidget {
 class _SearchAndFilterState extends State<SearchAndFilter> {
   final TextEditingController keywordCtrl = TextEditingController();
 
-  BookingStatus? selectedStatus; // ✅ يبدأ فارغ
+  BookingStatus? selectedStatus;
 
   ReportDateField dateField = ReportDateField.createdAt;
   ReportPeriod period = ReportPeriod.withinDay;
@@ -68,7 +65,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   DateTime? rangeFrom;
   DateTime? rangeTo;
 
-  // ---- status options (مثل السابق) ----
+  // ---- status options ----
   static BookingStatus _pickStatus(List<String> values) {
     for (final v in values) {
       final s = BookingStatus.fromJson(v);
@@ -82,30 +79,9 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     _StatusOption(_pickStatus(['confirmed']), 'Confirmed'),
     _StatusOption(_pickStatus(['cancelled', 'canceled']), 'Cancelled'),
     _StatusOption(_pickStatus(['void', 'voided']), 'Void'),
+    _StatusOption(_pickStatus(['refund']), 'Refund'),
   ].where((e) => e.status != BookingStatus.notFound).toList();
 
-  // ---------- status helpers ----------
-  bool get _isCancelledStatus {
-    final v = selectedStatus?.apiValue;
-    return v == 'cancelled' || v == 'canceled';
-  }
-
-  bool get _isVoidStatus {
-    final v = selectedStatus?.apiValue;
-    return v == 'void' || v == 'voided';
-  }
-
-  List<ReportDateField> _allowedDateFields() {
-    final fields = <ReportDateField>[
-      ReportDateField.createdAt,
-      ReportDateField.travelDate,
-    ];
-    if (_isCancelledStatus) fields.add(ReportDateField.cancelOn);
-    if (_isVoidStatus) fields.add(ReportDateField.voidOn);
-    return fields;
-  }
-
-  // ---------- defaults ----------
   DateTime _todayOnly() {
     final n = DateTime.now();
     return DateTime(n.year, n.month, n.day);
@@ -118,13 +94,11 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) {
       singleDate = today;
     }
-
     if (period == ReportPeriod.withinMonth) {
       selectedYear = now.year;
       selectedMonth = now.month;
       _clampMonthIfNeeded();
     }
-
     if (period == ReportPeriod.withinRange) {
       rangeFrom = today;
       rangeTo = today;
@@ -132,11 +106,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   }
 
   void _resetToDefaults({bool clearKeyword = false}) {
-    final allowed = _allowedDateFields();
-    if (!allowed.contains(dateField)) {
-      dateField = ReportDateField.createdAt;
-    }
-
     if (clearKeyword) keywordCtrl.text = '';
 
     singleDate = null;
@@ -197,7 +166,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
       lastDate: _singleLastDate,
     );
     if (picked == null) return;
-
     setState(() => singleDate = picked);
   }
 
@@ -246,18 +214,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   }
 
   // ---------- labels & formatting ----------
-  String _dateFieldLabel(ReportDateField f) {
-    switch (f) {
-      case ReportDateField.createdAt:
-        return 'Created at'.tr;
-      case ReportDateField.travelDate:
-        return 'Travel date'.tr;
-      case ReportDateField.cancelOn:
-        return 'Cancel on'.tr;
-      case ReportDateField.voidOn:
-        return 'Void on'.tr;
-    }
-  }
+  String _dateFieldLabel() => 'Created at'.tr;
 
   String _periodLabel(ReportPeriod p) {
     switch (p) {
@@ -283,18 +240,49 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     return AppFuns.replaceArabicNumbers(s);
   }
 
-  void _onSearchPressed(ReportDateField safeDateField) {
+  /// ✅ Build date_from/date_to according to your backend rules
+  (DateTime, DateTime) _buildCreatedAtRange() {
+    if (period == ReportPeriod.withinDay) {
+      final d = singleDate ?? _todayOnly();
+      final only = DateTime(d.year, d.month, d.day);
+      return (only, only);
+    }
+
+    if (period == ReportPeriod.untilDay) {
+      final d = singleDate ?? _todayOnly();
+      final to = DateTime(d.year, d.month, d.day);
+      final from = DateTime(2010, 1, 1); // ✅ fixed as requested
+      return (from, to);
+    }
+
+    if (period == ReportPeriod.withinMonth) {
+      final start = DateTime(selectedYear, selectedMonth, 1);
+      final end = Jiffy.parseFromDateTime(start).endOf(Unit.month).dateTime;
+      final to = DateTime(end.year, end.month, end.day);
+      return (start, to);
+    }
+
+    // withinRange
+    final f = rangeFrom ?? _todayOnly();
+    final t = rangeTo ?? _todayOnly();
+    final from = DateTime(f.year, f.month, f.day);
+    final to = DateTime(t.year, t.month, t.day);
+    return (from, to);
+  }
+
+  void _onSearchPressed() {
+    if (selectedStatus == null) return;
+
+    final (dateFrom, dateTo) = _buildCreatedAtRange();
+
     final state = SearchAndFilterState(
       applied: true,
       status: selectedStatus,
-      keyword: keywordCtrl.text.trim(),
-      dateField: safeDateField,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      keyword: keywordCtrl.text.trim(), // ignored by API
+      dateField: dateField,
       period: period,
-      singleDate: (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ? singleDate : null,
-      year: (period == ReportPeriod.withinMonth) ? selectedYear : null,
-      month: (period == ReportPeriod.withinMonth) ? selectedMonth : null,
-      from: (period == ReportPeriod.withinRange) ? rangeFrom : null,
-      to: (period == ReportPeriod.withinRange) ? rangeTo : null,
     );
 
     widget.onSearch?.call(state);
@@ -303,18 +291,12 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
 
   @override
   Widget build(BuildContext context) {
-    final allowedDateFields = _allowedDateFields();
-    final safeDateField = allowedDateFields.contains(dateField) ? dateField : ReportDateField.createdAt;
-
     final years = _yearsList();
-    if (!years.contains(selectedYear)) {
-      selectedYear = years.first;
-    }
+    if (!years.contains(selectedYear)) selectedYear = years.first;
+
     _clampMonthIfNeeded();
     final months = _monthsForYear(selectedYear);
-    if (!months.contains(selectedMonth)) {
-      selectedMonth = months.last;
-    }
+    if (!months.contains(selectedMonth)) selectedMonth = months.last;
 
     if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) {
       singleDate ??= _todayOnly();
@@ -348,132 +330,128 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
 
           const SizedBox(height: 12),
 
-          // Filter by date
+          // ✅ Filter by date (fixed to Created at)
           // DropdownButtonFormField<ReportDateField>(
-          //   value: safeDateField,
+          //   value: ReportDateField.createdAt,
           //   decoration: InputDecoration(labelText: 'Filter by date'.tr),
-          //   items: allowedDateFields
-          //       .map((f) => DropdownMenuItem(value: f, child: Text(_dateFieldLabel(f))))
-          //       .toList(),
-          //   onChanged: (v) {
-          //     if (v == null) return;
-          //     setState(() {
-          //       dateField = v;
-          //       _resetToDefaults();
-          //     });
-          //   },
+          //   items: [
+          //     DropdownMenuItem(
+          //       value: ReportDateField.createdAt,
+          //       child: Text(_dateFieldLabel()),
+          //     ),
+          //   ],
+          //   onChanged: null, // disabled (createdAt only)
           // ),
 
-          // const SizedBox(height: 12),
 
-          // Period
-          DropdownButtonFormField<ReportPeriod>(
-            value: period,
-            decoration: InputDecoration(labelText: 'Period'.tr),
-            items: ReportPeriod.values
-                .map((p) => DropdownMenuItem(value: p, child: Text(_periodLabel(p))))
-                .toList(),
-            onChanged: (v) {
-              if (v == null) return;
-              setState(() {
-                period = v;
-                _resetToDefaults();
-              });
-            },
-          ),
+
 
           const SizedBox(height: 12),
+          if(selectedStatus != BookingStatus.preBooking)
+            ...[
+                        // Period
+              DropdownButtonFormField<ReportPeriod>(
+                value: period,
+                decoration: InputDecoration(labelText: 'Period'.tr),
+                items: ReportPeriod.values
+                    .map((p) => DropdownMenuItem(value: p, child: Text(_periodLabel(p))))
+                    .toList(),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    period = v;
+                    _resetToDefaults();
+                  });
+                },
+              ),
 
-          if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ...[
-            _DatePickerField(
-              label: 'Select date'.tr,
-              value: _formatPickedDate(singleDate),
-              onTap: _pickSingleDate,
-            ),
-          ],
+              const SizedBox(height: 12),
 
-          if (period == ReportPeriod.withinMonth) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: selectedYear,
-                    decoration: InputDecoration(labelText: 'Year'.tr),
-                    items: years
-                        .map((y) => DropdownMenuItem<int>(
-                              value: y,
-                              child: Text(AppFuns.replaceArabicNumbers(y.toString())),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      if (v == null) return;
-                      setState(() {
-                        selectedYear = v;
-                        _clampMonthIfNeeded();
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: selectedMonth,
-                    decoration: InputDecoration(labelText: 'Month'.tr),
-                    items: _monthsForYear(selectedYear)
-                        .map((m) => DropdownMenuItem<int>(
-                              value: m,
-                              child: Text(_monthName(m)),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      if (v == null) return;
-                      setState(() {
-                        selectedMonth = v;
-                      });
-                    },
-                  ),
+              if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ...[
+                _DatePickerField(
+                  label: 'Select date'.tr,
+                  value: _formatPickedDate(singleDate),
+                  onTap: _pickSingleDate,
                 ),
               ],
-            ),
-          ],
 
-          if (period == ReportPeriod.withinRange) ...[
-            _DatePickerField(
-              label: 'From'.tr,
-              value: _formatPickedDate(rangeFrom),
-              onTap: _pickRangeFrom,
-            ),
-            const SizedBox(height: 12),
-            _DatePickerField(
-              label: 'To'.tr,
-              value: _formatPickedDate(rangeTo),
-              onTap: _pickRangeTo,
-            ),
-          ],
+              if (period == ReportPeriod.withinMonth) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedYear,
+                        decoration: InputDecoration(labelText: 'Year'.tr),
+                        items: years
+                            .map((y) => DropdownMenuItem<int>(
+                                  value: y,
+                                  child: Text(AppFuns.replaceArabicNumbers(y.toString())),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() {
+                            selectedYear = v;
+                            _clampMonthIfNeeded();
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedMonth,
+                        decoration: InputDecoration(labelText: 'Month'.tr),
+                        items: months
+                            .map((m) => DropdownMenuItem<int>(
+                                  value: m,
+                                  child: Text(_monthName(m)),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() => selectedMonth = v);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
 
-          const SizedBox(height: 12),
+              if (period == ReportPeriod.withinRange) ...[
+                _DatePickerField(
+                  label: 'From'.tr,
+                  value: _formatPickedDate(rangeFrom),
+                  onTap: _pickRangeFrom,
+                ),
+                const SizedBox(height: 12),
+                _DatePickerField(
+                  label: 'To'.tr,
+                  value: _formatPickedDate(rangeTo),
+                  onTap: _pickRangeTo,
+                ),
+              ],
 
-          // Global search
-          TextFormField(
-            controller: keywordCtrl,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              labelText: 'Global search'.tr,
-              hintText: 'Type keyword...'.tr,
-            ),
-            onFieldSubmitted: (_) {
-              if (selectedStatus == null) return;
-              _onSearchPressed(safeDateField);
-            },
-          ),
+              const SizedBox(height: 12),
 
-          const SizedBox(height: 16),
+              // Global search (ignored by API for now)
+              // TextFormField(
+              //   controller: keywordCtrl,
+              //   textInputAction: TextInputAction.search,
+              //   decoration: InputDecoration(
+              //     labelText: 'Global search'.tr,
+              //     hintText: 'Type keyword...'.tr,
+              //   ),
+              //   onFieldSubmitted: (_) => _onSearchPressed(),
+              // ),
+              const SizedBox(height: 16),
 
-          // ✅ Search only (no cancel)
+            ],
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: selectedStatus == null ? null : () => _onSearchPressed(safeDateField),
+              onPressed: selectedStatus == null ? null : _onSearchPressed,
               child: Text('Search'.tr),
             ),
           ),

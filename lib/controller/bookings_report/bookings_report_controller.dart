@@ -3,73 +3,125 @@ import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class BookingsReportController extends GetxController {
   BookingsReportData? bookingsReportData;
 
-  BookingStatus currentStatus = BookingStatus.preBooking;
+  /// ✅ Required for search
+  BookingStatus? currentStatus;
 
-  int limit = 10;
-  final int limitStep = 10;
+  /// ✅ API pagination
+  final int limit = 30;
+  int offset = 0;
 
   bool loading = false;
   bool loadingMore = false;
   String? error;
 
-  /// ✅ لا نعرض أي نتائج قبل أول Search
+  /// ✅ do not show list before first search
   bool searched = false;
 
-  List<BookingReportItem> get items => bookingsReportData?.items ?? const [];
-  int get itemsCount => items.length;
-  bool get hasData => items.isNotEmpty;
+  /// ✅ track the current search range (createdAt)
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
 
+  /// ✅ has more pages?
+  bool hasMore = false;
+
+  List<BookingReportItem> get items => bookingsReportData?.items ?? const [];
+
+  String _fmt(DateTime d) => DateFormat('yyyy-MM-dd', 'en').format(d);
+
+  String? _apiSessionId() {
+    // TODO: adjust to your profile/session field name
+    return AppVars.apiSessionId;
+  }
+
+  /// ✅ Start new search (offset resets to 0, items reset)
   Future<void> search({
     required BookingStatus status,
-    int initialLimit = 10,
-    bool fullDetails = false,
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    int fullDetails = 0,
   }) async {
     searched = true;
+    currentStatus = status;
+
+    _dateFrom = dateFrom;
+    _dateTo = dateTo;
+
+    offset = 0;
+    hasMore = false;
 
     bookingsReportData = null;
     error = null;
     loading = true;
     loadingMore = false;
-
-    currentStatus = status;
-    limit = initialLimit;
-
     update();
 
-    await getDataServer(
-      status: currentStatus,
-      newLimit: limit,
-      fullDetails: fullDetails,
-      showLoading: false,
-    );
+    await _fetchPage(fullDetails: fullDetails, resetItems: true);
   }
 
-  Future<void> getDataServer({
-    BookingStatus? status,
-    int? newLimit,
-    bool fullDetails = false,
-    bool showLoading = true,
+  /// ✅ Load next page
+  Future<void> loadMore({int fullDetails = 0}) async {
+    if (!searched) return;
+    if (loading || loadingMore) return;
+    if (!hasMore) return;
+
+    loadingMore = true;
+    error = null;
+    update();
+
+    offset += limit;
+    await _fetchPage(fullDetails: fullDetails, resetItems: false);
+  }
+
+  /// ✅ Refresh current search
+  Future<void> refreshData({int fullDetails = 0}) async {
+    if (!searched) return;
+    if (currentStatus == null || _dateFrom == null || _dateTo == null) return;
+
+    offset = 0;
+    hasMore = false;
+
+    bookingsReportData = null;
+    error = null;
+    loading = true;
+    loadingMore = false;
+    update();
+
+    await _fetchPage(fullDetails: fullDetails, resetItems: true);
+  }
+
+  Future<void> _fetchPage({
+    required int fullDetails,
+    required bool resetItems,
   }) async {
-    if (status != null) currentStatus = status;
-    if (newLimit != null) limit = newLimit;
-
-    if (showLoading) {
-      loading = true;
-      error = null;
-      update();
-    } else {
-      error = null;
-      update();
-    }
-
     if (AppVars.profile == null) {
       error = 'Not logged in'.tr;
       loading = false;
       loadingMore = false;
+      hasMore = false;
+      update();
+      return;
+    }
+
+    final sid = _apiSessionId();
+    if (sid == null || sid.isEmpty) {
+      error = 'Session not found'.tr;
+      loading = false;
+      loadingMore = false;
+      hasMore = false;
+      update();
+      return;
+    }
+
+    if (currentStatus == null || _dateFrom == null || _dateTo == null) {
+      error = 'Invalid search params'.tr;
+      loading = false;
+      loadingMore = false;
+      hasMore = false;
       update();
       return;
     }
@@ -78,17 +130,42 @@ class BookingsReportController extends GetxController {
       final response = await AppVars.api.post(
         AppApis.bookingsReport,
         params: {
-          "status": currentStatus.apiValue,
+          "api_session_id": sid,
+          "status": currentStatus!.apiValue,
+          "date_from": (currentStatus == BookingStatus.preBooking) ? null : _fmt(_dateFrom!),
+          "date_to": (currentStatus == BookingStatus.preBooking) ? null : _fmt(_dateTo!),
+          "full_details": fullDetails,
           "limit": limit,
-          "full_details": fullDetails ? 1 : 0,
-          "agent_id": AppVars.profile!.id,
+          "offset": offset,
         },
         asJson: true,
       );
 
-      bookingsReportData = BookingsReportResponse.fromJson(response).data;
+      if ((response['status'] ?? '').toString() != 'success') {
+        throw Exception((response['message'] ?? 'Request failed'.tr).toString());
+      }
+
+      final dataJson = (response['data'] ?? {}) as Map<String, dynamic>;
+      final data = BookingsReportData.fromJson(dataJson);
+
+      final oldItems = resetItems
+          ? <BookingReportItem>[]
+          : (bookingsReportData?.items ?? const <BookingReportItem>[]);
+
+      final newItems = <BookingReportItem>[...oldItems, ...data.items];
+
+      bookingsReportData = BookingsReportData(
+        agentId: data.agentId,
+        status: data.status,
+        fullDetails: data.fullDetails,
+        count: data.count,
+        items: newItems,
+      );
+
+      hasMore = data.items.length >= limit;
     } catch (e) {
       error = e.toString();
+      hasMore = false;
     }
 
     loading = false;
@@ -96,45 +173,21 @@ class BookingsReportController extends GetxController {
     update();
   }
 
-  Future<void> refreshData({
-    int initialLimit = 10,
-    bool fullDetails = false,
-  }) async {
-    if (!searched) return;
-    limit = initialLimit;
-    await getDataServer(
-      status: currentStatus,
-      newLimit: limit,
-      fullDetails: fullDetails,
-      showLoading: true,
-    );
-  }
-
-  Future<void> loadMore({
-    bool fullDetails = false,
-  }) async {
-    if (!searched) return;
-    if (loading || loadingMore) return;
-
-    loadingMore = true;
-    error = null;
-    update();
-
-    final nextLimit = limit + limitStep;
-    await getDataServer(
-      status: currentStatus,
-      newLimit: nextLimit,
-      fullDetails: fullDetails,
-      showLoading: false,
-    );
-  }
-
   void clear() {
     bookingsReportData = null;
+    currentStatus = null;
+
+    offset = 0;
+    hasMore = false;
+
+    _dateFrom = null;
+    _dateTo = null;
+
     error = null;
     loading = false;
     loadingMore = false;
     searched = false;
+
     update();
   }
 }

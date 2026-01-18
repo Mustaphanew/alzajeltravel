@@ -5,24 +5,7 @@ import 'package:alzajeltravel/model/airport_model.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 
-class BookingsReportResponse {
-  final String status;
-  final BookingsReportData data;
 
-  const BookingsReportResponse({required this.status, required this.data});
-
-  factory BookingsReportResponse.fromJson(Map<String, dynamic> json) {
-    return BookingsReportResponse(
-      status: (json['status'] ?? '').toString(),
-      data: BookingsReportData.fromJson((json['data'] ?? {}) as Map<String, dynamic>),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'status': status,
-        'data': data.toJson(),
-      };
-}
 
 class BookingsReportData {
   final int agentId;

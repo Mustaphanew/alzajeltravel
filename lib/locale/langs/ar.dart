@@ -389,7 +389,7 @@ Map<String, String> ar = {
   "Pre-book": "حجز مبدئي",
 
   "Confirmed": "مؤكدة",
-  "Cancelled": "ملغي",
+  "Cancelled": "حجز مبدئي ملغى",
 
   "Cancel On": "الغيت في",
   "Void On": "فويدت في",
@@ -516,5 +516,7 @@ Map<String, String> ar = {
   "Confirm new password is required": "تأكيد كلمة المرور الجديدة مطلوب",
 
   "Issue On": "صدرت في",
-  "cancelled": "ملغي",
+  "cancelled": "حجز مبدئي ملغى",
+  "Refund": "الاسترجاع",
+  "refund": "الاسترجاع",
 };
