@@ -1,20 +1,20 @@
 
 
-class OtherPricesResponse {
-  final String? status;
-  final OtherPricesData? data;
+// class OtherPricesResponse {
+//   final String? status;
+//   final OtherPricesData? data;
 
-  OtherPricesResponse({this.status, this.data});
+//   OtherPricesResponse({this.status, this.data});
 
-  factory OtherPricesResponse.fromJson(Map<String, dynamic> json) {
-    return OtherPricesResponse(
-      status: json["status"]?.toString(),
-      data: json["data"] is Map<String, dynamic>
-          ? OtherPricesData.fromJson(json["data"] as Map<String, dynamic>)
-          : null,
-    );
-  }
-}
+//   factory OtherPricesResponse.fromJson(Map<String, dynamic> json) {
+//     return OtherPricesResponse(
+//       status: json["status"]?.toString(),
+//       data: json["data"] is Map<String, dynamic>
+//           ? OtherPricesData.fromJson(json["data"] as Map<String, dynamic>)
+//           : null,
+//     );
+//   }
+// }
 
 class OtherPricesData {
   final String? status;

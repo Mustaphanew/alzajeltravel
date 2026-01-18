@@ -21,8 +21,8 @@ import 'package:alzajeltravel/view/frame/travelers_review/travelers_review_page.
 import 'package:alzajeltravel/utils/widgets/country_picker.dart'; // عدّل المسار لو مختلف
 
 class PassportsFormsController extends GetxController {
-  final FlightDetailApiController flightDetailApiController = Get.find();
-  final SearchFlightController searchFlightController = Get.find();
+  final FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
+  final SearchFlightController searchFlightController = Get.put(SearchFlightController());
   DateTime lastDateInSearch = DateTime.now();
   double totalFlight = 0;
   String currency = '';
@@ -102,7 +102,7 @@ class PassportsFormsController extends GetxController {
       contactEmailController.text = profile.email;
       contactCodeController.text = profile.agencyNumber;
       contactPhoneController.text = profile.phone;
-      contactDialCountry = CountryRepo.searchByDialcode("967");
+      contactDialCountry = CountryRepo.searchByDialcode(dialcode: "967");
       contactNationalityCountry = CountryRepo.searchByAlpha("ye");
     }
   }

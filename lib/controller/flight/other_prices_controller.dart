@@ -8,7 +8,7 @@ import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_pag
 import 'package:get/get.dart';
 
 class OtherPricesController extends GetxController {
-  final FlightDetailApiController flightDetailApiController = Get.find();
+  final FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
   String? errorMessage;
   List<OtherPriceOffer> offers = [];
   OtherPriceOffer? selectedOffer;
@@ -22,10 +22,15 @@ class OtherPricesController extends GetxController {
     selectedOffer = null;
     update();
 
+    print("AppVars.apiSessionId: ${AppVars.apiSessionId}");
+
     try {
       final res = await AppVars.api.post(
         AppApis.otherPricesFlight,
-        params: {"id": offer.id},
+        params: {
+          "id": offer.id,
+          "api_session_id": AppVars.apiSessionId,
+        },
       );
 
       if (res == null) {
@@ -40,18 +45,20 @@ class OtherPricesController extends GetxController {
         return false;
       }
 
-      final parsed = OtherPricesResponse.fromJson(res);
+      final parsed = OtherPricesData.fromJson(res);
+
+      print("res: $res");
 
       final outerStatus = parsed.status?.toLowerCase();
-      final innerStatus = parsed.data?.status?.toLowerCase();
+      // final innerStatus = parsed.data?.status?.toLowerCase();
 
-      if (outerStatus != 'success' || innerStatus != 'success') {
+      if (outerStatus != 'success') {
         errorMessage = 'Failed to load other prices'.tr;
         update();
         return false;
       }
 
-      offers = parsed.data?.offers ?? [];
+      offers = parsed.offers;
       if (offers.isEmpty) {
         errorMessage = 'No other prices found'.tr;
         update();

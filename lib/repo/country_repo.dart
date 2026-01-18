@@ -1568,7 +1568,8 @@ class CountryRepo {
   // =========================
   //  البحث بالـ dialcode
   // =========================
-  static CountryModel? searchByDialcode(String dialcode) {
+  static CountryModel? searchByDialcode({String? dialcode}) {
+    if (dialcode == null) return null;
     final upper = dialcode.replaceAll("+", "").toUpperCase();
 
     try {

@@ -1,10 +1,8 @@
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/routes.dart';
-import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
@@ -13,7 +11,6 @@ import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class TravelersReviewPage extends StatefulWidget {
@@ -47,7 +44,7 @@ class TravelersReviewPage extends StatefulWidget {
 }
 
 class _TravelersReviewPageState extends State<TravelersReviewPage> {
-  final FlightDetailApiController flightDetailApiController = Get.find<FlightDetailApiController>();
+  final FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
 
   int _currentTravelerIndex = 0; // 👈 مؤشر السلايدر
 
@@ -60,7 +57,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
       init: TravelersReviewController(widget.travelers),
       builder: (c) {
         final offerDetail = flightDetailApiController.revalidatedDetails.value;
-        final timeLimit = offerDetail?.timeLimit;
         return SafeArea(
           bottom: true,
           top: false,

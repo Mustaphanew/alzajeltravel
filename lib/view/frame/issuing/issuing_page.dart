@@ -490,12 +490,20 @@ class _IssuingPageState extends State<IssuingPage> {
                                 if (res != null) {
                                   booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                   bookingStatus = booking.status.name;
-                                  cancelOn = _formatDateTime(res['flight']['cancelled_at']);
-                                  voidOn = _formatDateTime(res['flight']['void_time']);
+
+                                  DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+                                      ? DateTime.parse(res['flight']['cancelled_at'])
+                                      : null;
+                                  DateTime? voidTime = res['flight']['void_time'] != null
+                                      ? DateTime.parse(res['flight']['void_time'])
+                                      : null;
+                                  cancelOn = _formatDateTime(cancelledAt);
+                                  voidOn = _formatDateTime(voidTime);
                                   print("booking.status.name: $bookingStatus");
                                 }
                               } catch (e) {
                                 Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                print("cancelPreBooking error: $e");
                               }
                               if (context.mounted) context.loaderOverlay.hide();
                               setState(() {});
@@ -536,12 +544,22 @@ class _IssuingPageState extends State<IssuingPage> {
                                 if (res != null) {
                                   booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                   bookingStatus = booking.status.name;
-                                  cancelOn = _formatDateTime(res['flight']['cancelled_at']);
-                                  voidOn = _formatDateTime(res['flight']['void_time']);
+
+                                DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+                                    ? DateTime.parse(res['flight']['cancelled_at'])
+                                    : null;
+
+                                  DateTime? voidTime = res['flight']['void_time'] != null
+                                      ? DateTime.parse(res['flight']['void_time'])
+                                      : null;
+
+                                  cancelOn = _formatDateTime(cancelledAt);
+                                  voidOn = _formatDateTime(voidTime);
                                   print("booking.status.name: $bookingStatus");
                                 }
                               } catch (e) {
                                 Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+                                print("❌ voidIssue error: $e");
                               }
                               if (context.mounted) context.loaderOverlay.hide();
                               setState(() {});

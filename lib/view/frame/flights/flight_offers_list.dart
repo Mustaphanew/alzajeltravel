@@ -48,8 +48,8 @@ class _FlightOffersListState extends State<FlightOffersList> {
   void initState() {
     super.initState();
 
-    detailCtrl = Get.put(FlightDetailApiController(), permanent: false);
-    otherPricesCtrl = Get.put(OtherPricesController(), permanent: false);
+    detailCtrl = Get.put(FlightDetailApiController(), );
+    otherPricesCtrl = Get.put(OtherPricesController(),);
 
     allOffers = widget.flightOffers.map((e) => FlightOfferModel.fromJson(e)).toList();
     offers = List<FlightOfferModel>.from(allOffers);
@@ -59,12 +59,12 @@ class _FlightOffersListState extends State<FlightOffersList> {
 
   @override
   void dispose() {
-    if (Get.isRegistered<FlightDetailApiController>()) {
-      Get.delete<FlightDetailApiController>();
-    }
-    if (Get.isRegistered<OtherPricesController>()) {
-      Get.delete<OtherPricesController>();
-    }
+    // if (Get.isRegistered<FlightDetailApiController>()) {
+    //   Get.delete<FlightDetailApiController>();
+    // }
+    // if (Get.isRegistered<OtherPricesController>()) {
+    //   Get.delete<OtherPricesController>();
+    // }
     super.dispose();
   }
 

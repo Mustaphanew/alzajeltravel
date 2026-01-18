@@ -73,7 +73,7 @@ class BookingDataModel {
       travelDate: _parseDateTime(json['travel_date']),
       bookedBy: (json['booked_by'] ?? '').toString(),
       bookingId: (json['booking_id'] ?? '').toString(),
-      countryCode: CountryRepo.searchByDialcode(json['country_code']),
+      countryCode: CountryRepo.searchByDialcode(dialcode: json['country_code']),
       mobileNo: (json['mobile_no'] ?? '').toString(),
       currency: (json['currency'] ?? '').toString(),
       pnr: json['pnr'] == null ? null : json['pnr'].toString(),

@@ -1,9 +1,13 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
+import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import '../../utils/app_consts.dart';
 
@@ -217,6 +221,30 @@ class _MyDrawerState extends State<MyDrawer> {
                 ],
               ),
             ),
+          ),
+        
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(0)),
+              ),
+            ),
+            onPressed: () async {
+              context.loaderOverlay.show();
+              try {
+                final res = await AppVars.api.post(AppApis.logout);
+                if (res['status'] == 'success') {
+                  print("res: $res");
+                  if(context.mounted) context.loaderOverlay.hide();
+                  Get.offAll(() => LoginPage());
+                }
+              } catch (e) {
+                if(context.mounted) context.loaderOverlay.hide();
+                Get.snackbar("Error".tr, "Could not logout".tr, snackPosition: SnackPosition.BOTTOM);
+              }
+               
+            },
+            child: Text("Logout".tr),
           ),
         ],
       ),

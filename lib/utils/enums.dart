@@ -101,7 +101,7 @@ enum BookingStatus {
 
   static BookingStatus fromJson(String v) {
     try {
-      return BookingStatus.values.firstWhere((e) => e.apiValue == v);
+      return BookingStatus.values.firstWhere((e) => e.apiValue.toLowerCase() == v.toLowerCase());
     } catch (e) {
       return BookingStatus.notFound;
     }

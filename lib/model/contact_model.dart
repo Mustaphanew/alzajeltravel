@@ -102,7 +102,7 @@ class ContactModel {
 
     // ✅ استخدام CountryRepo مباشرة
     final phoneCountry =
-        CountryRepo.searchByDialcode(dialStr) ??
+        CountryRepo.searchByDialcode(dialcode: dialStr) ??
         CountryRepo.searchByAlpha(alpha2)!; // fallback بسيط لو حبيت
 
     final nationalityCountry =

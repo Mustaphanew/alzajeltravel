@@ -23,7 +23,7 @@ class BookingDetail {
       final cleaned = _cleanCountryCode(raw);
 
       if (cleaned.isNotEmpty) {
-        final found = CountryRepo.searchByDialcode(cleaned);
+        final found = CountryRepo.searchByDialcode(dialcode: cleaned);
         if (found != null) {
           return model.copyWith(countryCode: found);
         }

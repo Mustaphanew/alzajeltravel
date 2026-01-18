@@ -6,7 +6,7 @@ import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class TravelersReviewController extends GetxController {
-  final FlightDetailApiController flightDetailApiController = Get.find();
+  final FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
   final List<TravelerReviewModel> travelers;
 
   TravelersReviewController(this.travelers);
@@ -156,7 +156,13 @@ class TravelersReviewController extends GetxController {
   dynamic cancelPreBookingRes;
   Future<dynamic> cancelPreBooking(String insertId) async {
     try {
-      cancelPreBookingRes = await AppVars.api.post(AppApis.cancelPnr, params: {"insert_id": insertId});
+      cancelPreBookingRes = await AppVars.api.post(
+        AppApis.cancelPnr,
+        params: {
+          "insert_id": insertId,
+          "api_session_id": AppVars.apiSessionId,
+        },
+      );
       if (cancelPreBookingRes == null) {
         Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
         return null;
@@ -177,12 +183,16 @@ class TravelersReviewController extends GetxController {
   dynamic voidIssueRes;
   Future<dynamic> voidIssue(String insertId) async { 
     try {
-      voidIssueRes = await AppVars.api.post(AppApis.voidIssue, params: {
-        "insert_id": insertId,
-        "cancel_pnr_after_void": 1
-      });
+      voidIssueRes = await AppVars.api.post(  
+        AppApis.voidIssue,
+        params: {
+          "insert_id": insertId,
+          "api_session_id": AppVars.apiSessionId,
+        },
+      );
+      print("voidIssueRes: $voidIssueRes");
       if (voidIssueRes == null) {
-        Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar("Error".tr, "Could not void issue 1".tr, snackPosition: SnackPosition.BOTTOM);
         return null;
       }
       if (voidIssueRes is! Map<String, dynamic>) {
@@ -192,7 +202,7 @@ class TravelersReviewController extends GetxController {
       return voidIssueRes;
     } catch (e) {
       print("❌ voidIssue error: $e");
-      Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Error".tr, "Could not void issue 2".tr, snackPosition: SnackPosition.BOTTOM);
       return null;
     }
   }
