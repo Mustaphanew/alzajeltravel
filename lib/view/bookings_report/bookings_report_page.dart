@@ -23,6 +23,17 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:jiffy/jiffy.dart';
 import 'dart:convert';
 
+import 'package:alzajeltravel/controller/airline_controller.dart';
+import 'package:alzajeltravel/controller/bookings_report/bookings_report_controller.dart';
+import 'package:alzajeltravel/model/bookings_report/bookings_report_model.dart';
+import 'package:alzajeltravel/utils/app_consts.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/widgets.dart';
+import 'package:alzajeltravel/view/bookings_report/search_and_filter.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+
 class BookingsReportPage extends StatefulWidget {
   const BookingsReportPage({super.key});
 
@@ -30,152 +41,71 @@ class BookingsReportPage extends StatefulWidget {
   State<BookingsReportPage> createState() => _BookingsReportPageState();
 }
 
-class _BookingsReportPageState extends State<BookingsReportPage> with SingleTickerProviderStateMixin {
-  FlightDetailApiController flightDetailApiController = Get.put(FlightDetailApiController());
+class _BookingsReportPageState extends State<BookingsReportPage> {
   AirlineController airlineController = Get.put(AirlineController());
 
-  late final TabController _tabController;
   late final BookingsReportController c;
 
-  // نختار الستاتس من apiValue (حتى لو اسم enum عندك مختلف)
-  static BookingStatus _pickStatus(List<String> values) {
-    for (final v in values) {
-      final s = BookingStatus.fromJson(v);
-      if (s != BookingStatus.notFound) return s;
-    }
-    return BookingStatus.notFound;
-  }
+  final ExpansionTileController _filterTileController = ExpansionTileController();
 
-  late final List<_StatusTab> tabs = <_StatusTab>[
-    _StatusTab(_pickStatus(['pre-book']), 'Pre-book'),
-    _StatusTab(_pickStatus(['confirmed']), 'Confirmed'),
-    _StatusTab(_pickStatus(['cancelled', 'canceled']), 'Cancelled'),
-    _StatusTab(_pickStatus(['void', 'voided']), 'Void'),
-  ];
+  SearchAndFilterState? parentState;
 
   @override
   void initState() {
     super.initState();
 
-    // منع تكرار put إذا الكنترولر مسجّل مسبقاً
     if (Get.isRegistered<BookingsReportController>()) {
       c = Get.find<BookingsReportController>();
     } else {
       c = Get.put(BookingsReportController());
     }
 
-    _tabController = TabController(length: tabs.length, vsync: this);
-
-    // أول تحميل
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _switchToStatus(tabs[0].status);
-    });
-
-    // عند تغيير التبويب
-    // _tabController.addListener(() {
-    //   if (_tabController.indexIsChanging) return;
-    //   _switchToStatus(tabs[_tabController.index].status);
-    // });
-    _filterTileController.addListener(() {
-      // hide keyboard when filter tile is collapsed
-      AppFuns.hideKeyboard();
-      if (_filterTileController.isExpanded == false) {
-        setState(() {});
-      }
+      _filterTileController.expand(); // ✅ expanded في البداية
     });
   }
-
-  Future<void> _switchToStatus(BookingStatus status) async {
-    // مهم: نمسح البيانات ونظهر Loading بدل بيانات التبويب السابق
-    c.bookingsReportData = null;
-    c.error = null;
-    c.loading = true;
-    c.loadingMore = false;
-    c.currentStatus = status;
-    c.limit = 10;
-    c.update();
-
-    // نجلب بدون ما نعيد ضبط loading من جديد (لأننا ضبطناه هنا)
-    print('_switchToStatus status: $status');
-    await c.getDataServer(status: status, newLimit: 10, showLoading: false);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  final ExpansibleController _filterTileController = ExpansibleController();
-
-  SearchAndFilterState? parentState;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text('Bookings Report'.tr),
         centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: Material(
-            color: AppConsts.primaryColor.withValues(alpha: 0.4),
-            child: TabBar(
-              controller: _tabController,
-
-              indicatorSize: TabBarIndicatorSize.tab,
-              // indicatorWeight: 60,
-              dividerHeight: 0,
-              dividerColor: Colors.transparent,
-              padding: EdgeInsets.all(0),
-              indicator: BoxDecoration(color: AppConsts.primaryColor),
-              labelColor: cs.secondary,
-              unselectedLabelColor: cs.onPrimary,
-              unselectedLabelStyle: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.normal, fontFamily: AppConsts.font),
-              labelStyle: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.w600, fontFamily: AppConsts.font),
-
-              physics: const NeverScrollableScrollPhysics(),
-              isScrollable: false,
-              tabs: tabs.map((t) => Tab(text: t.label.tr)).toList(),
-              onTap: (index) async {
-                print("index: $index");
-                context.loaderOverlay.show();
-                await _switchToStatus(tabs[index].status);
-                if (context.mounted) context.loaderOverlay.hide();
-                _filterTileController.collapse();
-              },
-            ),
-          ),
-        ),
       ),
       body: Column(
         children: [
           ExpansionTile(
             controller: _filterTileController,
-            maintainState: true, // ✅ مهم جدًا: يحافظ على State عند الإغلاق
-            title: Text('Search and Filter'.tr),
-            collapsedBackgroundColor: (parentState == null || parentState!.applied == false) ? Colors.transparent : AppConsts.primaryColor.withValues(alpha: 0.5),
+            initiallyExpanded: true,
+            maintainState: true,
+            // show status
+            title: Text('Search and Filter'.tr + " (${parentState?.status?.toJson().tr})"),
+            // collapsedBackgroundColor:
+            //     (parentState == null || parentState!.applied == false) 
+            //         ? Colors.transparent
+            //         : AppConsts.primaryColor.withValues(alpha: 0.5),
+            onExpansionChanged: (expanded) {
+              AppFuns.hideKeyboard();
+              if (!expanded) setState(() {});
+            },
             children: [
               SearchAndFilter(
-                status: c.currentStatus,
-                tileController: _filterTileController, 
-                onSearch: (state) {
-                  
-                  this.parentState = state;
-                  print("state: ${state.applied}");
-                  // TODO: لاحقاً اربطها بجلب البيانات من السيرفر
-                  // state contains selections
+                tileController: _filterTileController,
+                onSearch: (state) async {
+                  parentState = state;
+                  setState(() {});
+
+                  if (state.status == null) return;
+
+                  context.loaderOverlay.show();
+                  await c.search(status: state.status!, initialLimit: 10);
+                  if (context.mounted) context.loaderOverlay.hide();
                 },
               ),
             ],
           ),
-          Expanded(
-            child: TabBarView(
-              physics: const NeverScrollableScrollPhysics(),
-              controller: _tabController,
-              children: List.generate(tabs.length, (_) => const _BookingsReportList()),
-            ),
+          const Expanded(
+            child: _BookingsReportList(),
           ),
         ],
       ),
@@ -215,11 +145,10 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
     final threshold = 200.0;
     final pos = _scroll.position;
 
-    // إذا رجع السيرفر عناصر مساوية للـ limit → غالباً يوجد المزيد
-    final canLoadMore = !c.loading && !c.loadingMore && (c.items.length >= c.limit);
+    final canLoadMore = c.searched && !c.loading && !c.loadingMore && (c.items.length >= c.limit);
 
     if (canLoadMore && pos.pixels >= pos.maxScrollExtent - threshold) {
-      c.loadMore(); // 10 -> 20 -> 30 ...
+      c.loadMore();
     }
   }
 
@@ -229,19 +158,28 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
 
     return GetBuilder<BookingsReportController>(
       builder: (controller) {
+        // ✅ لا نعرض شيء قبل أول Search
+        if (!controller.searched) {
+          return const SizedBox.shrink();
+        }
+
         if (controller.loading && controller.items.isEmpty) {
           return const Center(child: CircularProgressIndicator.adaptive());
         }
 
         if (controller.error != null && controller.items.isEmpty) {
-          return _ErrorView(message: controller.error!, onRetry: () => controller.refreshData(initialLimit: 10));
+          return _ErrorView(
+            message: controller.error!,
+            onRetry: () => controller.refreshData(initialLimit: 10),
+          );
         }
 
         if (controller.items.isEmpty) {
           return _EmptyView(onRefresh: () => controller.refreshData(initialLimit: 10));
         }
 
-        final showLoadMoreButton = !controller.loadingMore && !controller.loading && (controller.items.length >= controller.limit);
+        final showLoadMoreButton =
+            !controller.loadingMore && !controller.loading && (controller.items.length >= controller.limit);
 
         return RefreshIndicator(
           onRefresh: () => controller.refreshData(initialLimit: 10),
@@ -251,11 +189,10 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
             itemCount: controller.items.length + 1,
             itemBuilder: (context, index) {
               if (index < controller.items.length) {
-                final item = controller.items[index];
-                return _ReportCard(item: item);
+                final BookingReportItem item = controller.items[index];
+                return _ReportCard(item: item); // ✅ كما هو عندك
               }
 
-              // Footer
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Column(
@@ -264,11 +201,14 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
                       const SizedBox(height: 6),
                       const CircularProgressIndicator.adaptive(),
                       const SizedBox(height: 10),
-                      Text('Loading more'.tr + " ..."),
+                      Text('Loading more'.tr + ' ...'),
                     ] else if (showLoadMoreButton) ...[
                       SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton(onPressed: controller.loadMore, child: Text('Load more'.tr)),
+                        child: OutlinedButton(
+                          onPressed: controller.loadMore,
+                          child: Text('Load more'.tr),
+                        ),
                       ),
                     ] else ...[
                       Text('No more results'.tr),
@@ -283,6 +223,10 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
     );
   }
 }
+
+
+
+
 
 class _ReportCard extends StatefulWidget {
   final BookingReportItem item;

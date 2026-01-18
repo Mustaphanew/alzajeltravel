@@ -514,4 +514,7 @@ Map<String, String> ar = {
   "New password is required": "كلمة المرور الجديدة مطلوبة",
   "New password must be different from current password": "يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية",
   "Confirm new password is required": "تأكيد كلمة المرور الجديدة مطلوب",
+
+  "Issue On": "صدرت في",
+  "cancelled": "ملغي",
 };

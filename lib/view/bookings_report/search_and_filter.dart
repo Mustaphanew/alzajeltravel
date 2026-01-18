@@ -10,25 +10,23 @@ enum ReportDateField { createdAt, travelDate, cancelOn, voidOn }
 enum ReportPeriod { withinDay, untilDay, withinMonth, withinRange }
 
 class SearchAndFilterState {
-  final bool applied; // ✅ هل تم تنفيذ البحث؟
+  final bool applied;
+  final BookingStatus? status; // ✅ new
   final String keyword;
 
   final ReportDateField dateField;
   final ReportPeriod period;
 
-  // withinDay / untilDay
   final DateTime? singleDate;
-
-  // withinMonth
   final int? year;
   final int? month;
 
-  // withinRange
   final DateTime? from;
   final DateTime? to;
 
   const SearchAndFilterState({
     required this.applied,
+    required this.status,
     required this.keyword,
     required this.dateField,
     required this.period,
@@ -41,17 +39,13 @@ class SearchAndFilterState {
 }
 
 class SearchAndFilter extends StatefulWidget {
-  final BookingStatus status;
   final ExpansionTileController tileController;
   final void Function(SearchAndFilterState state)? onSearch;
-  final void Function()? onCancel;
 
   const SearchAndFilter({
     super.key,
-    required this.status,
     required this.tileController,
     this.onSearch,
-    this.onCancel,
   });
 
   @override
@@ -61,7 +55,7 @@ class SearchAndFilter extends StatefulWidget {
 class _SearchAndFilterState extends State<SearchAndFilter> {
   final TextEditingController keywordCtrl = TextEditingController();
 
-  bool hasSearched = false;
+  BookingStatus? selectedStatus; // ✅ يبدأ فارغ
 
   ReportDateField dateField = ReportDateField.createdAt;
   ReportPeriod period = ReportPeriod.withinDay;
@@ -74,14 +68,30 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   DateTime? rangeFrom;
   DateTime? rangeTo;
 
+  // ---- status options (مثل السابق) ----
+  static BookingStatus _pickStatus(List<String> values) {
+    for (final v in values) {
+      final s = BookingStatus.fromJson(v);
+      if (s != BookingStatus.notFound) return s;
+    }
+    return BookingStatus.notFound;
+  }
+
+  late final List<_StatusOption> statusOptions = <_StatusOption>[
+    _StatusOption(_pickStatus(['pre-book']), 'Pre-book'),
+    _StatusOption(_pickStatus(['confirmed']), 'Confirmed'),
+    _StatusOption(_pickStatus(['cancelled', 'canceled']), 'Cancelled'),
+    _StatusOption(_pickStatus(['void', 'voided']), 'Void'),
+  ].where((e) => e.status != BookingStatus.notFound).toList();
+
   // ---------- status helpers ----------
   bool get _isCancelledStatus {
-    final v = widget.status.apiValue;
+    final v = selectedStatus?.apiValue;
     return v == 'cancelled' || v == 'canceled';
   }
 
   bool get _isVoidStatus {
-    final v = widget.status.apiValue;
+    final v = selectedStatus?.apiValue;
     return v == 'void' || v == 'voided';
   }
 
@@ -129,7 +139,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
 
     if (clearKeyword) keywordCtrl.text = '';
 
-    // reset dates to today's defaults
     singleDate = null;
     rangeFrom = null;
     rangeTo = null;
@@ -139,17 +148,15 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     selectedMonth = now.month;
 
     _applyDefaultDatesForCurrentPeriod();
-
-    hasSearched = false;
   }
 
   // ---------- constraints ----------
-  DateTime get _singleLastDate => _todayOnly(); // withinDay/untilDay <= today
-  DateTime get _rangeLastDate => _todayOnly(); // withinRange <= today
+  DateTime get _singleLastDate => _todayOnly();
+  DateTime get _rangeLastDate => _todayOnly();
 
   List<int> _yearsList() {
     final nowYear = DateTime.now().year;
-    return List.generate(21, (i) => nowYear - i); // current .. current-20
+    return List.generate(21, (i) => nowYear - i);
   }
 
   List<int> _monthsForYear(int year) {
@@ -161,7 +168,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   void _clampMonthIfNeeded() {
     final months = _monthsForYear(selectedYear);
     if (!months.contains(selectedMonth)) {
-      // لو السنة الحالية والشهر المختار أكبر من الشهر الحالي
       selectedMonth = months.last;
     }
   }
@@ -169,22 +175,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   @override
   void initState() {
     super.initState();
-    // defaults on start
     _applyDefaultDatesForCurrentPeriod();
-  }
-
-  @override
-  void didUpdateWidget(covariant SearchAndFilter oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // إذا تغير status قد تتغير خيارات Filter by date
-    final allowed = _allowedDateFields();
-    if (!allowed.contains(dateField)) {
-      setState(() {
-        dateField = ReportDateField.createdAt;
-        _resetToDefaults();
-      });
-    }
   }
 
   @override
@@ -242,7 +233,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
       context: context,
       initialDate: initSafe,
       firstDate: first,
-      lastDate: _rangeLastDate, // <= today
+      lastDate: _rangeLastDate,
     );
     if (picked == null) return;
 
@@ -293,10 +284,9 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   }
 
   void _onSearchPressed(ReportDateField safeDateField) {
-    setState(() => hasSearched = true);
-
     final state = SearchAndFilterState(
       applied: true,
+      status: selectedStatus,
       keyword: keywordCtrl.text.trim(),
       dateField: safeDateField,
       period: period,
@@ -311,34 +301,11 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     widget.tileController.collapse();
   }
 
-  void _onCancelSearchPressed(ReportDateField safeDateField) {
-    setState(() {
-      _resetToDefaults(clearKeyword: true);
-    });
-
-    // ممكن ترجع state applied=false إذا تحب
-    widget.onCancel?.call();
-    widget.onSearch?.call(
-      SearchAndFilterState(
-        applied: false,
-        keyword: '',
-        dateField: safeDateField,
-        period: period,
-        singleDate: (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ? singleDate : null,
-        year: (period == ReportPeriod.withinMonth) ? selectedYear : null,
-        month: (period == ReportPeriod.withinMonth) ? selectedMonth : null,
-        from: (period == ReportPeriod.withinRange) ? rangeFrom : null,
-        to: (period == ReportPeriod.withinRange) ? rangeTo : null,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final allowedDateFields = _allowedDateFields();
     final safeDateField = allowedDateFields.contains(dateField) ? dateField : ReportDateField.createdAt;
 
-    // withinMonth dropdown safe lists
     final years = _yearsList();
     if (!years.contains(selectedYear)) {
       selectedYear = years.first;
@@ -349,7 +316,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
       selectedMonth = months.last;
     }
 
-    // ensure defaults exist per current period
     if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) {
       singleDate ??= _todayOnly();
     }
@@ -364,23 +330,41 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
         children: [
           const SizedBox(height: 8),
 
-          // Filter by date
-          DropdownButtonFormField<ReportDateField>(
-            value: safeDateField,
-            decoration: InputDecoration(labelText: 'Filter by date'.tr),
-            items: allowedDateFields
-                .map((f) => DropdownMenuItem(value: f, child: Text(_dateFieldLabel(f))))
+          // ✅ Status (required)
+          DropdownButtonFormField<BookingStatus>(
+            value: selectedStatus,
+            decoration: InputDecoration(labelText: 'Status'.tr),
+            hint: Text('Select status'.tr),
+            items: statusOptions
+                .map((o) => DropdownMenuItem(value: o.status, child: Text(o.label.tr)))
                 .toList(),
             onChanged: (v) {
-              if (v == null) return;
               setState(() {
-                dateField = v;
-                _resetToDefaults(); // ✅ رجّع التواريخ لليوم الحالي
+                selectedStatus = v;
+                _resetToDefaults();
               });
             },
           ),
 
           const SizedBox(height: 12),
+
+          // Filter by date
+          // DropdownButtonFormField<ReportDateField>(
+          //   value: safeDateField,
+          //   decoration: InputDecoration(labelText: 'Filter by date'.tr),
+          //   items: allowedDateFields
+          //       .map((f) => DropdownMenuItem(value: f, child: Text(_dateFieldLabel(f))))
+          //       .toList(),
+          //   onChanged: (v) {
+          //     if (v == null) return;
+          //     setState(() {
+          //       dateField = v;
+          //       _resetToDefaults();
+          //     });
+          //   },
+          // ),
+
+          // const SizedBox(height: 12),
 
           // Period
           DropdownButtonFormField<ReportPeriod>(
@@ -393,14 +377,13 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
               if (v == null) return;
               setState(() {
                 period = v;
-                _resetToDefaults(); // ✅ رجّع التواريخ لليوم الحالي حسب الفترة
+                _resetToDefaults();
               });
             },
           ),
 
           const SizedBox(height: 12),
 
-          // Dynamic fields
           if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ...[
             _DatePickerField(
               label: 'Select date'.tr,
@@ -427,7 +410,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                       setState(() {
                         selectedYear = v;
                         _clampMonthIfNeeded();
-                        hasSearched = false;
                       });
                     },
                   ),
@@ -447,7 +429,6 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                       if (v == null) return;
                       setState(() {
                         selectedMonth = v;
-                        hasSearched = false;
                       });
                     },
                   ),
@@ -480,30 +461,21 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
               labelText: 'Global search'.tr,
               hintText: 'Type keyword...'.tr,
             ),
-            onFieldSubmitted: (_) => _onSearchPressed(safeDateField),
+            onFieldSubmitted: (_) {
+              if (selectedStatus == null) return;
+              _onSearchPressed(safeDateField);
+            },
           ),
-
 
           const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _onSearchPressed(safeDateField),
-                  child: Text('Search'.tr),
-                ),
-              ),
-              if (hasSearched) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _onCancelSearchPressed(safeDateField),
-                    child: Text('Cancel search'.tr),
-                  ),
-                ),
-              ],
-            ],
+          // ✅ Search only (no cancel)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: selectedStatus == null ? null : () => _onSearchPressed(safeDateField),
+              child: Text('Search'.tr),
+            ),
           ),
         ],
       ),
@@ -532,4 +504,10 @@ class _DatePickerField extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StatusOption {
+  final BookingStatus status;
+  final String label;
+  const _StatusOption(this.status, this.label);
 }

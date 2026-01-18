@@ -1,5 +1,3 @@
-// bookings_report_controller.dart
-
 import 'package:alzajeltravel/model/bookings_report/bookings_report_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
@@ -11,25 +9,43 @@ class BookingsReportController extends GetxController {
 
   BookingStatus currentStatus = BookingStatus.preBooking;
 
-  /// current limit used by the API
   int limit = 10;
-
-  /// increase limit step for "load more"
   final int limitStep = 10;
 
   bool loading = false;
   bool loadingMore = false;
   String? error;
 
+  /// ✅ لا نعرض أي نتائج قبل أول Search
+  bool searched = false;
+
   List<BookingReportItem> get items => bookingsReportData?.items ?? const [];
   int get itemsCount => items.length;
   bool get hasData => items.isNotEmpty;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // إذا تحب التحميل مباشرة عند الدخول فعّل السطر التالي
-    // getDataServer();
+  Future<void> search({
+    required BookingStatus status,
+    int initialLimit = 10,
+    bool fullDetails = false,
+  }) async {
+    searched = true;
+
+    bookingsReportData = null;
+    error = null;
+    loading = true;
+    loadingMore = false;
+
+    currentStatus = status;
+    limit = initialLimit;
+
+    update();
+
+    await getDataServer(
+      status: currentStatus,
+      newLimit: limit,
+      fullDetails: fullDetails,
+      showLoading: false,
+    );
   }
 
   Future<void> getDataServer({
@@ -80,11 +96,11 @@ class BookingsReportController extends GetxController {
     update();
   }
 
-  /// Refresh with same status and reset limit to initial
   Future<void> refreshData({
     int initialLimit = 10,
     bool fullDetails = false,
   }) async {
+    if (!searched) return;
     limit = initialLimit;
     await getDataServer(
       status: currentStatus,
@@ -94,11 +110,10 @@ class BookingsReportController extends GetxController {
     );
   }
 
-  /// Naive "load more": increases limit and refetches first N items
-  /// (بدون pagination حقيقية لأن الـ API ما أعطانا page/offset)
   Future<void> loadMore({
     bool fullDetails = false,
   }) async {
+    if (!searched) return;
     if (loading || loadingMore) return;
 
     loadingMore = true;
@@ -114,17 +129,12 @@ class BookingsReportController extends GetxController {
     );
   }
 
-  void changeStatus(BookingStatus status, {int? initialLimit}) {
-    currentStatus = status;
-    limit = initialLimit ?? limit;
-    getDataServer(status: currentStatus, newLimit: limit);
-  }
-
   void clear() {
     bookingsReportData = null;
     error = null;
     loading = false;
     loadingMore = false;
+    searched = false;
     update();
   }
 }
