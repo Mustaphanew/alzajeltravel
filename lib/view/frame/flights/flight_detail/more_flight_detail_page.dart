@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -15,11 +16,13 @@ import 'package:alzajeltravel/utils/widgets.dart';
 class MoreFlightDetailPage extends StatelessWidget {
   final FlightOfferModel flightOffer;
   final RevalidatedFlightModel? revalidatedDetails;
+  final List<FareRule> fareRules;
 
   const MoreFlightDetailPage({
     super.key,
     required this.flightOffer,
     this.revalidatedDetails,
+    required this.fareRules,
   });
 
   @override
@@ -76,6 +79,19 @@ class MoreFlightDetailPage extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
+              
+              if (fareRules.isNotEmpty)
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ExpansionTile(
+                    title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    children: fareRules!.map((rule) => FareRuleTile(rule: rule)).toList(),
+                  ),
+                ),
+              
+              const SizedBox(height: 30),
+
             ],
           ),
         ),
@@ -325,6 +341,10 @@ class MoreFlightDetailPage extends StatelessWidget {
                                             seg.fromCode,
                                             style: theme.textTheme.bodyMedium,
                                           ),
+                                          Text(
+                                            "Terminal".tr + ": " + (seg.fromTerminal?? '_'),
+                                            style: theme.textTheme.bodyMedium,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -391,6 +411,10 @@ class MoreFlightDetailPage extends StatelessWidget {
                                             seg.toCode,
                                             style: theme.textTheme.bodyMedium,
                                           ),
+                                          Text(
+                                            "Terminal".tr + ": " + (seg.toTerminal?? '_'),
+                                            style: theme.textTheme.bodyMedium,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -428,6 +452,8 @@ class MoreFlightDetailPage extends StatelessWidget {
                                     value: segmentBaggage,
                                   ),
                                 ],
+
+                                
                               ],
                             ),
                           ),
@@ -440,6 +466,7 @@ class MoreFlightDetailPage extends StatelessWidget {
             ),
 
             const SizedBox(height: 0),
+            
           ],
         );
       },
@@ -476,8 +503,10 @@ class MoreFlightDetailPage extends StatelessWidget {
                   ),
                 ],
               ),
+              
               const SizedBox(height: 4),
               const Divider(),
+              
             ],
           ),
         );
@@ -502,6 +531,7 @@ class _InfoRow extends StatelessWidget {
           value,
           style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
+        
       ],
     );
   }

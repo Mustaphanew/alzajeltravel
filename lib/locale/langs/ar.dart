@@ -519,4 +519,11 @@ Map<String, String> ar = {
   "cancelled": "حجز مبدئي ملغى",
   "Refund": "الاسترجاع",
   "refund": "الاسترجاع",
+
+  "Copy Balance": "نسخ الرصيد",
+  "Show": "إظهار",
+  "Hide": "إخفاء",
+  "Copied": "تم النسخ",
+  "Copied to clipboard": "تم النسخ إلى الحافظة",
+
 };

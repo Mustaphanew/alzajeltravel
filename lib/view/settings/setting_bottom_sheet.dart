@@ -1,4 +1,5 @@
 // lib/view/common/picker_bottom_sheet.dart
+import 'package:alzajeltravel/controller/frame_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -78,11 +79,12 @@ Future<void> showPickerBottomSheet<T>({
                     title: Text(opt.label),
                     subtitle: opt.subtitle != null ? Text(opt.subtitle!) : null,
                     trailing: isSel ? const Icon(Icons.check) : null,
-                    onTap: () {
+                    onTap: () async {
                       onSelected(opt.value);
+                      
                       Navigator.pop(context);
                     },
-                  );
+                  ); 
                 },
                 separatorBuilder: (_, __) => const Divider(height: 1),
               ),

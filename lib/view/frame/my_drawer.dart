@@ -54,39 +54,27 @@ class _MyDrawerState extends State<MyDrawer> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // if (user != null) ...[
-                    //   ClipRRect(
-                    //     borderRadius: BorderRadius.circular(100),
-                    //     child: SizedBox(height: 80, width: 80, child: CacheImg("${user!.photoURL}")),
-                    //   ),
-                    //   SizedBox(height: 16),
-                    //   Text(
-                    //     "${user!.displayName}",
-                    //     textAlign: TextAlign.center,
-                    //     maxLines: 2,
-                    //     overflow: TextOverflow.ellipsis,
-                    //     style: TextStyle(
-                    //       color: cs.onPrimary,
-                    //       fontFamily: AppConsts.font,
-                    //       fontWeight: FontWeight.normal,
-                    //       fontSize: AppConsts.lg,
-                    //     ),
-                    //   ),
-                    //   Text(
-                    //     "${user!.email}",
-                    //     textAlign: TextAlign.center,
-                    //     maxLines: 2,
-                    //     overflow: TextOverflow.ellipsis,
-                    //     style: TextStyle(
-                    //       color: cs.onPrimary,
-                    //       fontFamily: AppConsts.font,
-                    //       fontWeight: FontWeight.normal,
-                    //       fontSize: AppConsts.sm,
-                    //     ),
-                    //   ),
-                    // ],
-                    // if (user == null) ...[
-                    SvgPicture.asset(AppConsts.logo3, width: 60, height: 60),
+                    if (profileModel != null) ...[
+                      Container(
+                        width: 80,
+                        height: 80,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cs.secondary,
+                          // border: Border.all(color: cs.outlineVariant),
+                        ),
+                        child: Text(
+                          AppFuns.getAvatarText(profileModel!.name),
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                    
                     SizedBox(height: 16),
                     if (profileModel != null) ...[
                       Text(

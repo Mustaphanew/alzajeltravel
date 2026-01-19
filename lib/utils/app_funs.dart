@@ -6,7 +6,7 @@ import 'app_vars.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppFuns {
-  static setUpRebuild() {
+  static void setUpRebuild() {
     AppVars.appLocale = AppVars.getStorage.read("lang") == null ? Get.deviceLocale : Locale(AppVars.getStorage.read("lang"));
     AppVars.lang = AppVars.appLocale?.languageCode;
     print("lang app: ${AppVars.lang}");
@@ -312,5 +312,17 @@ class AppFuns {
       );
     }
   }
+
+  static String getAvatarText(String text) {
+    final parts = text.replaceAll('-', ' ').trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+    if (parts.isEmpty) return '';
+    final first = parts.first;
+    final last = parts.last;
+    final firstChar = first.isNotEmpty ? first[0] : '';
+    final lastChar = last.isNotEmpty ? last[0] : '';
+    if (parts.length == 1) return firstChar.toUpperCase();
+    return (firstChar + lastChar).toUpperCase();
+  }
+
 
 }

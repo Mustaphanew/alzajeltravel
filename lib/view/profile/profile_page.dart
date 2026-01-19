@@ -1,8 +1,11 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/profile/change_password.dart';
+import 'package:alzajeltravel/view/profile/profile_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:alzajeltravel/controller/profile/profile_controller.dart';
@@ -36,6 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final cs = Theme.of(context).colorScheme;
     return GetBuilder<ProfileController>(
       builder: (c) {
+
         return Scaffold(
           appBar: AppBar(title: Text('Profile Account'.tr), titleSpacing: 15),
 
@@ -47,128 +51,127 @@ class _ProfilePageState extends State<ProfilePage> {
                   //  const SizedBox(height: 20),
                   // ProfileBalanceCharts(profile: widget.data),
                   Divider(height: 0, thickness: 2),
-                  Form(
-                    key: c.formKey,
-                    child: ExpansionTile(
-                      initiallyExpanded: true,
-                      tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                      title: Text("Profile".tr),
-                      // subtitle: Text("close and reopen all open command prompts", style: TextStyle(color: Colors.grey[600])),
-                      childrenPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                      children: [
-                        const SizedBox(height: 12),
 
-                        // TextFormField(
-                        //   controller: c.companyRegistrationNumberController,
-                        //   decoration: InputDecoration(
-                        //     labelText: 'Company Registration Number'.tr,
-                        //     hintText: 'Enter Company Registration Number'.tr,
-                        //   ),
-                        //   validator: (v) => c.validateRequired(v, 'Company Registration Number Required'),
-                        //   textInputAction: TextInputAction.next,
-                        // ),
-                        // const SizedBox(height: 12),
-                        TextFormField(
-                          readOnly: true,
-                          controller: c.nameController,
-                          decoration: InputDecoration(labelText: 'Name'.tr, hintText: 'Enter Name'.tr),
-                          validator: (v) => c.validateRequired(v, 'Name Required'),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
+                  const SizedBox(height: 20),
 
-                        TextFormField(
-                          readOnly: true,
-                          controller: c.emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(labelText: 'Email'.tr, hintText: 'Enter Email'.tr),
-                          validator: c.validateEmail,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
-
-                        TextFormField(
-                          readOnly: true,
-                          controller: c.agencyNumberController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(labelText: 'Agency Number'.tr, hintText: 'Enter Agency Number'.tr),
-                          validator: (v) => c.validateRequired(v, 'Agency Number Required'),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
-
-                        TextFormField(
-                          readOnly: true,
-                          controller: c.phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(labelText: 'Phone'.tr, hintText: 'Enter Phone'.tr),
-                          validator: (v) => c.validateRequired(v, 'Phone Required'),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Country (readOnly + open picker)
-                        // TextFormField(
-                        //   controller: c.countryController,
-                        //   readOnly: true,
-                        //   decoration: InputDecoration(
-                        //     labelText: 'Country'.tr,
-                        //     hintText: 'Select Country'.tr,
-                        //     suffixIcon: const Icon(Icons.arrow_drop_down),
-                        //   ),
-                        //   onTap: c.pickCountry,
-                        //   validator: (v) => c.validateRequired(v, 'Country Required'),
-                        // ),
-                        // const SizedBox(height: 12),
-
-                        // TextFormField(
-                        //   controller: c.addressController,
-                        //   decoration: InputDecoration(labelText: 'Address'.tr, hintText: 'Enter Address'.tr),
-                        //   textInputAction: TextInputAction.next,
-                        // ),
-                        // const SizedBox(height: 12),
-
-                        // TextFormField(
-                        //   controller: c.websiteController,
-                        //   keyboardType: TextInputType.url,
-                        //   decoration: InputDecoration(labelText: 'Website'.tr, hintText: 'Enter Website'.tr),
-                        //   textInputAction: TextInputAction.next,
-                        // ),
-                        // const SizedBox(height: 12),
-                        // branch code
-                        // TextFormField(
-                        //   controller: c.branchCodeController,
-                        //   decoration: InputDecoration(labelText: 'Branch Code'.tr, hintText: 'Enter Branch Code'.tr),
-                        //   readOnly: true,
-                        //   textInputAction: TextInputAction.next,
-                        // ),
-                        const SizedBox(height: 12),
-
-                        // Status (readOnly)
-                        TextFormField(
-                          controller: c.statusController,
-                          readOnly: true,
-                          decoration: InputDecoration(labelText: 'Status'.tr, hintText: 'Status'.tr),
-                        ),
-                        const SizedBox(height: 20),
-                        BalanceCard(data: widget.data, context: context),
-                        const SizedBox(height: 20),
-
-                        // SizedBox(
-                        //   height: 52,
-                        //   child: ElevatedButton(
-                        //     onPressed: c.isSaving ? null : c.saveProfile,
-                        //     child: c.isSaving
-                        //         ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                        //         : Text('Save'.tr),
-                        //   ),
-                        // ),
-                      ],
+                  // Form(
+                  //   key: c.formKey,
+                  //   child: ExpansionTile(
+                  //     initiallyExpanded: true,
+                  //     tilePadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  //     title: Text("Profile".tr),
+                  //     // subtitle: Text("close and reopen all open command prompts", style: TextStyle(color: Colors.grey[600])),
+                  //     childrenPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  //     children: [
+                  //       const SizedBox(height: 12),
+                  //       // TextFormField(
+                  //       //   controller: c.companyRegistrationNumberController,
+                  //       //   decoration: InputDecoration(
+                  //       //     labelText: 'Company Registration Number'.tr,
+                  //       //     hintText: 'Enter Company Registration Number'.tr,
+                  //       //   ),
+                  //       //   validator: (v) => c.validateRequired(v, 'Company Registration Number Required'),
+                  //       //   textInputAction: TextInputAction.next,
+                  //       // ),
+                  //       // const SizedBox(height: 12),
+                  //       TextFormField(
+                  //         readOnly: true,
+                  //         controller: c.nameController,
+                  //         decoration: InputDecoration(labelText: 'Name'.tr, hintText: 'Enter Name'.tr),
+                  //         validator: (v) => c.validateRequired(v, 'Name Required'),
+                  //         textInputAction: TextInputAction.next,
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       TextFormField(
+                  //         readOnly: true,
+                  //         controller: c.emailController,
+                  //         keyboardType: TextInputType.emailAddress,
+                  //         decoration: InputDecoration(labelText: 'Email'.tr, hintText: 'Enter Email'.tr),
+                  //         validator: c.validateEmail,
+                  //         textInputAction: TextInputAction.next,
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       TextFormField(
+                  //         readOnly: true,
+                  //         controller: c.agencyNumberController,
+                  //         keyboardType: TextInputType.number,
+                  //         decoration: InputDecoration(labelText: 'Agency Number'.tr, hintText: 'Enter Agency Number'.tr),
+                  //         validator: (v) => c.validateRequired(v, 'Agency Number Required'),
+                  //         textInputAction: TextInputAction.next,
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       TextFormField(
+                  //         readOnly: true,
+                  //         controller: c.phoneController,
+                  //         keyboardType: TextInputType.phone,
+                  //         decoration: InputDecoration(labelText: 'Phone'.tr, hintText: 'Enter Phone'.tr),
+                  //         validator: (v) => c.validateRequired(v, 'Phone Required'),
+                  //         textInputAction: TextInputAction.next,
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       // Country (readOnly + open picker)
+                  //       // TextFormField(
+                  //       //   controller: c.countryController,
+                  //       //   readOnly: true,
+                  //       //   decoration: InputDecoration(
+                  //       //     labelText: 'Country'.tr,
+                  //       //     hintText: 'Select Country'.tr,
+                  //       //     suffixIcon: const Icon(Icons.arrow_drop_down),
+                  //       //   ),
+                  //       //   onTap: c.pickCountry,
+                  //       //   validator: (v) => c.validateRequired(v, 'Country Required'),
+                  //       // ),
+                  //       // const SizedBox(height: 12),
+                  //       // TextFormField(
+                  //       //   controller: c.addressController,
+                  //       //   decoration: InputDecoration(labelText: 'Address'.tr, hintText: 'Enter Address'.tr),
+                  //       //   textInputAction: TextInputAction.next,
+                  //       // ),
+                  //       // const SizedBox(height: 12),
+                  //       // TextFormField(
+                  //       //   controller: c.websiteController,
+                  //       //   keyboardType: TextInputType.url,
+                  //       //   decoration: InputDecoration(labelText: 'Website'.tr, hintText: 'Enter Website'.tr),
+                  //       //   textInputAction: TextInputAction.next,
+                  //       // ),
+                  //       // const SizedBox(height: 12),
+                  //       // branch code
+                  //       // TextFormField(
+                  //       //   controller: c.branchCodeController,
+                  //       //   decoration: InputDecoration(labelText: 'Branch Code'.tr, hintText: 'Enter Branch Code'.tr),
+                  //       //   readOnly: true,
+                  //       //   textInputAction: TextInputAction.next,
+                  //       // ),
+                  //       const SizedBox(height: 12),
+                  //       // Status (readOnly)
+                  //       TextFormField(
+                  //         controller: c.statusController,
+                  //         readOnly: true,
+                  //         decoration: InputDecoration(labelText: 'Status'.tr, hintText: 'Status'.tr),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: ProfileHeaderCard(
+                      name: c.nameController.text,
+                      email: c.emailController.text,
+                      agencyNumber: c.agencyNumberController.text,
+                      statusText: c.statusController.text,
+                      isApproved: true,
+                      avatarText: AppFuns.getAvatarText(c.nameController.text),
                     ),
                   ),
 
-                  ChangePassword(), 
-                  
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: BalanceCard(data: widget.data, context: context),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 12), child: ChangePassword()),
                 ],
               ),
             ),
@@ -190,78 +193,102 @@ class BalanceCard extends StatefulWidget {
 }
 
 class _BalanceCardState extends State<BalanceCard> {
-  bool showValue = false;
+  bool isHidden = true;
+
+  double get _balance {
+    return double.tryParse(widget.data.remainingBalance?.toString() ?? '') ?? 0.0;
+  }
+
+  String get _formattedBalance {
+    return AppFuns.priceWithCoin(_balance, "USD");
+  }
+
+  Future<void> _copyBalance() async {
+    await Clipboard.setData(ClipboardData(text: _formattedBalance));
+    if (mounted) CustomSnackBar.success(context, "Copied".tr, subtitle: "Copied to clipboard".tr);
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
     return Card(
-      borderOnForeground: true,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: cs.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 8, bottom: 8),
-        child: Row(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            Text(
+              'Remaining Balance'.tr,
+              style: TextStyle(
+                fontSize: AppConsts.xlg,
+                // fontWeight: FontWeight.bold,
+                color: cs.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Inner "field" like the image
+            Container(
+              decoration: BoxDecoration(color: cs.onTertiaryFixedVariant, borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 12, 10),
+              child: Row(
                 children: [
-                  Text(
-                    'Account Balance'.tr,
-                    style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.normal),
+                  // Center value / stars
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: isHidden
+                        ? Text(
+                            '********',
+                            key: const ValueKey('hidden'),
+                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, letterSpacing: 6, color: cs.onSurface),
+                          )
+                        : SelectableText(
+                            _formattedBalance,
+                            key: const ValueKey('value'),
+                            textDirection: TextDirection.ltr,
+                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: cs.onSurface),
+                          ),
                   ),
-
-                  // const SizedBox(height: 4),
-                  Text(
-                    'Remaining Balance'.tr,
-                    style: TextStyle(color: cs.primaryFixed, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => setState(() => isHidden = !isHidden),
+                    icon: Icon(isHidden ? Icons.visibility : Icons.visibility_off),
+                    color: cs.onSurfaceVariant,
+                    iconSize: 26,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    splashRadius: 22,
+                    tooltip: isHidden ? 'Show'.tr : 'Hide'.tr,
                   ),
-                  const SizedBox(height: 8),
-                  if (showValue)
-                    Row(
-                      children: [
-                        SelectableText(
-                          AppFuns.priceWithCoin(double.parse(widget.data.remainingBalance.toString()), "USD"),
-                          textDirection: TextDirection.ltr,
-                          style: TextStyle(color: cs.secondaryFixed, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  if (!showValue)
-                    Text(
-                      '******',
-                      style: TextStyle(color: cs.secondaryFixed, fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
-                    ),
-
-                  // const Divider(height: 16),
-
-                  // balanceRow(
-                  //   'Used Balance'.tr,
-                  //   fmt(data.usedBalance ?? 0),
-                  //   styleValue: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
-                  // ),
-
-                  // const Divider(height: 16, thickness: 3),
-
-                  // balanceRow(
-                  //   'Total Balance'.tr,
-                  //   fmt(data.totalBalance ?? 0),
-                  //   styleTitle: const TextStyle(fontWeight: FontWeight.bold),
-                  //   styleValue: const TextStyle(fontWeight: FontWeight.w900),
-                  // ),
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  showValue = !showValue;
-                });
-              },
-              icon: Icon(showValue ? Icons.visibility : Icons.visibility_off, color: cs.primaryFixed),
+
+            const SizedBox(height: 8),
+
+            // Copy button bottom-right like the image
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                onPressed: _copyBalance,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 0),
+                  backgroundColor: cs.onTertiaryFixedVariant,
+                  // raduis
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Copy Balance'.tr,
+                  style: TextStyle(fontSize: AppConsts.sm, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                ),
+              ),
             ),
           ],
         ),

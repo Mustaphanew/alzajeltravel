@@ -67,7 +67,7 @@ class _FlightDetailPageState extends State<FlightDetailPage> {
                         child: ExpansionTile(
                           title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
                           childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          children: widget.detail.fareRules.map((rule) => _FareRuleTile(rule: rule)).toList(),
+                          children: widget.detail.fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
                         ),
                       ),
                   ],
@@ -168,7 +168,11 @@ class FlightMainCard extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  Get.to(() => MoreFlightDetailPage(flightOffer: revalidatedDetails.offer, revalidatedDetails: revalidatedDetails));
+                  Get.to(() => MoreFlightDetailPage(
+                    flightOffer: revalidatedDetails.offer, 
+                    revalidatedDetails: revalidatedDetails,
+                    fareRules: revalidatedDetails.fareRules,
+                  ));
                 },
                 icon: const Icon(Icons.info_outline),
                 label: Text("More Details".tr),
@@ -438,8 +442,8 @@ class _LabelValueRow extends StatelessWidget {
   }
 }
 
-class _FareRuleTile extends StatelessWidget {
-  const _FareRuleTile({required this.rule});
+class FareRuleTile extends StatelessWidget {
+  const FareRuleTile({super.key, required this.rule});
 
   final FareRule rule;
 

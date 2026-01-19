@@ -1,4 +1,5 @@
 // lib/view/pages/settings_page.dart
+import 'package:alzajeltravel/controller/frame_controller.dart';
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -9,20 +10,24 @@ import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/view/settings/help_center.dart';
 import 'package:alzajeltravel/view/settings/setting_bottom_sheet.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SettingsController>(
       init: SettingsController(),
       builder: (c) => Scaffold(
-        appBar: AppBar(title: Text('App Settings'.tr), titleSpacing: 15,),
+        appBar: AppBar(title: Text('App Settings'.tr), titleSpacing: 15),
         body: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -33,9 +38,9 @@ class SettingsPage extends StatelessWidget {
                     title: Text('Language'.tr),
                     subtitle: Text(c.currentLanguage),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
+                    onTap: () async {
                       print(" locale: ${c.locale.languageCode}");
-                      showPickerBottomSheet<Locale>(
+                      await showPickerBottomSheet<Locale>(
                         context: context,
                         title: 'Choose Language'.tr,
                         selected: c.locale,
@@ -65,17 +70,19 @@ class SettingsPage extends StatelessWidget {
                     title: Text('Currency'.tr),
                     subtitle: Text(c.currentCurrency),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => showPickerBottomSheet<String>(
-                      context: context,
-                      title: 'Choose Currency'.tr,
-                      selected: c.currency,
-                      options: c.currencies.map((e) {
-                        final code = e['key'] as String;
-                        final label = (e['value'] as String).tr;
-                        return SettingOption<String>(value: code, label: label);
-                      }).toList(),
-                      onSelected: c.setCurrency,
-                    ),
+                    onTap: () async {
+                      await showPickerBottomSheet<String>(
+                        context: context,
+                        title: 'Choose Currency'.tr,
+                        selected: c.currency,
+                        options: c.currencies.map((e) {
+                          final code = e['key'] as String;
+                          final label = (e['value'] as String).tr;
+                          return SettingOption<String>(value: code, label: label);
+                        }).toList(),
+                        onSelected: c.setCurrency,
+                      );
+                    },
                   ),
                   const Divider(height: 1),
                   ListTile(
@@ -83,32 +90,34 @@ class SettingsPage extends StatelessWidget {
                     title: Text('Appearance'.tr),
                     subtitle: Text(c.currentTheme),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => showPickerBottomSheet<ThemeMode>(
-                      context: context,
-                      title: 'Choose Appearance'.tr,
-                      selected: c.themeMode,
-                      options: [
-                        SettingOption(value: ThemeMode.system, label: 'System'.tr, icon: Icon(Icons.phone_android)),
-                        SettingOption(value: ThemeMode.light, label: 'Light'.tr, icon: Icon(Icons.light_mode)),
-                        SettingOption(value: ThemeMode.dark, label: 'Dark'.tr, icon: Icon(Icons.dark_mode)),
-                      ],
-                      onSelected: c.setThemeMode,
-                    ),
+                    onTap: () async {
+                      await showPickerBottomSheet<ThemeMode>(
+                        context: context,
+                        title: 'Choose Appearance'.tr,
+                        selected: c.themeMode,
+                        options: [
+                          SettingOption(value: ThemeMode.system, label: 'System'.tr, icon: Icon(Icons.phone_android)),
+                          SettingOption(value: ThemeMode.light, label: 'Light'.tr, icon: Icon(Icons.light_mode)),
+                          SettingOption(value: ThemeMode.dark, label: 'Dark'.tr, icon: Icon(Icons.dark_mode)),
+                        ],
+                        onSelected: c.setThemeMode,
+                      );
+                    },
                   ),
                   const Divider(height: 1),
                 ],
               ),
-             
+
               SizedBox(height: 16),
 
               HelpCenterPage(title: "Help Center"),
               SizedBox(height: 30),
               // Container(
-              //   height: 100, 
-              //   width: 100, 
+              //   height: 100,
+              //   width: 100,
               //   child: SvgPicture.asset(
-              //     AppConsts.logoBlack, 
-              //     width: 24, 
+              //     AppConsts.logoBlack,
+              //     width: 24,
               //     height: 24,
               //   ),
               // ),

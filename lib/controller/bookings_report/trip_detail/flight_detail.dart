@@ -184,11 +184,15 @@ class FlightDetail {
     final cabinCode = _splitLegsSegments(flight['CabinClassCode']);
     final journeyDur = _splitLegsSegments(flight['JourneyDuration']);
 
+    final departureTerminal = _splitLegsSegments(flight['DepartureTerminal']);
+    final arrivalTerminal = _splitLegsSegments(flight['ArrivalTerminal']);
+
     // عدد الـ legs = أكبر عدد legs موجود
     int legsCount = 0;
     for (final f in [
       depCodes, arrCodes, depDTs, arrDTs, flightNums, marketingCodes,
       equip, cabinText, cabinCode, journeyDur, depNames, arrNames,
+      departureTerminal, arrivalTerminal,
     ]) {
       if (f.length > legsCount) legsCount = f.length;
     }
@@ -201,6 +205,7 @@ class FlightDetail {
       for (final f in [
         depCodes, arrCodes, depDTs, arrDTs, flightNums, marketingCodes,
         equip, cabinText, cabinCode, journeyDur, depNames, arrNames,
+        departureTerminal, arrivalTerminal,
       ]) {
         final len = _legLen(f, l);
         if (len > segCount) segCount = len;
@@ -260,6 +265,8 @@ class FlightDetail {
             layoverMinutes: layMin,
             layoverText: layText,
             seatsRemaining: '',
+            fromTerminal: _get2D(departureTerminal, l, s),
+            toTerminal: _get2D(arrivalTerminal, l, s),
           ),
         );
       }

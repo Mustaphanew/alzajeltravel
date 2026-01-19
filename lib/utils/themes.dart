@@ -31,7 +31,10 @@ class Themes {
       inversePrimary: AppConsts.secondaryColor,
       primaryFixed: Colors.black,
       secondaryFixed: Colors.green[800],
+      onTertiaryFixedVariant: const Color(0xFFf7f8fb),
+
     );
+
 
     // 2) حدود موحّدة
     OutlineInputBorder _outline(Color c, {double width = 1.0}) => OutlineInputBorder(
@@ -220,7 +223,9 @@ class Themes {
       inversePrimary: AppConsts.secondaryColor,
       primaryFixed: Colors.white,
       secondaryFixed: Colors.green[800],
+      onTertiaryFixedVariant: const Color(0xFFf7f8fb),
     );
+
 
     // 2) حدود موحدة للنصوص
     OutlineInputBorder _outline(Color c, {double width = 1.0}) => OutlineInputBorder(

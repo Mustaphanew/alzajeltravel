@@ -134,7 +134,10 @@ class _OtherPricesPageState extends State<OtherPricesPage> {
                       FlightOfferCard(
                         offer: flight,
                         onDetails: () {
-                          Get.to(() => MoreFlightDetailPage(flightOffer: flight));
+                          Get.to(() => MoreFlightDetailPage(
+                            flightOffer: flight,
+                            fareRules: [],
+                          ));
                         },
                       ),
                     ],

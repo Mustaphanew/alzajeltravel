@@ -353,6 +353,7 @@ class _IssuingPageState extends State<IssuingPage> {
                           Get.to(
                             () => MoreFlightDetailPage(
                               flightOffer: widget.offerDetail.offer,
+                              fareRules: widget.offerDetail.fareRules,
                               // revalidatedDetails: widget.offerDetail,
                             ),
                           );

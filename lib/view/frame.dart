@@ -28,7 +28,6 @@ class Frame extends StatefulWidget {
 }
 
 class _FrameState extends State<Frame> with WidgetsBindingObserver {
-
   TranslationController translationController = Get.put(TranslationController());
   // MainController mainController = Get.put(MainController());
   FrameController frameController = Get.put(FrameController());
@@ -39,7 +38,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     AppVars.profile = AppVars.getStorage.read('profile') != null ? ProfileModel.fromJson(AppVars.getStorage.read('profile')) : null;
     print("profile: ${AppVars.profile?.id}");
-    Jiffy.setLocale(AppVars.lang??'en');
+    Jiffy.setLocale(AppVars.lang ?? 'en');
   }
 
   DateTime? _leftAt;
@@ -76,12 +75,11 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     super.dispose();
   }
 
-
   // ✅ الشاشات لكل تبويب
   List<Widget> _buildScreens() {
     return [
       Home(persistentTabController: frameController.persistentTabController),
-      SearchFlight(frameContext: context), 
+      SearchFlight(frameContext: context),
       const BookingsReportPage(),
       AppVars.profile != null ? ProfilePage(data: AppVars.profile!) : const Center(child: Text("No Profile")),
       SettingsPage(),
@@ -89,12 +87,16 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   }
 
   // ✅ عناصر الأيقونات
-  List<PersistentBottomNavBarItem> _navBarsItems() {
-    Color activeColorPrimary = AppConsts.secondaryColor;
+  List<PersistentBottomNavBarItem> navBarsItems() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    Color activeColorPrimary = cs.primaryContainer;
+    Color activeTextColorPrimary = cs.onInverseSurface;
+    Color inactiveColorPrimary = Colors.grey;
     return [
       PersistentBottomNavBarItem(
         icon: SvgPicture.asset(
-          AppConsts.logo2,
+          (AppVars.appThemeMode == ThemeMode.dark) ? AppConsts.logo2 : AppConsts.logo3,
           width: 24,
           height: 24,
           // color: Colors.black,
@@ -103,8 +105,8 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
         title: ("   ${'Home'.tr}"),
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
         activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: Colors.grey[400],
-        activeColorSecondary: Colors.black,
+        inactiveColorPrimary: inactiveColorPrimary,
+        activeColorSecondary: activeTextColorPrimary,
       ),
 
       PersistentBottomNavBarItem(
@@ -112,16 +114,16 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
         title: (" ${'Search'.tr}"),
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
         activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: Colors.grey[400],
-        activeColorSecondary: Colors.black,
+        inactiveColorPrimary: inactiveColorPrimary,
+        activeColorSecondary: activeTextColorPrimary,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.flight_takeoff_outlined),
         title: (" ${'Bookings'.tr}"),
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
         activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: Colors.grey[400],
-        activeColorSecondary: Colors.black,
+        inactiveColorPrimary: inactiveColorPrimary,
+        activeColorSecondary: activeTextColorPrimary,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.person),
@@ -129,8 +131,8 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
 
         activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: Colors.grey[400],
-        activeColorSecondary: Colors.black,
+        inactiveColorPrimary: inactiveColorPrimary,
+        activeColorSecondary: activeTextColorPrimary,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.settings),
@@ -138,17 +140,20 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
 
         activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: Colors.grey[400],
-        activeColorSecondary: Colors.black,
+        inactiveColorPrimary: inactiveColorPrimary,
+        activeColorSecondary: activeTextColorPrimary,
       ),
     ];
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    Color activeColorPrimary = cs.primaryContainer;
+    Color activeTextColorPrimary = cs.onInverseSurface;
+    Color inactiveColorPrimary = Colors.grey;
+
     return SafeArea(
       bottom: true,
       top: false,
@@ -160,12 +165,12 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
           backgroundColor: cs.surfaceContainerHighest,
           controller: frameController.persistentTabController,
           screens: _buildScreens(),
-          items: _navBarsItems(),
+          items: navBarsItems(),
           confineToSafeArea: true,
           handleAndroidBackButtonPress: true,
           resizeToAvoidBottomInset: true,
-          stateManagement: true,
-          hideNavigationBarWhenKeyboardAppears: true,
+          stateManagement: true, 
+          hideNavigationBarWhenKeyboardAppears: true, 
           navBarHeight: 70,
           decoration: NavBarDecoration(
             borderRadius: BorderRadius.circular(0.0),

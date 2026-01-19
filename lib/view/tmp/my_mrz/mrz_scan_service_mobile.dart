@@ -22,7 +22,9 @@ class MrzScanService {
 
   void dispose() => _recognizer.close();
 
-  /// ✅ الآن 24 محاولة (12 القديمة + 12 جديدة أقوى)
+  /// ✅ الآن 24 محاولة
+  /// - أول 11 محاولة: كما هي تماماً (نفس منطقك السابق)
+  /// - 12..24: محاولات جديدة محسّنة (بدون crop/rotate) + brightness/saturation/denoise/clear...
   Future<Map<String, dynamic>> scanPassport(
     File original, {
     AttemptCallback? onAttempt,
@@ -32,74 +34,25 @@ class MrzScanService {
 
     final tempFiles = <File>[];
     try {
-      // -------------------------------
-      // Attempt 1: base full  (كما هو)
-      // -------------------------------
-      onAttempt?.call(1, maxAttempts, 'base_full');
-      final out1 = await _runOcrTryParse(base.baseFile);
-      if (out1.parsed != null) {
-        final fixed = await _postFixParsedIfNeeded(out1.parsed!);
-        return _resultToJson(
-          fixed.result,
-          fixed.usedLines,
-          attempt: 1,
-          tag: 'base_full',
-        );
-      }
+      final attempts = _buildAttempts24();
 
-      // ---------------------------------------------------------
-      // Attempt 2: auto-rect (if possible) else fallback strip BW
-      // (كما هو)
-      // ---------------------------------------------------------
-      onAttempt?.call(2, maxAttempts, 'auto_rect_or_strip_bw');
-      final rect = _guessMrzRect(
-        out1.recognizedText,
-        imageWidth: base.image.width.toDouble(),
-        imageHeight: base.image.height.toDouble(),
-      );
-
-      final attempt2Spec = _AttemptSpec(
-        tag: rect != null ? 'auto_rect_bw' : 'strip_bw_055',
-        crop: rect != null
-            ? _CropRect(rect)
-            : const _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.55,
-        contrast: 230,
-        sharpenLevel: 1,
-      );
-
-      final attempt2File =
-          await _renderAttemptFile(base.image, attempt2Spec, index: 2);
-      tempFiles.add(attempt2File);
-
-      final out2 = await _runOcrTryParse(attempt2File);
-      if (out2.parsed != null) {
-        final fixed = await _postFixParsedIfNeeded(out2.parsed!);
-        return _resultToJson(
-          fixed.result,
-          fixed.usedLines,
-          attempt: 2,
-          tag: attempt2Spec.tag,
-        );
-      }
-
-      // -------------------------------
-      // Attempts 3..12 (كما هي تماماً)
-      // -------------------------------
-      final plan10 = _buildPlan10();
-      var attemptNo = 3;
-
-      for (final spec in plan10) {
+      for (int i = 0; i < attempts.length; i++) {
+        final attemptNo = i + 1;
         if (attemptNo > maxAttempts) break;
 
+        final spec = attempts[i];
         onAttempt?.call(attemptNo, maxAttempts, spec.tag);
 
-        final f = await _renderAttemptFile(base.image, spec, index: attemptNo);
-        tempFiles.add(f);
+        File inputFile;
+        if (spec.tag == 'base_full') {
+          inputFile = base.baseFile;
+        } else {
+          final f = await _renderAttemptFile(base.image, spec, index: attemptNo);
+          tempFiles.add(f);
+          inputFile = f;
+        }
 
-        final out = await _runOcrTryParse(f);
+        final out = await _runOcrTryParse(inputFile);
         if (out.parsed != null) {
           final fixed = await _postFixParsedIfNeeded(out.parsed!);
           return _resultToJson(
@@ -109,34 +62,6 @@ class MrzScanService {
             tag: spec.tag,
           );
         }
-        attemptNo++;
-      }
-
-      // ----------------------------------------------------------
-      // Attempts 13..24 (12 محاولات جديدة أقوى)
-      // مبنية على image_prep.dart:
-      //   normalize + sharpen + Otsu + upscale + crops/rotations
-      // ----------------------------------------------------------
-      final planExtra12 = _buildPlanExtra12();
-      for (final spec in planExtra12) {
-        if (attemptNo > maxAttempts) break;
-
-        onAttempt?.call(attemptNo, maxAttempts, spec.tag);
-
-        final f = await _renderAttemptFile(base.image, spec, index: attemptNo);
-        tempFiles.add(f);
-
-        final out = await _runOcrTryParse(f);
-        if (out.parsed != null) {
-          final fixed = await _postFixParsedIfNeeded(out.parsed!);
-          return _resultToJson(
-            fixed.result,
-            fixed.usedLines,
-            attempt: attemptNo,
-            tag: spec.tag,
-          );
-        }
-        attemptNo++;
       }
 
       throw MrzScanException('Could not extract MRZ.');
@@ -153,11 +78,42 @@ class MrzScanService {
   }
 
   // --------------------------------------------------------------------------
-  // Attempts plan (Attempts 3..12)  ✅ كما هي
+  // ✅ خطة الـ 24 محاولة
+  // أول 11 محاولة = نفس محاولاتك السابقة كما هي
+  // 12..24 = محاولات جديدة بدون قص/ميلان (crop full + rotate 0)
   // --------------------------------------------------------------------------
 
-  List<_AttemptSpec> _buildPlan10() {
+  List<_AttemptSpec> _buildAttempts24() {
+    const full = _CropFrac(x0: 0, y0: 0, x1: 1, y1: 1);
+
     return const [
+      // =========================
+      // ✅ 1..11 (كما هي تماماً)
+      // =========================
+
+      // 1) base_full (بدون معالجة)
+      _AttemptSpec(
+        tag: 'base_full',
+        crop: full,
+        rotateDeg: 0,
+        bw: false,
+        threshold: 0.0,
+        contrast: 0,
+        sharpenLevel: 0,
+      ),
+
+      // 2) strip_bw_055
+      _AttemptSpec(
+        tag: 'strip_bw_055',
+        crop: _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.55,
+        contrast: 230,
+        sharpenLevel: 1,
+      ),
+
+      // 3) strip_gray_sharp
       _AttemptSpec(
         tag: 'strip_gray_sharp',
         crop: _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
@@ -167,15 +123,8 @@ class MrzScanService {
         contrast: 220,
         sharpenLevel: 1,
       ),
-      _AttemptSpec(
-        tag: 'strip_bw_055_sharp',
-        crop: _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 1,
-      ),
+
+      // 4) strip_bw_045_strong
       _AttemptSpec(
         tag: 'strip_bw_045_strong',
         crop: _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
@@ -185,6 +134,8 @@ class MrzScanService {
         contrast: 250,
         sharpenLevel: 2,
       ),
+
+      // 5) tight22_bw_055_strong
       _AttemptSpec(
         tag: 'tight22_bw_055_strong',
         crop: _CropFrac(x0: 0.0, y0: 0.78, x1: 1.0, y1: 1.0),
@@ -194,42 +145,8 @@ class MrzScanService {
         contrast: 250,
         sharpenLevel: 2,
       ),
-      _AttemptSpec(
-        tag: 'tight20_bw_045_strong',
-        crop: _CropFrac(x0: 0.0, y0: 0.80, x1: 1.0, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.45,
-        contrast: 255,
-        sharpenLevel: 2,
-      ),
-      _AttemptSpec(
-        tag: 'right_strip_bw_055',
-        crop: _CropFrac(x0: 0.30, y0: 0.66, x1: 1.0, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 1,
-      ),
-      _AttemptSpec(
-        tag: 'right_strip_bw_rot_-2',
-        crop: _CropFrac(x0: 0.30, y0: 0.66, x1: 1.0, y1: 1.0),
-        rotateDeg: -2,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 1,
-      ),
-      _AttemptSpec(
-        tag: 'right_strip_bw_rot_+2',
-        crop: _CropFrac(x0: 0.30, y0: 0.66, x1: 1.0, y1: 1.0),
-        rotateDeg: 2,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 1,
-      ),
+
+      // 6) strip_bw_rot_-2_strong
       _AttemptSpec(
         tag: 'strip_bw_rot_-2_strong',
         crop: _CropFrac(x0: 0.0, y0: 0.70, x1: 1.0, y1: 1.0),
@@ -239,6 +156,8 @@ class MrzScanService {
         contrast: 255,
         sharpenLevel: 2,
       ),
+
+      // 7) bottom45_bw
       _AttemptSpec(
         tag: 'bottom45_bw',
         crop: _CropFrac(x0: 0.0, y0: 0.55, x1: 1.0, y1: 1.0),
@@ -248,21 +167,8 @@ class MrzScanService {
         contrast: 240,
         sharpenLevel: 1,
       ),
-    ];
-  }
 
-  // --------------------------------------------------------------------------
-  // ✅ Attempts 13..24 (مستوحاة من image_prep.dart و mrz_utils.dart)
-  // - normalize (img.normalize)
-  // - strong sharpen (مستوى 2/3)
-  // - Otsu binarization
-  // - Upscale width أكبر (2800)
-  // - قص أدق + ميلان بسيط
-  // --------------------------------------------------------------------------
-
-  List<_AttemptSpec> _buildPlanExtra12() {
-    return const [
-      // 13: strip + normalize + otsu + upscale
+      // 8) extra_strip_norm_otsu_up2800
       _AttemptSpec(
         tag: 'extra_strip_norm_otsu_up2800',
         crop: _CropFrac(x0: 0.0, y0: 0.68, x1: 1.0, y1: 1.0),
@@ -276,35 +182,7 @@ class MrzScanService {
         upscaleWidth: 2800,
       ),
 
-      // 14: strip tighter + normalize + otsu
-      _AttemptSpec(
-        tag: 'extra_strip_y072_norm_otsu_up2800',
-        crop: _CropFrac(x0: 0.0, y0: 0.72, x1: 1.0, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 2,
-        normalize: true,
-        otsu: true,
-        upscaleWidth: 2800,
-      ),
-
-      // 15: strip x-trim + normalize + otsu (يزيل الحواف المزخرفة)
-      _AttemptSpec(
-        tag: 'extra_strip_xtrim_norm_otsu_up2800',
-        crop: _CropFrac(x0: 0.02, y0: 0.68, x1: 0.98, y1: 1.0),
-        rotateDeg: 0,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
-        sharpenLevel: 2,
-        normalize: true,
-        otsu: true,
-        upscaleWidth: 2800,
-      ),
-
-      // 16: strip x-trim + rotate -1.5
+      // 9) extra_strip_xtrim_rot_-15_norm_otsu
       _AttemptSpec(
         tag: 'extra_strip_xtrim_rot_-15_norm_otsu',
         crop: _CropFrac(x0: 0.02, y0: 0.68, x1: 0.98, y1: 1.0),
@@ -318,7 +196,7 @@ class MrzScanService {
         upscaleWidth: 2800,
       ),
 
-      // 17: strip x-trim + rotate +1.5
+      // 10) extra_strip_xtrim_rot_+15_norm_otsu
       _AttemptSpec(
         tag: 'extra_strip_xtrim_rot_+15_norm_otsu',
         crop: _CropFrac(x0: 0.02, y0: 0.68, x1: 0.98, y1: 1.0),
@@ -332,7 +210,7 @@ class MrzScanService {
         upscaleWidth: 2800,
       ),
 
-      // 18: tighter 25% (MRZ فقط تقريباً)
+      // 11) extra_tight25_norm_otsu_up2800
       _AttemptSpec(
         tag: 'extra_tight25_norm_otsu_up2800',
         crop: _CropFrac(x0: 0.0, y0: 0.75, x1: 1.0, y1: 1.0),
@@ -346,10 +224,97 @@ class MrzScanService {
         upscaleWidth: 2800,
       ),
 
-      // 19: tighter 18% (قد تنجح مع MRZ القريبة جداً)
+      // =========================
+      // ✅ 12..24 محاولات جديدة (بدون قص/ميلان)
+      // crop=full + rotate=0
+      // =========================
+
+      // 12) clear gray (normalize + contrast + sharp) بدون BW
       _AttemptSpec(
-        tag: 'extra_tight18_norm_otsu_up2800',
-        crop: _CropFrac(x0: 0.0, y0: 0.82, x1: 1.0, y1: 1.0),
+        tag: 'full_clear_gray',
+        crop: full,
+        rotateDeg: 0,
+        bw: false,
+        threshold: 0.0,
+        contrast: 230,
+        sharpenLevel: 2,
+        normalize: true,
+        brightness: 1.08,
+        saturation: 1.00,
+        denoiseLevel: 0,
+        scale: 1.05,
+      ),
+
+      // 13) BW fixed 0.55 + clear
+      _AttemptSpec(
+        tag: 'full_bw055_clear',
+        crop: full,
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.55,
+        contrast: 245,
+        sharpenLevel: 2,
+        normalize: true,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 0,
+        scale: 1.08,
+      ),
+
+      // 14) BW fixed 0.60 (أقوى / deep)
+      _AttemptSpec(
+        tag: 'full_bw060_deep',
+        crop: full,
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.60,
+        contrast: 255,
+        sharpenLevel: 3,
+        normalize: true,
+        brightness: 1.15,
+        saturation: 1.00,
+        denoiseLevel: 0,
+        scale: 1.10,
+      ),
+
+      // 15) Otsu BW + clear
+      _AttemptSpec(
+        tag: 'full_otsu_clear',
+        crop: full,
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.55,
+        contrast: 240,
+        sharpenLevel: 2,
+        normalize: true,
+        otsu: true,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 0,
+        scale: 1.10,
+      ),
+
+      // 16) denoise(1) + Otsu
+      _AttemptSpec(
+        tag: 'full_denoise1_otsu',
+        crop: full,
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.55,
+        contrast: 240,
+        sharpenLevel: 2,
+        normalize: true,
+        otsu: true,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 1,
+        scale: 1.10,
+      ),
+
+      // 17) denoise(2) + Otsu + deep sharpen
+      _AttemptSpec(
+        tag: 'full_denoise2_otsu_deep',
+        crop: full,
         rotateDeg: 0,
         bw: true,
         threshold: 0.55,
@@ -357,13 +322,16 @@ class MrzScanService {
         sharpenLevel: 3,
         normalize: true,
         otsu: true,
-        upscaleWidth: 2800,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 2,
+        scale: 1.12,
       ),
 
-      // 20: right strip + normalize + otsu (للجواز المفتوح)
+      // 18) saturation↑ + brightness↑ + Otsu
       _AttemptSpec(
-        tag: 'extra_right_norm_otsu_up2800',
-        crop: _CropFrac(x0: 0.25, y0: 0.66, x1: 1.0, y1: 1.0),
+        tag: 'full_sat130_bright110_otsu',
+        crop: full,
         rotateDeg: 0,
         bw: true,
         threshold: 0.55,
@@ -371,63 +339,107 @@ class MrzScanService {
         sharpenLevel: 2,
         normalize: true,
         otsu: true,
-        upscaleWidth: 2800,
+        brightness: 1.10,
+        saturation: 1.30,
+        denoiseLevel: 0,
+        scale: 1.10,
       ),
 
-      // 21: right strip + rotate -2
+      // 19) saturation↑↑ + brightness↑↑ + BW 0.55 deep
       _AttemptSpec(
-        tag: 'extra_right_rot_-2_norm_otsu',
-        crop: _CropFrac(x0: 0.25, y0: 0.66, x1: 1.0, y1: 1.0),
-        rotateDeg: -2,
+        tag: 'full_sat160_bright120_bw055_deep',
+        crop: full,
+        rotateDeg: 0,
+        bw: true,
+        threshold: 0.55,
+        contrast: 255,
+        sharpenLevel: 3,
+        normalize: true,
+        brightness: 1.20,
+        saturation: 1.60,
+        denoiseLevel: 1,
+        scale: 1.12,
+      ),
+
+      // 20) saturation↓ (أحياناً يقلل تشويش الخلفية) + brightness↑ + Otsu
+      _AttemptSpec(
+        tag: 'full_sat080_bright115_otsu',
+        crop: full,
+        rotateDeg: 0,
         bw: true,
         threshold: 0.55,
         contrast: 240,
         sharpenLevel: 2,
         normalize: true,
         otsu: true,
-        upscaleWidth: 2800,
+        brightness: 1.15,
+        saturation: 0.80,
+        denoiseLevel: 0,
+        scale: 1.10,
       ),
 
-      // 22: right strip + rotate +2
+      // 21) bright قوي + denoise1 + Gray فقط (بدون BW) للحفاظ على '<'
       _AttemptSpec(
-        tag: 'extra_right_rot_+2_norm_otsu',
-        crop: _CropFrac(x0: 0.25, y0: 0.66, x1: 1.0, y1: 1.0),
-        rotateDeg: 2,
-        bw: true,
-        threshold: 0.55,
-        contrast: 240,
+        tag: 'full_bright125_denoise1_gray',
+        crop: full,
+        rotateDeg: 0,
+        bw: false,
+        threshold: 0.0,
+        contrast: 235,
         sharpenLevel: 2,
         normalize: true,
-        otsu: true,
-        upscaleWidth: 2800,
+        brightness: 1.25,
+        saturation: 1.00,
+        denoiseLevel: 1,
+        scale: 1.08,
       ),
 
-      // 23: fixed threshold 0.50 + normalize (بدون Otsu)
+      // 22) denoise1 + BW fixed 0.50 (مرن أكثر)
       _AttemptSpec(
-        tag: 'extra_strip_norm_fixed_050_up2800',
-        crop: _CropFrac(x0: 0.02, y0: 0.68, x1: 0.98, y1: 1.0),
+        tag: 'full_denoise1_bw050',
+        crop: full,
         rotateDeg: 0,
         bw: true,
         threshold: 0.50,
-        contrast: 250,
+        contrast: 245,
         sharpenLevel: 2,
         normalize: true,
-        otsu: false,
-        upscaleWidth: 2800,
+        brightness: 1.15,
+        saturation: 1.00,
+        denoiseLevel: 1,
+        scale: 1.10,
       ),
 
-      // 24: fixed threshold 0.60 + normalize (بدون Otsu)
+      // 23) denoise1 + BW fixed 0.45 (للصور اللي الخط فيها باهت)
       _AttemptSpec(
-        tag: 'extra_strip_norm_fixed_060_up2800',
-        crop: _CropFrac(x0: 0.02, y0: 0.68, x1: 0.98, y1: 1.0),
+        tag: 'full_denoise1_bw045',
+        crop: full,
         rotateDeg: 0,
         bw: true,
-        threshold: 0.60,
-        contrast: 250,
-        sharpenLevel: 2,
+        threshold: 0.45,
+        contrast: 255,
+        sharpenLevel: 3,
         normalize: true,
-        otsu: false,
-        upscaleWidth: 2800,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 1,
+        scale: 1.10,
+      ),
+
+      // 24) denoise2 + deep clear Gray (بدون BW) آخر محاولة قوية
+      _AttemptSpec(
+        tag: 'full_denoise2_gray_deep_clear',
+        crop: full,
+        rotateDeg: 0,
+        bw: false,
+        threshold: 0.0,
+        contrast: 255,
+        sharpenLevel: 3,
+        normalize: true,
+        brightness: 1.12,
+        saturation: 1.00,
+        denoiseLevel: 2,
+        scale: 1.10,
       ),
     ];
   }
@@ -456,7 +468,7 @@ class MrzScanService {
   _ParsedMrz? _tryParseMrzSafe(List<String> linesTopToBottom) {
     if (linesTopToBottom.isEmpty) return null;
 
-    // 1) Adjacent first (كما كان)
+    // Adjacent first
     for (int i = 0; i < linesTopToBottom.length; i++) {
       // TD1 (3x30)
       if (i + 2 < linesTopToBottom.length) {
@@ -484,7 +496,6 @@ class MrzScanService {
         var l1 = _fitToLen(linesTopToBottom[i], 44, preferDocStart: true);
         var l2 = _fitToLen(linesTopToBottom[i + 1], 44);
 
-        // Repairs (givenNames + personal noise + digits)
         l1 = _repairTd3Line1NameDelimiter(l1);
         l1 = _fixNameFieldDigitsToLetters(l1);
         l2 = _cleanTd3Line2PersonalNumberNoise(l2);
@@ -495,27 +506,22 @@ class MrzScanService {
       }
     }
 
-    // 2) ✅ إضافة منطق mrz_utils.dart: جرب الأزواج غير المتجاورة (يرفع النجاح)
+    // non-adjacent pairing (max 20)
     final limit = linesTopToBottom.length > 20 ? 20 : linesTopToBottom.length;
-
     for (int i = 0; i < limit; i++) {
       for (int j = i + 1; j < limit; j++) {
         final a = linesTopToBottom[i];
         final b = linesTopToBottom[j];
 
-        // TD3 44 (order a,b)
         final p1 = _tryParseTwoLines(a, b, 44);
         if (p1 != null) return p1;
 
-        // TD3 44 (order b,a)
         final p2 = _tryParseTwoLines(b, a, 44);
         if (p2 != null) return p2;
 
-        // TD2 36 (order a,b)
         final p3 = _tryParseTwoLines(a, b, 36);
         if (p3 != null) return p3;
 
-        // TD2 36 (order b,a)
         final p4 = _tryParseTwoLines(b, a, 36);
         if (p4 != null) return p4;
       }
@@ -575,10 +581,6 @@ class MrzScanService {
     return null;
   }
 
-  // --------------------------------------------------------------------------
-  // Post-fix: إذا parser نجح لكن givenNames فارغ
-  // --------------------------------------------------------------------------
-
   Future<_ParsedMrz> _postFixParsedIfNeeded(_ParsedMrz parsed) async {
     final r = parsed.result;
 
@@ -605,7 +607,7 @@ class MrzScanService {
   }
 
   // --------------------------------------------------------------------------
-  // Build MRZ-ish lines from OCR
+  // Extract rows
   // --------------------------------------------------------------------------
 
   List<String> _extractOrderedRows(RecognizedText rt) {
@@ -621,7 +623,7 @@ class MrzScanService {
 
     ocrLines.sort((a, b) => a.box.top.compareTo(b.box.top));
 
-    final yTol = 14.0;
+    const yTol = 14.0;
     final rows = <List<_OcrLine>>[];
 
     for (final line in ocrLines) {
@@ -695,8 +697,7 @@ class MrzScanService {
         final total = t * k;
         if (x.length >= total - 12 && x.length <= total + 12) {
           final padded = x.padRight(total, '<');
-          return List.generate(
-              k, (i) => padded.substring(i * t, (i + 1) * t));
+          return List.generate(k, (i) => padded.substring(i * t, (i + 1) * t));
         }
       }
     }
@@ -712,7 +713,6 @@ class MrzScanService {
       return x.padRight(target, '<');
     }
 
-    // إضافة من mrz_utils.dart: لو أطول بفارق بسيط حاول أخذ آخر target
     if (x.length > target && x.length <= target + 20) {
       if (preferDocStart) {
         final starts = ['P<', 'I<', 'V<', 'A<', 'C<'];
@@ -740,7 +740,7 @@ class MrzScanService {
   }
 
   // --------------------------------------------------------------------------
-  // Repairs
+  // Repairs / Normalization
   // --------------------------------------------------------------------------
 
   String _normalizeMrzString(String s) {
@@ -754,7 +754,7 @@ class MrzScanService {
         .replaceAll('《', '<')
         .replaceAll('〉', '<')
         .replaceAll('＞', '<')
-        .replaceAll('>', '<'); // ✅ من mrz_utils.dart
+        .replaceAll('>', '<');
 
     x = x.replaceAll(RegExp(r'\s+'), '');
     x = x.replaceAll(RegExp(r'[^A-Z0-9<\n]'), '');
@@ -768,39 +768,28 @@ class MrzScanService {
   String _repairTd3Line1NameDelimiter(String line1) {
     if (line1.length != 44) return line1;
 
-    final start = 5; // P<XXX
+    final start = 5;
     final idx = line1.indexOf('<', start);
     if (idx == -1) return line1;
 
     if (idx + 1 < line1.length && line1[idx + 1] != '<') {
-      final repaired =
-          line1.substring(0, idx) + '<<' + line1.substring(idx + 1);
+      final repaired = line1.substring(0, idx) + '<<' + line1.substring(idx + 1);
       return repaired.length >= 44
           ? repaired.substring(0, 44)
           : repaired.padRight(44, '<');
     }
-
     return line1;
   }
 
   String _fixNameFieldDigitsToLetters(String line1) {
     if (line1.length != 44) return line1;
 
-    const map = {
-      '0': 'O',
-      '1': 'I',
-      '2': 'Z',
-      '5': 'S',
-      '8': 'B',
-      '6': 'G',
-    };
+    const map = {'0': 'O', '1': 'I', '2': 'Z', '5': 'S', '8': 'B', '6': 'G'};
 
     final chars = line1.split('');
     for (int i = 5; i < chars.length; i++) {
       final c = chars[i];
-      if (map.containsKey(c)) {
-        chars[i] = map[c]!;
-      }
+      if (map.containsKey(c)) chars[i] = map[c]!;
     }
     return chars.join('');
   }
@@ -866,16 +855,19 @@ class MrzScanService {
 
     final chars = line2.split('');
 
-    final nat =
-        fixLetters(chars.sublist(10, 13).join()).padRight(3, '<').substring(0, 3);
+    final nat = fixLetters(chars.sublist(10, 13).join())
+        .padRight(3, '<')
+        .substring(0, 3);
     chars.setRange(10, 13, nat.split(''));
 
-    final bd =
-        fixDigits(chars.sublist(13, 19).join()).padRight(6, '0').substring(0, 6);
+    final bd = fixDigits(chars.sublist(13, 19).join())
+        .padRight(6, '0')
+        .substring(0, 6);
     chars.setRange(13, 19, bd.split(''));
 
-    final exp =
-        fixDigits(chars.sublist(21, 27).join()).padRight(6, '0').substring(0, 6);
+    final exp = fixDigits(chars.sublist(21, 27).join())
+        .padRight(6, '0')
+        .substring(0, 6);
     chars.setRange(21, 27, exp.split(''));
 
     for (final idx in [9, 19, 27, 42, 43]) {
@@ -885,59 +877,6 @@ class MrzScanService {
     }
 
     return chars.join('');
-  }
-
-  // --------------------------------------------------------------------------
-  // Auto rect guess
-  // --------------------------------------------------------------------------
-
-  Rect? _guessMrzRect(
-    RecognizedText rt, {
-    required double imageWidth,
-    required double imageHeight,
-  }) {
-    final scored = <_OcrLineScore>[];
-
-    for (final b in rt.blocks) {
-      for (final l in b.lines) {
-        final t = _normalizeMrzString(l.text);
-        if (t.isEmpty) continue;
-
-        final lt = '<'.allMatches(t).length;
-        if (lt < 4) continue;
-
-        final y = l.boundingBox.center.dy / imageHeight;
-        if (y < 0.45) continue;
-
-        final score = lt.toDouble() + y * 10.0;
-        scored.add(_OcrLineScore(box: l.boundingBox, score: score));
-      }
-    }
-
-    if (scored.isEmpty) return null;
-
-    scored.sort((a, b) => b.score.compareTo(a.score));
-    final top = scored.take(4).toList();
-
-    Rect r = top.first.box;
-    for (final x in top.skip(1)) {
-      r = r.expandToInclude(x.box);
-    }
-
-    final padX = imageWidth * 0.03;
-    final padY = imageHeight * 0.03;
-
-    final left = (r.left - padX).clamp(0.0, imageWidth);
-    final topY = (r.top - padY).clamp(0.0, imageHeight);
-    final right = (r.right + padX).clamp(0.0, imageWidth);
-    final bottom = (r.bottom + padY).clamp(0.0, imageHeight);
-
-    final out = Rect.fromLTRB(left, topY, right, bottom);
-
-    if (out.width < imageWidth * 0.25 || out.height < imageHeight * 0.08) {
-      return null;
-    }
-    return out;
   }
 
   // --------------------------------------------------------------------------
@@ -965,28 +904,25 @@ class MrzScanService {
     required int index,
   }) async {
     try {
-      img.Image x = base;
+      // ✅ مهم جداً: نشتغل على copy حتى لا تتلوث base بين المحاولات
+      img.Image x = img.Image.from(base);
 
-      // Crop
+      // Crop (للمحاولات القديمة فقط، الجديدة crop=full)
       if (spec.crop is _CropFrac) {
-        x = _cropFrac(x, spec.crop as _CropFrac);
+        final c = spec.crop as _CropFrac;
+        if (!(c.x0 == 0 && c.y0 == 0 && c.x1 == 1 && c.y1 == 1)) {
+          x = _cropFrac(x, c);
+        }
       } else if (spec.crop is _CropRect) {
         x = _cropRect(x, (spec.crop as _CropRect).rect);
       }
 
-      // Rotate
+      // Rotate (المحاولات الجديدة rotate=0)
       if (spec.rotateDeg.abs() > 0.01) {
         x = img.copyRotate(x, angle: spec.rotateDeg);
       }
 
-      // Avoid too tiny
-      if (x.width < 30 || x.height < 30) {
-        x = base;
-      }
-
-      // Resize:
-      // - للمحاولات القديمة: نفس المنطق (1600..2200)
-      // - للمحاولات الجديدة: upscaleWidth (مثل 2800) إن وُجد
+      // Resize baseline
       const minW = 1600;
       const maxW = 2200;
 
@@ -1008,10 +944,33 @@ class MrzScanService {
         }
       }
 
-      // Grayscale
+      // little scale
+      if ((spec.scale - 1.0).abs() > 0.001) {
+        final newW = (x.width * spec.scale).round().clamp(300, 3000);
+        if (newW != x.width) {
+          x = img.copyResize(
+            x,
+            width: newW,
+            maintainAspect: true,
+            interpolation: img.Interpolation.linear,
+          );
+        }
+      }
+
+      // Color ops: brightness + saturation (قبل التحويل إلى Gray)
+      if ((spec.brightness - 1.0).abs() > 0.001 ||
+          (spec.saturation - 1.0).abs() > 0.001) {
+        _applyBrightnessSaturation(
+          x,
+          brightness: spec.brightness,
+          saturation: spec.saturation,
+        );
+      }
+
+      // Gray
       img.grayscale(x);
 
-      // ✅ Normalize (من image_prep.dart)
+      // Clear/Normalize
       if (spec.normalize) {
         x = img.normalize(
           x,
@@ -1022,17 +981,24 @@ class MrzScanService {
       }
 
       // Contrast
-      img.contrast(x, contrast: spec.contrast);
+      if (spec.contrast != 0) {
+        img.contrast(x, contrast: spec.contrast);
+      }
 
-      // Sharpen (level 1/2/3)
+      // Denoising (بعد Gray/Normalize وقبل Sharpen)
+      if (spec.denoiseLevel > 0) {
+        x = _denoiseBox3x3(x, passes: spec.denoiseLevel);
+      }
+
+      // Sharpen
       if (spec.sharpenLevel > 0 && x.width >= 3 && x.height >= 3) {
         x = _applySharpenLevels(x, spec.sharpenLevel);
       }
 
-      // BW: fixed threshold OR Otsu (من image_prep.dart)
+      // BW
       if (spec.bw) {
         if (spec.otsu) {
-          final thr = _otsuThreshold(x); // 0..255
+          final thr = _otsuThreshold(x);
           x = _binarize(x, threshold: thr);
         } else {
           x = _binarizeFixed(x, threshold01: spec.threshold);
@@ -1082,12 +1048,96 @@ class MrzScanService {
     return img.copyCrop(base, x: x, y: y, width: cw, height: ch);
   }
 
+  // --------------------------------------------------------------------------
+  // New ops: brightness + saturation
+  // --------------------------------------------------------------------------
+
+  void _applyBrightnessSaturation(
+    img.Image image, {
+    required double brightness,
+    required double saturation,
+  }) {
+    // brightness: 1.0 = no change
+    // saturation: 1.0 = no change
+    for (final p in image) {
+      final r = p.r.toDouble();
+      final g = p.g.toDouble();
+      final b = p.b.toDouble();
+
+      final lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      final rr = lum + (r - lum) * saturation;
+      final gg = lum + (g - lum) * saturation;
+      final bb = lum + (b - lum) * saturation;
+
+      int nr = (rr * brightness).round();
+      int ng = (gg * brightness).round();
+      int nb = (bb * brightness).round();
+
+      nr = nr.clamp(0, 255);
+      ng = ng.clamp(0, 255);
+      nb = nb.clamp(0, 255);
+
+      p
+        ..r = nr
+        ..g = ng
+        ..b = nb;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Denoising: simple box blur 3x3 (fast enough) for grayscale images
+  // --------------------------------------------------------------------------
+
+  img.Image _denoiseBox3x3(img.Image src, {required int passes}) {
+    img.Image current = src;
+    for (int pass = 0; pass < passes; pass++) {
+      final w = current.width;
+      final h = current.height;
+      final out = img.Image(width: w, height: h);
+
+      // Copy edges
+      for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+          if (x == 0 || y == 0 || x == w - 1 || y == h - 1) {
+            final p = current.getPixel(x, y);
+            out.setPixelRgba(x, y, p.r, p.g, p.b, p.a);
+          }
+        }
+      }
+
+      for (int y = 1; y < h - 1; y++) {
+        for (int x = 1; x < w - 1; x++) {
+          int sum = 0;
+          sum += int.parse(current.getPixel(x - 1, y - 1).r.toString());
+          sum += int.parse(current.getPixel(x, y - 1).r.toString());
+          sum += int.parse(current.getPixel(x + 1, y - 1).r.toString());
+          sum += int.parse(current.getPixel(x - 1, y).r.toString());
+          sum += int.parse(current.getPixel(x, y).r.toString());
+          sum += int.parse(current.getPixel(x + 1, y).r.toString());
+          sum += int.parse(current.getPixel(x - 1, y + 1).r.toString());
+          sum += int.parse(current.getPixel(x, y + 1).r.toString());
+          sum += int.parse(current.getPixel(x + 1, y + 1).r.toString());
+
+          final v = (sum / 9.0).round().clamp(0, 255);
+          out.setPixelRgba(x, y, v, v, v, 255);
+        }
+      }
+
+      current = out;
+    }
+    return current;
+  }
+
+  // --------------------------------------------------------------------------
+  // Sharpen
+  // --------------------------------------------------------------------------
+
   img.Image _applySharpenLevels(img.Image src, int level) {
     if (level <= 0) return src;
     if (level == 1) return _sharpen3x3(src, strong: false);
     if (level == 2) return _sharpen3x3(src, strong: true);
 
-    // level >= 3: strong مرتين
     final a = _sharpen3x3(src, strong: true);
     return _sharpen3x3(a, strong: true);
   }
@@ -1129,12 +1179,16 @@ class MrzScanService {
     return out;
   }
 
+  // --------------------------------------------------------------------------
+  // Otsu + BW helpers
+  // --------------------------------------------------------------------------
+
   int _otsuThreshold(img.Image gray) {
     final hist = List<int>.filled(256, 0);
     int total = 0;
 
     for (final p in gray) {
-      hist[int.parse((p.r).toString())]++;
+      hist[int.parse(p.r.toString())]++;
       total++;
     }
     if (total == 0) return 128;
@@ -1190,6 +1244,10 @@ class MrzScanService {
     final thr = (threshold01.clamp(0.0, 1.0) * 255).round();
     return _binarize(gray, threshold: thr);
   }
+
+  // --------------------------------------------------------------------------
+  // Temp files
+  // --------------------------------------------------------------------------
 
   Future<File> _writeTempPng(img.Image image, String name) async {
     final dir = await getTemporaryDirectory();
@@ -1252,10 +1310,7 @@ class _ScanOutcome {
   final RecognizedText recognizedText;
   final _ParsedMrz? parsed;
 
-  _ScanOutcome({
-    required this.recognizedText,
-    required this.parsed,
-  });
+  _ScanOutcome({required this.recognizedText, required this.parsed});
 }
 
 class _ParsedMrz {
@@ -1275,15 +1330,20 @@ class _AttemptSpec {
   final Object crop; // _CropFrac or _CropRect
   final double rotateDeg;
 
-  final bool bw; // إذا false: gray فقط
-  final double threshold; // fixed threshold
+  final bool bw;
+  final double threshold;
   final int contrast;
   final int sharpenLevel;
 
-  // ✅ إضافات (من الملفات المرفقة)
-  final bool normalize; // img.normalize
-  final bool otsu; // Otsu threshold بدل fixed threshold
-  final int? upscaleWidth; // تكبير عرض أقوى للمحاولات الجديدة
+  final bool normalize;
+  final bool otsu;
+  final int? upscaleWidth;
+
+  // ✅ New ops
+  final double brightness; // 1.0 = normal
+  final double saturation; // 1.0 = normal
+  final int denoiseLevel; // 0..2
+  final double scale; // 1.0 = none
 
   const _AttemptSpec({
     required this.tag,
@@ -1296,6 +1356,10 @@ class _AttemptSpec {
     this.normalize = false,
     this.otsu = false,
     this.upscaleWidth,
+    this.brightness = 1.0,
+    this.saturation = 1.0,
+    this.denoiseLevel = 0,
+    this.scale = 1.0,
   });
 }
 
@@ -1318,10 +1382,4 @@ class _OcrLine {
   final String text;
   final Rect box;
   _OcrLine({required this.text, required this.box});
-}
-
-class _OcrLineScore {
-  final Rect box;
-  final double score;
-  _OcrLineScore({required this.box, required this.score});
 }

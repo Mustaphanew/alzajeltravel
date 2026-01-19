@@ -21,6 +21,7 @@ class ChangePassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GetBuilder<ChangePasswordController>(
       init: ChangePasswordController(),
       tag: tag,
@@ -30,10 +31,24 @@ class ChangePassword extends StatelessWidget {
           key: c.formKey,
           child: ExpansionTile(
             controller: c.expandableController,
-            title: Text('Change Password'.tr),
+            leading: const Icon(Icons.lock),
+            title: Text('Change Password'.tr, style: TextStyle(fontWeight: FontWeight.bold)),
+            // backgroundColor: cs.surfaceContainerHighest,
+            collapsedBackgroundColor: cs.surfaceContainerHighest,
+            shape:  RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              // border top
+              side: BorderSide(
+                width: 1,
+                color: cs.outline,
+              ),
+            ),
+            collapsedShape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
             children: [
               Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), 
                 child: Column(
                   children: [
                     TextFormField(
@@ -96,7 +111,7 @@ class ChangePassword extends StatelessWidget {
                       validator: c.validateConfirmPassword,
                       onFieldSubmitted: (_) => submit(c, context),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 22),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
