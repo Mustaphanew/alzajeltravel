@@ -274,9 +274,9 @@ class _LegSummaryState extends State<_LegSummary> {
               // العمود الرأسي (خط المسار)
               Column(
                 children: [
-                  Container(width: 2, height: 12, color: cs.secondary),
+                  Container(width: 2, height: 18, color: cs.secondary),
                   Container(
-                    width: 8,
+                    width: 8, 
                     height: 8,
                     decoration: BoxDecoration(color: cs.secondary, shape: BoxShape.circle),
                   ),
@@ -286,7 +286,7 @@ class _LegSummaryState extends State<_LegSummary> {
                     height: 8,
                     decoration: BoxDecoration(color: cs.secondary, shape: BoxShape.circle),
                   ),
-                  Container(width: 2, height: 12, color: cs.secondary),
+                  Container(width: 2, height: 32, color: cs.secondary),
                 ],
               ),
               const SizedBox(width: 8),
@@ -355,7 +355,7 @@ class _LegSummaryState extends State<_LegSummary> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(AirportRepo.searchByCode(widget.leg.toCode)!.name[AppVars.lang], style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text(AirportRepo.searchByCode(widget.leg.toCode).name[AppVars.lang], style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                               const SizedBox(height: 4),
                               Text(widget.leg.toCode, style: textTheme.bodyMedium),
                             ],

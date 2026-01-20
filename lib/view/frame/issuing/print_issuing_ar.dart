@@ -1,10 +1,11 @@
-// print_issuing.dart
+// print_issuing_ar.dart
 import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/model/flight/flight_segment_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:get/get.dart';
 
 import 'pdf/pdf_saver.dart';
 
@@ -20,8 +21,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-
-class PrintIssuing extends StatefulWidget {
+class PrintIssuingAr extends StatefulWidget {
   final String pnr;
   final BookingDataModel bookingData;
   final RevalidatedFlightModel offerDetail;
@@ -29,7 +29,7 @@ class PrintIssuing extends StatefulWidget {
   final ContactModel contact;
   final List<Map<String, dynamic>> baggagesData;
 
-  const PrintIssuing({
+  const PrintIssuingAr({
     super.key,
     required this.pnr,
     required this.bookingData,
@@ -40,13 +40,12 @@ class PrintIssuing extends StatefulWidget {
   });
 
   @override
-  State<PrintIssuing> createState() => _PrintIssuingState();
+  State<PrintIssuingAr> createState() => _PrintIssuingArState();
 }
 
-class _PrintIssuingState extends State<PrintIssuing> {
+class _PrintIssuingArState extends State<PrintIssuingAr> {
   late String splashArSvg;
 
-  // Colors close to sample
   static final PdfColor _navy = PdfColor.fromInt(0xFF17204D);
   static final PdfColor _lightGrey = PdfColor.fromInt(0xFFEFEFEF);
 
@@ -54,18 +53,14 @@ class _PrintIssuingState extends State<PrintIssuing> {
   late final List<TravelerReviewModel> travelers;
   late final TravelerFareSummary summary;
 
-  
-
   @override
   void initState() {
     super.initState();
 
-    // ✅ جهّز البيانات أولاً
     segments = widget.offerDetail.offer.segments;
     travelers = List<TravelerReviewModel>.from(widget.travelersReviewController.travelers);
     summary = widget.travelersReviewController.summary;
 
-    // ✅ اطبع بعد أول frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       printIssuing();
     });
@@ -75,8 +70,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
     final logoData = await rootBundle.load(path);
     if (type == 'png' || type == 'jpg') {
       final logoBytes = logoData.buffer.asUint8List();
-      final logoImage = pw.MemoryImage(logoBytes);
-      return logoImage;
+      return pw.MemoryImage(logoBytes);
     } else if (type == 'svg') {
       final logoString = await rootBundle.loadString(path);
       return logoString;
@@ -85,8 +79,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
   Future<pw.Font> fontLoadAsset(String path) async {
     final fontData = await rootBundle.load(path);
-    final font = pw.Font.ttf(fontData);
-    return font;
+    return pw.Font.ttf(fontData);
   }
 
   String _fmtDate(DateTime? d, {String pattern = 'dd-MM-yyyy'}) {
@@ -101,8 +94,10 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
   String _fmtMoney(double v, {String currency = ''}) {
     final s = v.toStringAsFixed(2);
-    if (s.endsWith('.00')) return s.substring(0, s.length - 3) + ' ' + currency;
-    return s + ' ' + currency;
+    final formatted = s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+    final cur = currency.trim();
+    if (cur.isEmpty) return formatted;
+    return '$formatted $cur';
   }
 
   // ===================== Legs helpers (safe) =====================
@@ -144,28 +139,26 @@ class _PrintIssuingState extends State<PrintIssuing> {
         ? leg0Segments.last.toCode
         : (segments.isNotEmpty ? segments.last.toCode : '-');
 
-    final tripType = (legsCount <= 1) ? 'one-way' : 'round-trip';
+    final tripType = (legsCount <= 1) ? 'ذهاب فقط' : 'ذهاب وعودة';
 
     final depName = AirportRepo.searchByCode(depCode).name[AppVars.lang];
     final arrName = AirportRepo.searchByCode(arrCode).name[AppVars.lang];
 
-    // ✅ Departure_code – arrival_code (one-way/round-trip)
     return '$depName ($depCode) - $arrName ($arrCode) [$tripType]';
   }
 
   Future<void> printIssuing() async {
     final String currency = widget.bookingData.currency;
+
     try {
       splashArSvg = await imageLoadAsset(AppConsts.splashArSvg, type: 'svg');
 
-      // اسم الملف = رقم الحجز
       final bookingNumber = (widget.bookingData.bookingId)
           .toString()
           .replaceAll('/', '_')
           .replaceAll('\\', '_')
           .replaceAll(' ', '_');
 
-      // تحميل الخط
       final arabicFont = await fontLoadAsset('assets/fonts/Almaria/Almarai-Regular.ttf');
       final arabicBoldFont = await fontLoadAsset('assets/fonts/Almaria/Almarai-Bold.ttf');
 
@@ -173,21 +166,19 @@ class _PrintIssuingState extends State<PrintIssuing> {
         theme: pw.ThemeData.withFont(base: arabicFont, bold: arabicBoldFont),
       );
 
-      // تجهيز البيانات
-      final pnr = (widget.pnr).toString();
-      final bookingNo = (widget.bookingData.bookingId).toString();
+      final pnr = widget.pnr.toString();
+      final bookingNo = widget.bookingData.bookingId.toString();
 
-      final headerEmail = (widget.bookingData.bookedBy).toString();
-      final headerPhoneOrRef = (widget.bookingData.mobileNo).toString();
-      final headerDate = (widget.bookingData.createdOn).toString();
+      final headerEmail = widget.bookingData.bookedBy.toString();
+      final headerPhoneOrRef = widget.bookingData.mobileNo.toString();
+      final headerDate = widget.bookingData.createdOn.toString();
 
-      final status = (widget.bookingData.status.toJson()).toString();
+      final status = widget.bookingData.status.toJson().toString().tr;
 
       final contactName = '${widget.contact.firstName} ${widget.contact.lastName}'.trim();
       final contactPhone = '+${widget.contact.phoneCountry.dialcode} ${widget.contact.phone}';
-      final contactNationality = (widget.contact.nationality.name['en'] ?? '').toString();
+      final contactNationality = widget.contact.nationality.name[AppVars.lang].toString();
 
-      // ✅ Flight Detail subtitle line
       final flightRouteSubtitle = _buildFlightRouteSubtitle();
 
       // ---------------- Pricing rows from summary ----------------
@@ -195,7 +186,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
       if (summary.adultCount > 0) {
         pricingRows.add(<String>[
-          'Adult X${summary.adultCount}',
+          'بالغ X${summary.adultCount}',
           _fmtMoney(summary.adultsTotalBaseFareAllPassengers),
           _fmtMoney(summary.adultsTotalTaxAllPassengers),
           _fmtMoney(summary.adultsTotalFareAllPassengers),
@@ -204,7 +195,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
       if (summary.childCount > 0) {
         pricingRows.add(<String>[
-          'Child X${summary.childCount}',
+          'طفل X${summary.childCount}',
           _fmtMoney(summary.childrenTotalBaseFareAllPassengers),
           _fmtMoney(summary.childrenTotalTaxAllPassengers),
           _fmtMoney(summary.childrenTotalFareAllPassengers),
@@ -213,7 +204,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
       if (summary.infantLapCount > 0) {
         pricingRows.add(<String>[
-          'Infant X${summary.infantLapCount}',
+          'رضيع X${summary.infantLapCount}',
           _fmtMoney(summary.infantsTotalBaseFareAllPassengers),
           _fmtMoney(summary.infantsTotalTaxAllPassengers),
           _fmtMoney(summary.infantsTotalFareAllPassengers),
@@ -232,9 +223,8 @@ class _PrintIssuingState extends State<PrintIssuing> {
           summary.childrenTotalFareAllPassengers +
           summary.infantsTotalFareAllPassengers;
 
-      print("currency: $currency");
       pricingRows.add(<String>[
-        'Total All',
+        'الإجمالي الكلي',
         _fmtMoney(totalBase, currency: currency),
         _fmtMoney(totalTax, currency: currency),
         _fmtMoney(totalFare, currency: currency),
@@ -248,24 +238,27 @@ class _PrintIssuingState extends State<PrintIssuing> {
             (s.fromTerminal == null || s.fromTerminal!.trim().isEmpty) ? '-' : s.fromTerminal!.trim();
         final arrTerminal =
             (s.toTerminal == null || s.toTerminal!.trim().isEmpty) ? '-' : s.toTerminal!.trim();
+
         final depName = AirportRepo.searchByCode(s.fromCode).name[AppVars.lang];
         final arrName = AirportRepo.searchByCode(s.toCode).name[AppVars.lang];
+
         final depCell = [
-          "$depName (${s.fromCode})",
+          '$depName (${s.fromCode})',
           _fmtDateTime(s.departureDateTime),
-          'Terminal ($depTerminal)',
-        ].join('\n'); 
+          'الصالة ($depTerminal)',
+        ].join('\n');
 
         final arrCell = [
-          "$arrName (${s.toCode})",
+          '$arrName (${s.toCode})',
           _fmtDateTime(s.arrivalDateTime),
-          'Terminal ($arrTerminal)',
+          'الصالة ($arrTerminal)',
         ].join('\n');
 
         final airlineName = AirlineRepo.searchByCode(s.marketingAirlineCode)?.name[AppVars.lang];
-        final airlineCell = "$airlineName (${s.marketingAirlineCode})"; 
+        final airlineCell = (airlineName == null || airlineName.toString().trim().isEmpty)
+            ? s.marketingAirlineCode
+            : '$airlineName (${s.marketingAirlineCode})';
 
-        // ✅ Flight.NO: marketingAirlineCode-equipmentNumber (same line)
         final flightNoCell = '${s.marketingAirlineCode}-${s.equipmentNumber}';
 
         return <String>[depCell, arrCell, airlineCell, flightNoCell];
@@ -277,30 +270,30 @@ class _PrintIssuingState extends State<PrintIssuing> {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.fromLTRB(24, 20, 24, 24),
           header: (context) => pw.Directionality(
-            textDirection: pw.TextDirection.ltr,
+            textDirection: pw.TextDirection.rtl,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
                 pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Expanded(
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(headerEmail, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-                          pw.SizedBox(height: 4),
-                          pw.Text(headerPhoneOrRef, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-                          pw.SizedBox(height: 4),
-                          pw.Text(headerDate, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-                        ],
-                      ),
-                    ),
+                    // pw.Expanded(
+                    //   child: pw.Column(
+                    //     crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    //     children: [
+                    //       pw.Text(headerEmail, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+                    //       pw.SizedBox(height: 4),
+                    //       pw.Text(headerPhoneOrRef, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+                    //       pw.SizedBox(height: 4),
+                    //       pw.Text(headerDate, style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+                    //     ],
+                    //   ),
+                    // ),
                     pw.Expanded(
                       child: pw.Align(
-                        alignment: pw.Alignment.topCenter,
+                        alignment: pw.AlignmentDirectional.centerStart,
                         child: pw.Text(
-                          'BOOKINGVOUCHER',
+                          'قسيمة حجز',
                           style: pw.TextStyle(
                             fontSize: 12,
                             font: arabicBoldFont,
@@ -309,12 +302,12 @@ class _PrintIssuingState extends State<PrintIssuing> {
                         ),
                       ),
                     ),
-                    pw.Expanded(
-                      child: pw.Align(
-                        alignment: pw.Alignment.topRight,
-                        child: pw.SvgImage(svg: splashArSvg, height: 280 / 7),
-                      ),
+                    // pw.Expanded(
+                    pw.Align(
+                      alignment: pw.Alignment.topRight,
+                      child: pw.SvgImage(svg: splashArSvg, height: 280 / 7),
                     ),
+                    // ),
                   ],
                 ),
                 pw.SizedBox(height: 10),
@@ -324,125 +317,163 @@ class _PrintIssuingState extends State<PrintIssuing> {
             ),
           ),
           build: (context) => [
-            // ✅ حذف "Flight Ticket" من أول الصفحة كما طلبت
-
             // 1) Booking
-            _sectionKeyValue(
-              title: 'Booking',
-              rows: [
-                _kv('PNR', pnr),
-                _kv('Booking Number', bookingNo),
-                _kv('Date', headerDate),
-                _kv('Status', status),
-              ],
-              font: arabicFont,
-              bold: arabicBoldFont,
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionKeyValue(
+                title: 'بيانات الحجز',
+                rows: [
+                  _kv('PNR', pnr),
+                  _kv('رقم الحجز', bookingNo),
+                  _kv('التاريخ', headerDate),
+                  _kv('الحالة', status),
+                ],
+                font: arabicFont,
+                bold: arabicBoldFont,
+              ),
             ),
 
             pw.SizedBox(height: 18),
 
             // 2) Contact
-            _sectionKeyValue(
-              title: 'Contact',
-              rows: [
-                _kv('Name', contactName),
-                _kv('Phone', contactPhone),
-                _kv('Nationality', contactNationality),
-              ],
-              font: arabicFont,
-              bold: arabicBoldFont,
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionKeyValue(
+                title: 'بيانات التواصل',
+                rows: [
+                  _kv('الاسم', contactName),
+                  _kv('الهاتف', contactPhone),
+                  _kv('الجنسية', contactNationality),
+                ],
+                font: arabicFont,
+                bold: arabicBoldFont,
+              ),
             ),
 
             pw.SizedBox(height: 18),
 
-            // 3) Flight Detail + subtitle line (route)
-            _sectionTable(
-              title: 'Flight Detail',
-              subtitle: flightRouteSubtitle, // ✅ new line under title
-              header: const ['Departure', 'Arrival', 'Airline', 'Flight.NO'],
-              columnWidths: const {
-                0: pw.FlexColumnWidth(2.2),
-                1: pw.FlexColumnWidth(2.2),
-                2: pw.FlexColumnWidth(1.3),
-                3: pw.FlexColumnWidth(1.7),
-              },
-              rows: flightDetailRows,
-              font: arabicFont,
-              bold: arabicBoldFont,
+            // 3) Flight Detail (✅ columns reversed RTL)
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionTable(
+                title: 'تفاصيل الرحلة',
+                subtitle: flightRouteSubtitle,
+                header: const ['الذهاب', 'الوصول', 'شركة الطيران', 'رقم الرحلة'],
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(2.2),
+                  1: pw.FlexColumnWidth(2.2),
+                  2: pw.FlexColumnWidth(1.4),
+                  3: pw.FlexColumnWidth(1.2), 
+                },
+                columnAlignments: const {
+                  0: pw.Alignment.centerRight,
+                  1: pw.Alignment.centerRight,
+                  2: pw.Alignment.center,
+                  3: pw.Alignment.center,
+                },
+                rows: flightDetailRows,
+                font: arabicFont,
+                bold: arabicBoldFont,
+                rtlColumns: true,
+              ),
             ),
 
             pw.SizedBox(height: 18),
 
-            // 4) Travelers
-            _sectionTable(
-              title: 'Travelers',
-              header: const ['Full name', 'Ticket', 'Date of birth', 'Passport Number'],
-              columnWidths: const {
-                0: pw.FlexColumnWidth(2.2),
-                1: pw.FlexColumnWidth(1.6),
-                2: pw.FlexColumnWidth(1.4),
-                3: pw.FlexColumnWidth(1.6),
-              },
-              rows: travelers.map((t) {
-                final passportNumber = (t.passport.documentNumber ?? '').toString();
-                final fullName = (t.passport.fullName).toString();
-                final ticket = (t.ticketNumber ?? 'N/A').toString();
-                final dob = _fmtDate(t.passport.dateOfBirth);
-                return <String>[fullName, ticket, dob, passportNumber];
-              }).toList(growable: false),
-              font: arabicFont,
-              bold: arabicBoldFont,
+            // 4) Travelers (✅ columns reversed RTL)
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionTable(
+                title: 'المسافرون',
+                header: const ['الاسم الكامل', 'رقم التذكرة', 'تاريخ الميلاد', 'رقم الجواز'],
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(2.2),
+                  1: pw.FlexColumnWidth(1.6),
+                  2: pw.FlexColumnWidth(1.4),
+                  3: pw.FlexColumnWidth(1.6),
+                },
+                columnAlignments: const {
+                  0: pw.Alignment.centerRight,
+                  1: pw.Alignment.center,
+                  2: pw.Alignment.center,
+                  3: pw.Alignment.center,
+                },
+                rows: travelers.map((t) {
+                  final passportNumber = (t.passport.documentNumber ?? '').toString();
+                  final fullName = (t.passport.fullName).toString();
+                  final ticket = (t.ticketNumber ?? 'غير متوفر').toString();
+                  final dob = _fmtDate(t.passport.dateOfBirth);
+                  return <String>[fullName, ticket, dob, passportNumber];
+                }).toList(growable: false),
+                font: arabicFont,
+                bold: arabicBoldFont,
+                rtlColumns: true,
+              ),
             ),
 
             pw.SizedBox(height: 18),
 
-            // 5) Baggage Info
-            _sectionTable(
-              title: 'Baggage Info',
-              header: const ['Type', 'Weight'],
-              columnWidths: const {0: pw.FlexColumnWidth(2.5), 1: pw.FlexColumnWidth(1.0)},
-              columnAlignments: const {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight},
-              rows: widget.baggagesData.map((row) {
-                final type = (row['type'] ?? '').toString();
-                final weight = (row['Weight'] ?? row['weight'] ?? '').toString();
-                return [type, weight];
-              }).toList(growable: false),
-              font: arabicFont,
-              bold: arabicBoldFont,
+            // 5) Baggage (✅ columns reversed RTL)
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionTable(
+                title: 'الأمتعة',
+                header: const ['النوع', 'الوزن'],
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(2.5),
+                  1: pw.FlexColumnWidth(1.0),
+                },
+                columnAlignments: const {
+                  0: pw.Alignment.centerRight,
+                  1: pw.Alignment.center,
+                },
+                rows: widget.baggagesData.map((row) {
+                  final type = (row['type'] ?? '').toString();
+                  final weight = (row['Weight'] ?? row['weight'] ?? '').toString();
+                  return [type, weight];
+                }).toList(growable: false),
+                font: arabicFont,
+                bold: arabicBoldFont,
+                rtlColumns: true,
+              ),
             ),
 
             pw.SizedBox(height: 18),
 
-            // 6) Pricing Info (Total All row = light grey)
-            _sectionTable(
-              title: 'Pricing Info',
-              header: const ['Type', 'Base Fare', 'Tax', 'Total fare'],
-              columnWidths: const {
-                0: pw.FlexColumnWidth(2.0),
-                1: pw.FlexColumnWidth(1.0),
-                2: pw.FlexColumnWidth(1.0),
-                3: pw.FlexColumnWidth(1.2),
-              },
-              columnAlignments: const {
-                0: pw.Alignment.centerLeft,
-                1: pw.Alignment.center,
-                2: pw.Alignment.center,
-                3: pw.Alignment.centerRight,
-              },
-              rows: pricingRows,
-              font: arabicFont,
-              bold: arabicBoldFont,
-              highlightedRows: {totalAllRowIndex},
-              highlightedBg: _lightGrey,
-              highlightedBold: true,
+            // 6) Pricing (✅ columns reversed RTL + total highlighted)
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: _sectionTable(
+                title: 'التسعير',
+                header: const ['النوع', 'السعر الأساسي', 'الضرائب', 'الإجمالي'],
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(2.0),
+                  1: pw.FlexColumnWidth(1.0),
+                  2: pw.FlexColumnWidth(1.0),
+                  3: pw.FlexColumnWidth(1.2),
+                },
+                columnAlignments: const {
+                  0: pw.Alignment.centerRight,
+                  1: pw.Alignment.center,
+                  2: pw.Alignment.center,
+                  3: pw.Alignment.center,
+                },
+                rows: pricingRows,
+                font: arabicFont,
+                bold: arabicBoldFont,
+                highlightedRows: {totalAllRowIndex},
+                highlightedBg: _lightGrey,
+                highlightedBold: true,
+                rtlColumns: true,
+              ),
             ),
           ],
           footer: (context) => pw.Directionality(
-            textDirection: pw.TextDirection.ltr,
+            textDirection: pw.TextDirection.rtl,
             child: pw.Align(
               alignment: pw.AlignmentDirectional.bottomStart,
               child: pw.Text(
-                'Page ${context.pageNumber} of ${context.pagesCount}',
+                'الصفحة ${context.pageNumber} من ${context.pagesCount}',
                 style: pw.TextStyle(fontSize: 12, font: arabicFont, color: PdfColors.grey),
               ),
             ),
@@ -454,7 +485,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
       await saveAndOpenPdf(bytes: bytes, fileName: bookingNumber);
     } catch (e, s) {
       // ignore: avoid_print
-      print('❌ Error in printIssuing: $e');
+      print('❌ Error in print_issuing_ar: $e');
       // ignore: avoid_print
       print(s);
     } finally {
@@ -494,11 +525,11 @@ class _PrintIssuingState extends State<PrintIssuing> {
           if (hasSubtitle) ...[
             pw.SizedBox(height: 2),
             pw.Text(
-              subtitle,
+              subtitle!,
               style: pw.TextStyle(
                 fontSize: 10,
                 font: bold,
-                color: PdfColor.fromInt(0xFFD0D4E5), // light text on navy
+                color: PdfColor.fromInt(0xFFD0D4E5),
                 fontWeight: pw.FontWeight.normal,
               ),
             ),
@@ -515,7 +546,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
     pw.Font? bold,
     bool isHeaderCell = false,
     bool isBold = false,
-    pw.Alignment align = pw.Alignment.centerLeft,
+    pw.Alignment align = pw.Alignment.centerRight,
     pw.EdgeInsets padding = const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
   }) {
     final useBold = (isHeaderCell || isBold) && bold != null;
@@ -531,6 +562,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
           font: useBold ? bold : font,
           fontWeight: (isHeaderCell || isBold) ? pw.FontWeight.bold : pw.FontWeight.normal,
         ),
+        textDirection: pw.TextDirection.rtl,
       ),
     );
   }
@@ -547,12 +579,13 @@ class _PrintIssuingState extends State<PrintIssuing> {
         _sectionHeader(title, bold: bold),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.black, width: 1),
-          columnWidths: const {0: pw.FixedColumnWidth(160), 1: pw.FlexColumnWidth()},
+          // value (left) | key (right)
+          columnWidths: const {0: pw.FlexColumnWidth(), 1: pw.FixedColumnWidth(160)},
           children: rows.map((r) {
             return pw.TableRow(
               children: [
-                _cell(r.key, bg: _lightGrey, font: font, bold: bold, isHeaderCell: true),
-                _cell(r.value, bg: PdfColors.white, font: font, bold: bold),
+                _cell(r.value, bg: PdfColors.white, font: font, bold: bold, align: pw.Alignment.centerRight),
+                _cell(r.key, bg: _lightGrey, font: font, bold: bold, isHeaderCell: true, align: pw.Alignment.centerRight),
               ],
             );
           }).toList(growable: false),
@@ -561,9 +594,20 @@ class _PrintIssuingState extends State<PrintIssuing> {
     );
   }
 
+  Map<int, T>? _reverseIndexMap<T>(Map<int, T>? input, int count) {
+    if (input == null) return null;
+    final out = <int, T>{};
+    for (int newIdx = 0; newIdx < count; newIdx++) {
+      final oldIdx = count - 1 - newIdx;
+      final val = input[oldIdx];
+      if (val != null) out[newIdx] = val;
+    }
+    return out;
+  }
+
   pw.Widget _sectionTable({
     required String title,
-    String? subtitle, // ✅ new
+    String? subtitle,
     required List<String> header,
     required List<List<String>> rows,
     required pw.Font font,
@@ -573,20 +617,34 @@ class _PrintIssuingState extends State<PrintIssuing> {
     Set<int>? highlightedRows,
     PdfColor? highlightedBg,
     bool highlightedBold = false,
+
+    // ✅ هذا هو المفتاح: يعكس الأعمدة فعلياً
+    bool rtlColumns = false,
   }) {
+    final colCount = header.length;
+
+    final hdr = rtlColumns ? header.reversed.toList(growable: false) : header;
+
+    final bodyRows = rtlColumns
+        ? rows.map((r) => r.reversed.toList(growable: false)).toList(growable: false)
+        : rows;
+
+    final widths = rtlColumns ? _reverseIndexMap(columnWidths, colCount) : columnWidths;
+    final aligns = rtlColumns ? _reverseIndexMap(columnAlignments, colCount) : columnAlignments;
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
         _sectionHeader(title, bold: bold, subtitle: subtitle),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.black, width: 1),
-          columnWidths: columnWidths,
+          columnWidths: widths,
           children: [
             pw.TableRow(
-              children: List.generate(header.length, (i) {
-                final align = columnAlignments?[i] ?? pw.Alignment.centerLeft;
+              children: List.generate(hdr.length, (i) {
+                final align = aligns?[i] ?? pw.Alignment.centerRight;
                 return _cell(
-                  header[i],
+                  hdr[i],
                   bg: _lightGrey,
                   font: font,
                   bold: bold,
@@ -596,7 +654,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
                 );
               }),
             ),
-            ...rows.asMap().entries.map((entry) {
+            ...bodyRows.asMap().entries.map((entry) {
               final rowIndex = entry.key;
               final r = entry.value;
 
@@ -605,7 +663,7 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
               return pw.TableRow(
                 children: List.generate(r.length, (i) {
-                  final align = columnAlignments?[i] ?? pw.Alignment.centerLeft;
+                  final align = aligns?[i] ?? pw.Alignment.centerRight;
                   return _cell(
                     r[i],
                     bg: bg,
@@ -625,14 +683,14 @@ class _PrintIssuingState extends State<PrintIssuing> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Print Issuing...'),
-            const SizedBox(height: 16),
-            const SizedBox(height: 60, width: 60, child: CircularProgressIndicator(strokeWidth: 3)),
+            Text('جارٍ تجهيز وطباعة التقرير...'),
+            SizedBox(height: 16),
+            SizedBox(height: 60, width: 60, child: CircularProgressIndicator(strokeWidth: 3)),
           ],
         ),
       ),

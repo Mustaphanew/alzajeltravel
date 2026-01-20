@@ -2,6 +2,7 @@ import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
+import 'package:alzajeltravel/view/frame/issuing/print_issuing_ar.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
@@ -122,16 +123,29 @@ class _IssuingPageState extends State<IssuingPage> {
                 ),
               ),
               onPressed: () {
-                Get.to(
-                  PrintIssuing(
-                    pnr: widget.pnr,
-                    bookingData: booking,
-                    offerDetail: widget.offerDetail,
-                    travelersReviewController: travelersReviewController,
-                    contact: widget.contact,
-                    baggagesData: baggagesData,
-                  ),
-                );
+                if(AppVars.lang == "ar") {
+                  Get.to(
+                    PrintIssuingAr(
+                      pnr: widget.pnr,
+                      bookingData: booking,
+                      offerDetail: widget.offerDetail,
+                      travelersReviewController: travelersReviewController,
+                      contact: widget.contact,
+                      baggagesData: baggagesData,
+                    ),
+                  );
+                } else {
+                  Get.to(
+                    PrintIssuing(
+                      pnr: widget.pnr,
+                      bookingData: booking,
+                      offerDetail: widget.offerDetail,
+                      travelersReviewController: travelersReviewController,
+                      contact: widget.contact,
+                      baggagesData: baggagesData,
+                    ),
+                  );
+                }
               },
 
               icon: const Icon(Icons.print),

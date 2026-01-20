@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:amicons/amicons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -242,6 +243,11 @@ class _MyMrzPageState extends State<MyMrzPage> {
             Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 12),
           ],
+
+          Icon( Amicons.vuesax_gallery_fill,
+            color: Colors.black,
+            size: 90,
+          ),
 
           if (_jsonOutput != null) ...[
             Text(

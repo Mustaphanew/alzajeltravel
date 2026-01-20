@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.65"
+  amicons:
+    dependency: "direct main"
+    description:
+      name: amicons
+      sha256: b0216f8c4e205853650fec7fc6baa23fb996c114bf6320bbf1dbb801d352e86f
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   archive:
     dependency: transitive
     description:

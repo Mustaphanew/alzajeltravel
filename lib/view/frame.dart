@@ -149,10 +149,6 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
-    Color activeColorPrimary = cs.primaryContainer;
-    Color activeTextColorPrimary = cs.onInverseSurface;
-    Color inactiveColorPrimary = Colors.grey;
 
     return SafeArea(
       bottom: true,

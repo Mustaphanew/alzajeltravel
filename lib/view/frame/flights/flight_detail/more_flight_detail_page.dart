@@ -282,11 +282,11 @@ class MoreFlightDetailPage extends StatelessWidget {
                           Column(
                             children: [
                               Container(
-                                  width: 2, height: 12, color: cs.primary),
+                                  width: 2, height: 33, color: cs.primary),
                               Container(
                                 width: 10,
                                 height: 10,
-                                decoration: BoxDecoration(
+                                decoration: BoxDecoration( 
                                   color: cs.primary,
                                   shape: BoxShape.circle,
                                 ),
@@ -306,7 +306,7 @@ class MoreFlightDetailPage extends StatelessWidget {
                                 ),
                               ),
                               Container(
-                                  width: 2, height: 12, color: cs.primary),
+                                  width: 2, height: 25, color: cs.primary),
                             ],
                           ),
                           const SizedBox(width: 12),
@@ -389,6 +389,7 @@ class MoreFlightDetailPage extends StatelessWidget {
                                 // ===== إلى =====
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  
                                   children: [
                                     Expanded(
                                       child: Column(
@@ -443,23 +444,30 @@ class MoreFlightDetailPage extends StatelessWidget {
                                   ],
                                 ),
 
-                                // لو حاب تضيف عرض للأمتعة الخاصة بهذه السجمنت
-                                if (segmentBaggage != null &&
-                                    segmentBaggage.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  _InfoRow(
-                                    label: "Baggage".tr,
-                                    value: segmentBaggage,
-                                  ),
-                                ],
 
                                 
                               ],
                             ),
                           ),
+
+
+                        
                         ],
                       ),
                     ),
+
+
+                    // لو حاب تضيف عرض للأمتعة الخاصة بهذه السجمنت
+                    if (segmentBaggage != null &&
+                        segmentBaggage.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        label: "Baggage".tr,
+                        value: segmentBaggage,
+                      ),
+                    ],
+
+
                   ],
                 ),
               ),

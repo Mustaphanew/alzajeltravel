@@ -1,10 +1,6 @@
-import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
-import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-
 import 'package:alzajeltravel/controller/passport/passports_forms_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';

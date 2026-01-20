@@ -268,10 +268,6 @@ class PassportsFormsController extends GetxController {
       return;
     }
 
-    // (اختياري) لو حاب تخزن booking_id / booking_status
-    final bookingId = bookingResponse['booking_id'];
-    final bookingStatus = bookingResponse['booking_status'];
-    // تقدر تحفظهم في AppVars أو Controller آخر لو احتجتهم لاحقًا
 
     // ______________________________________________________
     // 5) بناء قائمة TravelerReviewModel من رد السيرفر (passengers)

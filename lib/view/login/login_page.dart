@@ -137,13 +137,6 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 20),
 
-                    Wrap(
-                      children: [
-                        Icon(Bootstrap.printer),
-
-                      ],
-                    ),
-
                     if(!kIsWeb)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -205,6 +198,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                       ],
                     ),
+                  
+                    SizedBox(height: 34),
+                  
                   ],
                 ),
               ),

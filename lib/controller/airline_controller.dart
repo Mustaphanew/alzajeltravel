@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/airline_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
-import 'package:alzajeltravel/utils/app_vars.dart';
 
 class AirlineController extends GetxController {
   final AirlineRepo airlineRepo = AirlineRepo();
