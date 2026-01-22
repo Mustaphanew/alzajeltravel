@@ -246,7 +246,7 @@ class _OtherPriceCardState extends State<_OtherPriceCard> {
             const SizedBox(height: 4),
 
             // ✅ cabin from bookingClass mapping
-            Text('${'Cabin:'.tr} ${cabinName}', style: theme.textTheme.bodyMedium),
+            Text('${'Cabin:'.tr} ${cabinName.trim().tr}', style: theme.textTheme.bodyMedium),
 
             const SizedBox(height: 16),
 

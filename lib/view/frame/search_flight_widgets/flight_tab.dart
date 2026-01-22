@@ -195,6 +195,7 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       child: GetBuilder<SearchFlightController>(
         builder: (controller) {
@@ -206,6 +207,7 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
                 context: widget.frameContext,
                 isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
                 // backgroundColor: Colors.white,
+                backgroundColor: cs.surface,
                 isDismissible: true,
                 shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
                 builder: (BuildContext context) {

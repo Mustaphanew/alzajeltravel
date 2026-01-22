@@ -534,8 +534,29 @@ Map<String, String> ar = {
   "Exit app": "الخروج من التطبيق",
   "Do you want to exit the application?": "هل تريد الخروج من التطبيق؟",
   "Okey": "حسنا",
+  "Ok": "حسنا",
 
   "Are you sure you want to exit?": "هل أنت متأكد من الخروج؟",
   "Exit": "خروج",
+
+  "Other prices": "أسعار أخرى",
+  "No flight data": "لا توجد بيانات رحلة",
+  "Please go back and try again": "يرجى الرجوع والمحاولة مرة أخرى",
+  "Please try again": "يرجى المحاولة مرة أخرى",
+  "No other prices found": "لم يتم العثور على أسعار أخرى",
+  "Fare": "السعر",
+  "Cabin:": "درجة السفر:",
+  "Flexibility": "المرونة",
+  "No details available": "لا توجد تفاصيل متاحة",
+  "Select": "اختيار",
+  "Nonstop": "بدون توقف",
+  "1 stop": "توقف واحد",
+  "2 stops": "توقفان",
+  "stops": "توقفات",
+
+  "Economy": "اقتصادية",
+  "Premium Economy": "اقتصادي مميز",
+  "Business": "رجال اعمال",
+  "First": "الدرجة الاولى",
 
 };

@@ -75,7 +75,7 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                 radius: const Radius.circular(100),
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  child: Padding(
+                  child: Container(
                     padding: const EdgeInsets.all(0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // يجعل الارتفاع حسب المحتوى

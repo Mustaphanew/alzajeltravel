@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:amicons/amicons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -32,7 +30,7 @@ class _MyMrzPageState extends State<MyMrzPage> {
 
   @override
   void dispose() {
-    _scanner.dispose();
+    // _scanner.dispose();
     super.dispose();
   }
 
@@ -126,17 +124,19 @@ class _MyMrzPageState extends State<MyMrzPage> {
     });
 
     try {
-      final output = await _scanner.scanPassport(
-        file,
-        maxAttempts: _maxAttempts,
-        onAttempt: (attempt, total, tag) {
-          if (!mounted) return;
-          setState(() {
-            _status =
-                '${'Please wait while analyzing the image...'.tr} ($attempt/$total)';
-          });
-        },
-      );
+      // final output = await _scanner.scanPassport(
+      //   file,
+      //   maxAttempts: _maxAttempts,
+      //   onAttempt: (attempt, total, tag) {
+      //     if (!mounted) return;
+      //     setState(() {
+      //       _status =
+      //           '${'Please wait while analyzing the image...'.tr} ($attempt/$total)';
+      //     });
+      //   },
+      // );
+
+      final output = null;
 
       final pretty = const JsonEncoder.withIndent('  ').convert(output);
       debugPrint(pretty);
@@ -146,7 +146,7 @@ class _MyMrzPageState extends State<MyMrzPage> {
         _status = null;
       });
     } catch (e) {
-      final msg = (e is MrzScanException) ? e.messageKey.tr : e.toString();
+      final msg = "";
       setState(() {
         _error = msg;
         _status = null;
@@ -243,11 +243,6 @@ class _MyMrzPageState extends State<MyMrzPage> {
             Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 12),
           ],
-
-          Icon( Amicons.vuesax_gallery_fill,
-            color: Colors.black,
-            size: 90,
-          ),
 
           if (_jsonOutput != null) ...[
             Text(
