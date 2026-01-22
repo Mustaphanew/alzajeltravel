@@ -525,5 +525,17 @@ Map<String, String> ar = {
   "Hide": "إخفاء",
   "Copied": "تم النسخ",
   "Copied to clipboard": "تم النسخ إلى الحافظة",
+  "canceled": "ملغي",
+
+  "Adult X ": "بالغ × ",
+  "Child X ": "طفل × ",
+  "Infant X ": "رضيع × ",
+
+  "Exit app": "الخروج من التطبيق",
+  "Do you want to exit the application?": "هل تريد الخروج من التطبيق؟",
+  "Okey": "حسنا",
+
+  "Are you sure you want to exit?": "هل أنت متأكد من الخروج؟",
+  "Exit": "خروج",
 
 };

@@ -7,6 +7,7 @@ import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -25,6 +26,7 @@ import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/intro.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path/path.dart';
 import 'package:pwa_install/pwa_install.dart';
 
 Future<void> main() async {
@@ -102,7 +104,7 @@ class _MyAppState extends State<MyApp> {
       builder: (controller) {
         AppFuns.setUpRebuild();
         return GetMaterialApp(
-          title: 'Alzajel Travel',
+          title: 'Alzajel Travel'.tr,
           debugShowCheckedModeBanner: false,
 
           // لا حاجة لوضع navigatorKey هنا غالبًا؛ Get يضبطه لك

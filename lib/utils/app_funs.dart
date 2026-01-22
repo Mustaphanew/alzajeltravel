@@ -324,5 +324,47 @@ class AppFuns {
     return (firstChar + lastChar).toUpperCase();
   }
 
+  static bool isDark(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark;
+  }
+
+  static Future<bool> confirmExit({String? title, String? message}) async {
+    final result = await Get.dialog<bool>(
+      barrierDismissible: false,
+      AlertDialog(
+        title: Center(child: Text(title ?? "Exit app".tr)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Text(
+            message ?? "Do you want to exit the application?".tr,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 42),
+              foregroundColor: Theme.of(Get.context!).colorScheme.error,
+            ),
+            onPressed: () => Get.back(result: true),
+            child: Text("Ok".tr),
+          ),
+          const SizedBox(width: 16),
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 42),
+            ),
+            onPressed: () => Get.back(result: false),
+            child: Text("Cancel".tr),
+          ),
+        ],
+      ),
+    );
+
+    return result == true;
+  }
+
+
 
 }

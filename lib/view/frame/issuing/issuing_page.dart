@@ -6,8 +6,9 @@ import 'package:alzajeltravel/view/frame/issuing/print_issuing_ar.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
 import 'package:alzajeltravel/model/flight/revalidated_flight_model.dart';
@@ -67,15 +68,15 @@ class _IssuingPageState extends State<IssuingPage> {
     summary = travelersReviewController.summary;
 
     if (summary.adultCount > 0) {
-      faringsData.add({"type": "Adult".tr + " ${summary.adultCount}", "Total fare": "${summary.adultTotalFare}"});
+      faringsData.add({"type": "Adult X ".tr + " ${summary.adultCount}", "Total fare": "${summary.adultTotalFare}"});
       baggagesData.add({"type": "Adult".tr, "Weight": AppFuns.formatBaggageWeight(tmpBaggage)});
     }
     if (summary.childCount > 0) {
-      faringsData.add({"type": "Child".tr + " ${summary.childCount}", "Total fare": "${summary.childTotalFare}"});
+      faringsData.add({"type": "Child X ".tr + " ${summary.childCount}", "Total fare": "${summary.childTotalFare}"});
       baggagesData.add({"type": "Child".tr, "Weight": "10kg"});
     }
     if (summary.infantLapCount > 0) {
-      faringsData.add({"type": "Infant".tr + " ${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
+      faringsData.add({"type": "Infant X ".tr + " ${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
       baggagesData.add({"type": "Infant".tr, "Weight": "5kg"});
     }
     bookingStatus = booking.status.name;
@@ -100,494 +101,506 @@ class _IssuingPageState extends State<IssuingPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Issuing".tr),
-          leading: IconButton(
-            tooltip: "Back".tr,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Get.back();
-            },
-          ),
-          actions: [
-            TextButton.icon(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                minimumSize: const Size(100, 30),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: cs.primaryContainer, width: 1),
+    return WillPopScope(
+      onWillPop: () async {
+        final ok = await AppFuns.confirmExit(
+          title: "Exit".tr,
+          message: "Are you sure you want to exit?".tr,
+        );
+        if (ok) {
+          return true;
+        }
+        return false;
+      },
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Issuing".tr),
+            // leading: IconButton(
+            //   tooltip: "Back".tr,
+            //   icon: const Icon(Icons.arrow_back),
+            //   onPressed: () {
+            //     Get.back();
+            //   },
+            // ),
+            actions: [
+              TextButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                  minimumSize: const Size(100, 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: cs.primaryContainer, width: 1),
+                  ),
                 ),
-              ),
-              onPressed: () {
-                if(AppVars.lang == "ar") {
-                  Get.to(
-                    PrintIssuingAr(
-                      pnr: widget.pnr,
-                      bookingData: booking,
-                      offerDetail: widget.offerDetail,
-                      travelersReviewController: travelersReviewController,
-                      contact: widget.contact,
-                      baggagesData: baggagesData,
-                    ),
-                  );
-                } else {
-                  Get.to(
-                    PrintIssuing(
-                      pnr: widget.pnr,
-                      bookingData: booking,
-                      offerDetail: widget.offerDetail,
-                      travelersReviewController: travelersReviewController,
-                      contact: widget.contact,
-                      baggagesData: baggagesData,
-                    ),
-                  );
-                }
-              },
-
-              icon: const Icon(Icons.print),
-              label: Text("Print".tr),
-            ),
-            const SizedBox(width: 12),
-          ],
-        ),
-        body: Column(
-          children: [
-            StatusCard(cs: cs, bookingStatus: bookingStatus),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
-                      const SizedBox(height: 12),
-                      Card(
-                        child: Container(
-                          padding: EdgeInsets.only(top: 12, bottom: 16),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            // color: cs.secondary,
-                          ),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "Time Left".tr,
-                                      style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
-                                    ),
-                                    Icon(Icons.access_time, color: cs.primary),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Divider(indent: 12, endIndent: 12, thickness: 2),
-
-                              TimeRemaining(
-                                timeLimit: timeLimit,
-                                createdAt: widget.booking.createdOn,
-                                expiredText: 'Expired'.tr,
-                                showExpiredAsZeros: false,
-                              ),
-                            ],
-                          ),
-                        ),
+                onPressed: () {
+                  if(AppVars.lang == "ar") {
+                    Get.to(
+                      PrintIssuingAr(
+                        pnr: widget.pnr,
+                        bookingData: booking,
+                        offerDetail: widget.offerDetail,
+                        travelersReviewController: travelersReviewController,
+                        contact: widget.contact,
+                        baggagesData: baggagesData,
                       ),
-                    ],
-
-                    const SizedBox(height: 12),
-                    ...[
-                      FirstTitle(title: "Booking".tr),
-                      const SizedBox(height: 4),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: cs.outlineVariant),
+                    );
+                  } else {
+                    Get.to(
+                      PrintIssuing(
+                        pnr: widget.pnr,
+                        bookingData: booking,
+                        offerDetail: widget.offerDetail,
+                        travelersReviewController: travelersReviewController,
+                        contact: widget.contact,
+                        baggagesData: baggagesData,
+                      ),
+                    );
+                  }
+                },
+      
+                icon: const Icon(Icons.print),
+                label: Text("Print".tr),
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+          body: Column(
+            children: [
+              StatusCard(cs: cs, bookingStatus: bookingStatus),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          child: Container(
+                            padding: EdgeInsets.only(top: 12, bottom: 16),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              // color: cs.secondary,
+                            ),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "Time Left".tr,
+                                        style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                                      ),
+                                      Icon(Icons.access_time, color: cs.primary),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Divider(indent: 12, endIndent: 12, thickness: 2),
+      
+                                TimeRemaining(
+                                  timeLimit: timeLimit,
+                                  createdAt: widget.booking.createdOn,
+                                  expiredText: 'Expired'.tr,
+                                  showExpiredAsZeros: false,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Ink(
-                          color: cs.surfaceContainer,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // LEFT (labels) like the travelers design
-                              Ink(
-                                color: cs.surface,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  child: IntrinsicWidth(
+                      ],
+      
+                      const SizedBox(height: 12),
+                      ...[
+                        FirstTitle(title: "Booking".tr),
+                        const SizedBox(height: 4),
+      
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: cs.outlineVariant),
+                          ),
+                          child: Ink(
+                            color: cs.surfaceContainer,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // LEFT (labels) like the travelers design
+                                Ink(
+                                  color: cs.surface,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                    child: IntrinsicWidth(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SecondTitle(title: "PNR"),
+                                          Divider(thickness: 1),
+                                          SecondTitle(title: "Number".tr),
+                                          Divider(thickness: 1),
+                                          SecondTitle(title: "Created at".tr),
+      
+                                          if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
+                                          if (cancelOn != null && voidOn == null) ...[
+                                            Divider(thickness: 1),
+                                            SecondTitle(title: "Cancel On".tr),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+      
+                                // RIGHT (values)
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        SecondTitle(title: "PNR"),
-                                        Divider(thickness: 1),
-                                        SecondTitle(title: "Number".tr),
-                                        Divider(thickness: 1),
-                                        SecondTitle(title: "Created at".tr),
-
-                                        if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
+                                        SecondTitle(title: (widget.pnr.isNotEmpty ? widget.pnr : "N/A")),
+                                        const Divider(thickness: 1),
+                                        SecondTitle(title: booking.bookingId),
+                                        const Divider(thickness: 1),
+                                        SecondTitle(title: createdOn),
+                                        if (voidOn != null) ...[const Divider(thickness: 1), SecondTitle(title: voidOn!)],
                                         if (cancelOn != null && voidOn == null) ...[
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Cancel On".tr),
+                                          const Divider(thickness: 1),
+                                          SecondTitle(title: cancelOn!),
                                         ],
                                       ],
                                     ),
                                   ),
                                 ),
-                              ),
-
-                              // RIGHT (values)
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SecondTitle(title: (widget.pnr.isNotEmpty ? widget.pnr : "N/A")),
-                                      const Divider(thickness: 1),
-                                      SecondTitle(title: booking.bookingId),
-                                      const Divider(thickness: 1),
-                                      SecondTitle(title: createdOn),
-                                      if (voidOn != null) ...[const Divider(thickness: 1), SecondTitle(title: voidOn!)],
-                                      if (cancelOn != null && voidOn == null) ...[
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: cancelOn!),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Divider(),
-
-                    ...[
-                      FirstTitle(title: "Travelers".tr),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: cs.outlineVariant),
-                        ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: travelersReviewController.travelers.length,
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (context, index) {
-                            final traveler = travelersReviewController.travelers[index];
-                            return Ink(
-                              color: cs.surfaceContainer,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Ink(
-                                    color: cs.surface,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      child: IntrinsicWidth(
+                      ],
+                      const SizedBox(height: 16),
+                      Divider(),
+      
+                      ...[
+                        FirstTitle(title: "Travelers".tr),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: cs.outlineVariant),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: travelersReviewController.travelers.length,
+                            padding: EdgeInsets.zero,
+                            itemBuilder: (context, index) {
+                              final traveler = travelersReviewController.travelers[index];
+                              return Ink(
+                                color: cs.surfaceContainer,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Ink(
+                                      color: cs.surface,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                        child: IntrinsicWidth(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            spacing: 3,
+                                            children: [
+                                              SecondTitle(title: "Full Name".tr),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(title: "Date of Birth".tr),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(title: "Ticket".tr),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           spacing: 3,
                                           children: [
-                                            SecondTitle(title: "Full Name".tr),
+                                            FittedBox(
+                                              fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
+                                              alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
+                                              child: Text(
+                                                traveler.passport.fullName,
+                                                style: TextStyle(
+                                                  fontSize: AppConsts.lg, // الحجم الأقصى
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
                                             const Divider(thickness: 1),
-                                            SecondTitle(title: "Date of Birth".tr),
+                                            SecondTitle(
+                                              title: AppFuns.replaceArabicNumbers(
+                                                intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                              ),
+                                            ),
                                             const Divider(thickness: 1),
-                                            SecondTitle(title: "Ticket".tr),
+                                            SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
                                           ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        spacing: 3,
-                                        children: [
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
-                                            alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
-                                            child: Text(
-                                              traveler.passport.fullName,
-                                              style: TextStyle(
-                                                fontSize: AppConsts.lg, // الحجم الأقصى
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          const Divider(thickness: 1),
-                                          SecondTitle(
-                                            title: AppFuns.replaceArabicNumbers(
-                                              DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
-                                            ),
-                                          ),
-                                          const Divider(thickness: 1),
-                                          SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                              );
+                            },
+                            separatorBuilder: (context, index) =>
+                                Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
+                          ),
+                        ),
+                      ],
+      
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      ...[
+                        FirstTitle(title: "Flight".tr),
+                        const SizedBox(height: 4),
+                        FlightOfferCard(
+                          offer: widget.offerDetail.offer,
+                          showSeatLeft: false,
+                          showBaggage: false,
+                          onDetails: () {
+                            // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
+                            Get.to(
+                              () => MoreFlightDetailPage(
+                                flightOffer: widget.offerDetail.offer,
+                                fareRules: widget.offerDetail.fareRules,
+                                // revalidatedDetails: widget.offerDetail,
                               ),
                             );
                           },
-                          separatorBuilder: (context, index) =>
-                              Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
+                          showFare: false,
                         ),
-                      ),
+                      ],
+                      const SizedBox(height: 16),
+                      Divider(),
+                      ...[FirstTitle(title: "Baggage".tr), buildTable(context, baggagesData)],
+                      const SizedBox(height: 16),
+                      Divider(),
+                      ...[
+                        FirstTitle(title: "Pricing".tr),
+                        buildTable(context, faringsData),
+                        // total all
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              SecondTitle(title: "Total All"),
+                              const Spacer(),
+                              SelectableText(
+                                AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+      
+                      const SizedBox(height: 30),
+                      const SizedBox(height: 30),
                     ],
-
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    ...[
-                      FirstTitle(title: "Flight".tr),
-                      const SizedBox(height: 4),
-                      FlightOfferCard(
-                        offer: widget.offerDetail.offer,
-                        showSeatLeft: false,
-                        showBaggage: false,
-                        onDetails: () {
-                          // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
-                          Get.to(
-                            () => MoreFlightDetailPage(
-                              flightOffer: widget.offerDetail.offer,
-                              fareRules: widget.offerDetail.fareRules,
-                              // revalidatedDetails: widget.offerDetail,
-                            ),
-                          );
-                        },
-                        showFare: false,
+                  ),
+                ),
+              ),
+      
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                width: double.infinity,
+                // height: 80,
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer,
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                  // shadow
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 5, blurRadius: 10, offset: const Offset(0, 2))],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Total".tr, style: const TextStyle(fontSize: AppConsts.lg)),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
+                          ),
+                        ],
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    Divider(),
-                    ...[FirstTitle(title: "Baggage".tr), buildTable(context, baggagesData)],
-                    const SizedBox(height: 16),
-                    Divider(),
-                    ...[
-                      FirstTitle(title: "Pricing".tr),
-                      buildTable(context, faringsData),
-                      // total all
-                      const SizedBox(height: 4),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
+                    ),
+                    if (booking.status == BookingStatus.preBooking && !isExpired)
+                      IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            SecondTitle(title: "Total All"),
-                            const Spacer(),
-                            SelectableText(
-                              AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
-                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
+                            ElevatedButton(
+                              onPressed: () async {
+                                final dialog = await CustomDialog.success(
+                                  context,
+                                  title: 'Confirm Booking'.tr,
+                                  desc:
+                                      'Are you sure you want to confirm this booking?'.tr +
+                                      '\n' +
+                                      AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
+                                      'will be deducted from your balance'.tr,
+                                  btnOkText: 'Confirm'.tr,
+                                );
+      
+                                if (dialog != DismissType.btnOk) {
+                                  return;
+                                }
+      
+                                if (context.mounted) context.loaderOverlay.show();
+                                try {
+                                  final res = await travelersReviewController.confirmBooking(booking.id);
+                                  if (res != null) {
+                                    // update travelers by setTicketNumber
+                                    final passengers = res['passengers'] as List;
+                                    for (var passenger in passengers) {
+                                      travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
+                                    }
+                                    print("res['booking']['status'] ${res['booking']['status']}");
+                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                    bookingStatus = booking.status.name;
+                                    print("booking.status.name: $bookingStatus");
+                                  }
+                                } catch (e) {
+                                  Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                }
+                                if (context.mounted) context.loaderOverlay.hide();
+                                setState(() {});
+                              },
+                              child: Text("Confirm Booking".tr),
+                            ),
+                            const SizedBox(height: 8),
+                            // cancel
+                            TextButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: cs.error,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: cs.error),
+                                ),
+                              ),
+                              onPressed: () async {
+                                final dialog = await CustomDialog.error(
+                                  context,
+                                  title: 'Cancel Pre-Booking'.tr,
+                                  desc: 'Are you sure you want to cancel this pre-booking?'.tr,
+                                  btnOkText: 'Cancel'.tr,
+                                );
+      
+                                if (dialog != DismissType.btnOk) {
+                                  return;
+                                }
+      
+                                if (context.mounted) context.loaderOverlay.show();
+                                try {
+                                  final res = await travelersReviewController.cancelPreBooking(booking.id);
+                                  if (res != null) {
+                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                    bookingStatus = booking.status.name;
+      
+                                    DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+                                        ? DateTime.parse(res['flight']['cancelled_at'])
+                                        : null;
+                                    DateTime? voidTime = res['flight']['void_time'] != null
+                                        ? DateTime.parse(res['flight']['void_time'])
+                                        : null;
+                                    cancelOn = _formatDateTime(cancelledAt);
+                                    voidOn = _formatDateTime(voidTime);
+                                    print("booking.status.name: $bookingStatus");
+                                  }
+                                } catch (e) {
+                                  Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                  print("cancelPreBooking error: $e");
+                                }
+                                if (context.mounted) context.loaderOverlay.hide();
+                                setState(() {});
+                              },
+                              child: Text("Cancel".tr),
                             ),
                           ],
                         ),
                       ),
-                    ],
-
-                    const SizedBox(height: 30),
-                    const SizedBox(height: 30),
-                  ],
-                ),
-              ),
-            ),
-
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              width: double.infinity,
-              // height: 80,
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                // shadow
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 5, blurRadius: 10, offset: const Offset(0, 2))],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Total".tr, style: const TextStyle(fontSize: AppConsts.lg)),
-                        const SizedBox(height: 8),
-                        SelectableText(
-                          AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (booking.status == BookingStatus.preBooking && !isExpired)
-                    IntrinsicWidth(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () async {
-                              final dialog = await CustomDialog.success(
-                                context,
-                                title: 'Confirm Booking'.tr,
-                                desc:
-                                    'Are you sure you want to confirm this booking?'.tr +
-                                    '\n' +
-                                    AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
-                                    'will be deducted from your balance'.tr,
-                                btnOkText: 'Confirm'.tr,
-                              );
-
-                              if (dialog != DismissType.btnOk) {
-                                return;
-                              }
-
-                              if (context.mounted) context.loaderOverlay.show();
-                              try {
-                                final res = await travelersReviewController.confirmBooking(booking.id);
-                                if (res != null) {
-                                  // update travelers by setTicketNumber
-                                  final passengers = res['passengers'] as List;
-                                  for (var passenger in passengers) {
-                                    travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
-                                  }
-                                  print("res['booking']['status'] ${res['booking']['status']}");
-                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                  bookingStatus = booking.status.name;
-                                  print("booking.status.name: $bookingStatus");
-                                }
-                              } catch (e) {
-                                Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
-                              }
-                              if (context.mounted) context.loaderOverlay.hide();
-                              setState(() {});
-                            },
-                            child: Text("Confirm Booking".tr),
-                          ),
-                          const SizedBox(height: 8),
-                          // cancel
-                          TextButton(
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: cs.error,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: cs.error),
+                    if (booking.status == BookingStatus.confirmed && allowVoid())
+                      IntrinsicWidth( 
+                        child: Column(
+                          children: [
+                            // void
+                            TextButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: cs.error,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: cs.error),
+                                ),
                               ),
-                            ),
-                            onPressed: () async {
-                              final dialog = await CustomDialog.error(
-                                context,
-                                title: 'Cancel Pre-Booking'.tr,
-                                desc: 'Are you sure you want to cancel this pre-booking?'.tr,
-                                btnOkText: 'Cancel'.tr,
-                              );
-
-                              if (dialog != DismissType.btnOk) {
-                                return;
-                              }
-
-                              if (context.mounted) context.loaderOverlay.show();
-                              try {
-                                final res = await travelersReviewController.cancelPreBooking(booking.id);
-                                if (res != null) {
-                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                  bookingStatus = booking.status.name;
-
+                              onPressed: () async {
+                                final dialog = await CustomDialog.error(
+                                  context,
+                                  title: 'Void Issue'.tr,
+                                  desc: 'Are you sure you want to void this issue?'.tr,
+                                  btnOkText: 'Void'.tr,
+                                );
+      
+                                if (dialog != DismissType.btnOk) {
+                                  return;
+                                }
+      
+                                if (context.mounted) context.loaderOverlay.show();
+                                try {
+                                  final res = await travelersReviewController.voidIssue(booking.id);
+                                  if (res != null) {
+                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                    bookingStatus = booking.status.name;
+      
                                   DateTime? cancelledAt = res['flight']['cancelled_at'] != null
                                       ? DateTime.parse(res['flight']['cancelled_at'])
                                       : null;
-                                  DateTime? voidTime = res['flight']['void_time'] != null
-                                      ? DateTime.parse(res['flight']['void_time'])
-                                      : null;
-                                  cancelOn = _formatDateTime(cancelledAt);
-                                  voidOn = _formatDateTime(voidTime);
-                                  print("booking.status.name: $bookingStatus");
+      
+                                    DateTime? voidTime = res['flight']['void_time'] != null
+                                        ? DateTime.parse(res['flight']['void_time'])
+                                        : null;
+      
+                                    cancelOn = _formatDateTime(cancelledAt);
+                                    voidOn = _formatDateTime(voidTime);
+                                    print("booking.status.name: $bookingStatus");
+                                  }
+                                } catch (e) {
+                                  Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+                                  print("❌ voidIssue error: $e");
                                 }
-                              } catch (e) {
-                                Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
-                                print("cancelPreBooking error: $e");
-                              }
-                              if (context.mounted) context.loaderOverlay.hide();
-                              setState(() {});
-                            },
-                            child: Text("Cancel".tr),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (booking.status == BookingStatus.confirmed && allowVoid())
-                    IntrinsicWidth( 
-                      child: Column(
-                        children: [
-                          // void
-                          TextButton(
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: cs.error,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: cs.error),
-                              ),
+                                if (context.mounted) context.loaderOverlay.hide();
+                                setState(() {});
+                              },
+                              child: Text("Void".tr),
                             ),
-                            onPressed: () async {
-                              final dialog = await CustomDialog.error(
-                                context,
-                                title: 'Void Issue'.tr,
-                                desc: 'Are you sure you want to void this issue?'.tr,
-                                btnOkText: 'Void'.tr,
-                              );
-
-                              if (dialog != DismissType.btnOk) {
-                                return;
-                              }
-
-                              if (context.mounted) context.loaderOverlay.show();
-                              try {
-                                final res = await travelersReviewController.voidIssue(booking.id);
-                                if (res != null) {
-                                  booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                  bookingStatus = booking.status.name;
-
-                                DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                    ? DateTime.parse(res['flight']['cancelled_at'])
-                                    : null;
-
-                                  DateTime? voidTime = res['flight']['void_time'] != null
-                                      ? DateTime.parse(res['flight']['void_time'])
-                                      : null;
-
-                                  cancelOn = _formatDateTime(cancelledAt);
-                                  voidOn = _formatDateTime(voidTime);
-                                  print("booking.status.name: $bookingStatus");
-                                }
-                              } catch (e) {
-                                Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
-                                print("❌ voidIssue error: $e");
-                              }
-                              if (context.mounted) context.loaderOverlay.hide();
-                              setState(() {});
-                            },
-                            child: Text("Void".tr),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -619,13 +632,15 @@ class _IssuingPageState extends State<IssuingPage> {
 
     bool isNumericColumn(String key) {
       final k = key.toLowerCase();
+      print("key: $k"); 
       return k.contains('weight') ||
           k.contains('price') ||
           k.contains('amount') ||
           k.contains('qty') ||
           k.contains('quantity') ||
           k.contains('fare') ||
-          k.contains('total');
+          k.contains('total') ||
+          k.contains('total fare');
     }
 
     String labelFromKey(String key) {
@@ -667,16 +682,34 @@ class _IssuingPageState extends State<IssuingPage> {
                       child: Text(labelFromKey(key).tr, style: TextStyle(color: cs.primaryContainer)),
                     ),
                     numeric: isNumericColumn(key),
+                    headingRowAlignment: MainAxisAlignment.start,
                   ),
               ],
               rows: [
-                for (final row in data) DataRow(cells: [for (final key in columnsKeys) DataCell(Text('${row[key] ?? ''}'))]),
-              ],
+                for (final row in data)
+                  DataRow(
+                    cells: [
+                      for (final key in columnsKeys)
+                        DataCell(
+                          Align(
+                            alignment: isNumericColumn(key)
+                                ? AlignmentDirectional.centerEnd
+                                : AlignmentDirectional.centerStart,
+                            child: Text(
+                              '${row[key] ?? ''}',
+                              textAlign: isNumericColumn(key) ? TextAlign.end : TextAlign.start,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+              ], 
             ),
+            
           ],
         ),
       ),
-    );
+    ); 
   }
 }
 
@@ -749,6 +782,6 @@ class SecondTitle extends StatelessWidget {
 
 String? _formatDateTime(DateTime? d) {
   if (d == null) return null;
-  final s = DateFormat('dd - MMM - yyyy HH:mm:ss', AppVars.lang).format(d);
+  final s = intl.DateFormat('dd - MMM - yyyy HH:mm:ss', AppVars.lang).format(d);
   return AppFuns.replaceArabicNumbers(s);
 }

@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/profile/change_password.dart';
 import 'package:alzajeltravel/view/profile/profile_header.dart';
@@ -286,7 +287,11 @@ class _BalanceCardState extends State<BalanceCard> {
                 ),
                 child: Text(
                   'Copy Balance'.tr,
-                  style: TextStyle(fontSize: AppConsts.sm, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: AppConsts.sm, 
+                    fontWeight: FontWeight.w600, 
+                    color: cs.surfaceContainerLow,
+                  ),
                 ),
               ),
             ),

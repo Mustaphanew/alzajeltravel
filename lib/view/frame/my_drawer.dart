@@ -32,6 +32,7 @@ class _MyDrawerState extends State<MyDrawer> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Drawer(
+      backgroundColor: cs.onInverseSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -128,7 +129,7 @@ class _MyDrawerState extends State<MyDrawer> {
               child: Column(
                 children: [
                   DrawerItem(
-                    icon: SvgPicture.asset(AppConsts.logoBlack, width: 24, height: 24, color: Get.isDarkMode ? Colors.white : Colors.black),
+                    icon: SvgPicture.asset(AppConsts.logoBlack, width: 24, height: 24, color: AppFuns.isDark(context) ? Colors.white : Colors.black),
                     title: "Home".tr,
                     onClick: () async {
                       if (widget.persistentTabController != null) {
@@ -255,7 +256,7 @@ class DrawerItem extends StatelessWidget {
       child: TextButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          foregroundColor: Get.isDarkMode ? Colors.white : Colors.black,
+          foregroundColor: AppFuns.isDark(context) ? Colors.white : Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
         ),
         onPressed: onClick,

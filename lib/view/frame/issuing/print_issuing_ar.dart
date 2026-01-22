@@ -186,7 +186,7 @@ class _PrintIssuingArState extends State<PrintIssuingAr> {
 
       if (summary.adultCount > 0) {
         pricingRows.add(<String>[
-          'بالغ X${summary.adultCount}',
+          'بالغ × ${summary.adultCount}',
           _fmtMoney(summary.adultsTotalBaseFareAllPassengers),
           _fmtMoney(summary.adultsTotalTaxAllPassengers),
           _fmtMoney(summary.adultsTotalFareAllPassengers),
@@ -195,7 +195,7 @@ class _PrintIssuingArState extends State<PrintIssuingAr> {
 
       if (summary.childCount > 0) {
         pricingRows.add(<String>[
-          'طفل X${summary.childCount}',
+          'طفل × ${summary.childCount}',
           _fmtMoney(summary.childrenTotalBaseFareAllPassengers),
           _fmtMoney(summary.childrenTotalTaxAllPassengers),
           _fmtMoney(summary.childrenTotalFareAllPassengers),
@@ -204,7 +204,7 @@ class _PrintIssuingArState extends State<PrintIssuingAr> {
 
       if (summary.infantLapCount > 0) {
         pricingRows.add(<String>[
-          'رضيع X${summary.infantLapCount}',
+          'رضيع × ${summary.infantLapCount}',
           _fmtMoney(summary.infantsTotalBaseFareAllPassengers),
           _fmtMoney(summary.infantsTotalTaxAllPassengers),
           _fmtMoney(summary.infantsTotalFareAllPassengers),
@@ -357,13 +357,13 @@ class _PrintIssuingArState extends State<PrintIssuingAr> {
               textDirection: pw.TextDirection.rtl,
               child: _sectionTable(
                 title: 'تفاصيل الرحلة',
-                subtitle: flightRouteSubtitle,
-                header: const ['الذهاب', 'الوصول', 'شركة الطيران', 'رقم الرحلة'],
+                subtitle: flightRouteSubtitle, 
+                header: const ['المغادرة', 'الوصول', 'شركة الطيران', 'رقم الرحلة'],
                 columnWidths: const {
                   0: pw.FlexColumnWidth(2.2),
                   1: pw.FlexColumnWidth(2.2),
                   2: pw.FlexColumnWidth(1.4),
-                  3: pw.FlexColumnWidth(1.2), 
+                  3: pw.FlexColumnWidth(1.2),
                 },
                 columnAlignments: const {
                   0: pw.Alignment.centerRight,

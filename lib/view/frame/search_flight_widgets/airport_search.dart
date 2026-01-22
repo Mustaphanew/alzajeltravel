@@ -138,7 +138,7 @@ class _AirportSearchState extends State<AirportSearch> {
                             //     ? const Icon(Icons.flight_outlined)
                             //     : const Icon(Icons.location_on_outlined),
                   
-                            const Icon(Icons.flight_outlined),
+                            // const Icon(Icons.flight_outlined),
                         
                             // const Icon(Icons.navigate_next),
                           ],

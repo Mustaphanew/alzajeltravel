@@ -32,6 +32,7 @@ class Themes {
       primaryFixed: Colors.black,
       secondaryFixed: Colors.green[800],
       onTertiaryFixedVariant: const Color(0xFFf7f8fb),
+      surfaceContainerLow: Colors.grey[700],
 
     );
 
@@ -223,7 +224,8 @@ class Themes {
       inversePrimary: AppConsts.secondaryColor,
       primaryFixed: Colors.white,
       secondaryFixed: Colors.green[800],
-      onTertiaryFixedVariant: const Color(0xFFf7f8fb),
+      onTertiaryFixedVariant: const Color(0xFF0E1226),
+      surfaceContainerLow: Colors.grey[300],
     );
 
 

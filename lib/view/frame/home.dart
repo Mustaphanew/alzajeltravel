@@ -1,9 +1,11 @@
 import 'package:alzajeltravel/model/profile/profile_model.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
@@ -41,18 +43,18 @@ class _HomeState extends State<Home> {
         SliverAppBar(
           pinned: true,
           expandedHeight: 300,
-
+    
           actions: [
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) async {
                 if (value == 'share') {
-
+    
                    
                   final dialog = await CustomDialog.success(context, title: 'Dialog Title', desc: 'Dialog description here', btnOkText: 'Ok');
-
+    
                   print("dialog: $dialog");
-
+    
                   // CustomSnackBar.success(
                   //   context, 'Share clicked 2',
                   //   subtitle: 'If you need to show the user some information in a nice way, you can use this package.',
@@ -92,7 +94,7 @@ class _HomeState extends State<Home> {
               ],
             ),
           ],
-
+    
           leading: TextButton(
             style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: CircleBorder()),
             onPressed: () async {
@@ -119,7 +121,7 @@ class _HomeState extends State<Home> {
               style: TextStyle(color: Colors.white, fontSize: AppConsts.xxlg, fontWeight: FontWeight.w600),
             ),
           ),
-
+    
           collapsedHeight: 60,
           flexibleSpace: FlexibleSpaceBar(
             titlePadding: const EdgeInsets.symmetric(horizontal: 52, vertical: 90),
@@ -190,7 +192,7 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-
+    
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(70),
             child: Padding(
@@ -214,7 +216,7 @@ class _HomeState extends State<Home> {
             ),
           ),
         ),
-
+    
         // ✅ Carousel Slider
         // SliverToBoxAdapter(
         //   child: Padding(
@@ -261,7 +263,7 @@ class _HomeState extends State<Home> {
             ),
           ),
         ],
-
+    
         // ✅ نص رئيسي وفرعي بشكل افقي
         SliverToBoxAdapter(
           child: Column(
@@ -293,7 +295,7 @@ class _HomeState extends State<Home> {
             ],
           ),
         ),
-
+    
         SliverToBoxAdapter(
           child: Container(
             // color: bgList,
@@ -317,9 +319,9 @@ class _HomeState extends State<Home> {
             ),
           ),
         ),
-
+    
         SliverToBoxAdapter(child: Container(height: 26, color: Colors.transparent)),
-
+    
         // ✅ نص رئيسي وفرعي بشكل عمودي
         SliverToBoxAdapter(
           child: Column(
@@ -351,11 +353,11 @@ class _HomeState extends State<Home> {
             ],
           ),
         ),
-
+    
         // ✅  قائمة الاماكن بشكل عمودي (SliverList.separated)
         SliverList.separated(
           itemCount: 6,
-
+    
           // scrollDirection: Axis.vertical,
           separatorBuilder: (context, index) {
             return Container(
@@ -363,7 +365,7 @@ class _HomeState extends State<Home> {
               // color: Colors.red,
             );
           },
-
+    
           itemBuilder: (context, index) {
             return FlightCardVertical(
               from: "Berlin (BER)",
@@ -374,7 +376,7 @@ class _HomeState extends State<Home> {
             );
           },
         ),
-
+    
         SliverToBoxAdapter(
           child: Container(
             height: 32,

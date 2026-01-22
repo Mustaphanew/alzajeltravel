@@ -13,9 +13,15 @@ class RootDecider extends StatelessWidget {
     // نقل بعد أول فريم لتجنب مشاكل build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (firstRun) {
-        Get.offAllNamed(Routes.intro.path);
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          Routes.intro.path,
+          (route) => false,
+        );
       } else {
-        Get.offAllNamed(Routes.login.path);
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          Routes.login.path,
+          (route) => false,
+        );
       }
     });
 

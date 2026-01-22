@@ -1,14 +1,14 @@
-import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/bookings_report/bookings_report_page.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:alzajeltravel/controller/frame_controller.dart';
 import 'package:alzajeltravel/locale/translation_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
@@ -18,7 +18,6 @@ import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
-import 'dart:async';
 
 class Frame extends StatefulWidget {
   const Frame({super.key});
@@ -96,11 +95,10 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     return [
       PersistentBottomNavBarItem(
         icon: SvgPicture.asset(
-          (AppVars.appThemeMode == ThemeMode.dark) ? AppConsts.logo2 : AppConsts.logo3,
+          (AppFuns.isDark(context)) ? AppConsts.logo2 : AppConsts.logo3,
           width: 24,
           height: 24,
-          // color: Colors.black,
-        ),
+        ),  
         inactiveIcon: SvgPicture.asset(AppConsts.logoBlack, width: 24, height: 24, color: Colors.grey[400]),
         title: ("   ${'Home'.tr}"),
         textStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.normal, fontSize: AppConsts.lg),
@@ -108,7 +106,6 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
         inactiveColorPrimary: inactiveColorPrimary,
         activeColorSecondary: activeTextColorPrimary,
       ),
-
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.search_outlined),
         title: (" ${'Search'.tr}"),
@@ -146,16 +143,17 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     ];
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
     return SafeArea(
       bottom: true,
       top: false,
       child: Scaffold(
         drawer: MyDrawer(persistentTabController: frameController.persistentTabController),
-
+    
         body: PersistentTabView(
           context,
           backgroundColor: cs.surfaceContainerHighest,
@@ -163,7 +161,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
           screens: _buildScreens(),
           items: navBarsItems(),
           confineToSafeArea: true,
-          handleAndroidBackButtonPress: true,
+          handleAndroidBackButtonPress: false,
           resizeToAvoidBottomInset: true,
           stateManagement: true, 
           hideNavigationBarWhenKeyboardAppears: true, 
@@ -172,11 +170,30 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(0.0),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4)],
           ),
-
+    
           // ✅ النمط المطلوب (Style 10)
           navBarStyle: NavBarStyle.style10,
+          
+          // ✅ هنا الحل
+          onWillPop: (BuildContext? tabContext) async {
+            print("onWillPop");
+            // لو كنت في أي Tab غير Home: يرجعك لـ Home بدل ما يخرج
+            if (frameController.persistentTabController.index != 0) {
+              frameController.persistentTabController.jumpToTab(0);
+              return false;
+            }
+            
+            final ok = await AppFuns.confirmExit();
+            if (ok) {
+              await SystemNavigator.pop();
+            }
+            return false;
+          },
+
+    
         ),
       ),
     );
   }
+
 }
