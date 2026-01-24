@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -450,9 +451,9 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
 
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: CustomButton(
               onPressed: selectedStatus == null ? null : _onSearchPressed,
-              child: Text('Search'.tr),
+              label: Text('Search'.tr),
             ),
           ),
         ],

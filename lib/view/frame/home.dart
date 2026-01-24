@@ -37,11 +37,12 @@ class _HomeState extends State<Home> {
     var size = MediaQuery.of(context).size;
     final cs = Theme.of(context).colorScheme;
     // Color bgList = Colors.red;
-    double listViewHorizontalHeight = 400;
+    double listViewHorizontalHeight = 350;
     return CustomScrollView(
       slivers: [
+
         SliverAppBar(
-          pinned: true,
+          pinned: true, 
           expandedHeight: 300,
     
           actions: [
@@ -110,7 +111,9 @@ class _HomeState extends State<Home> {
           ),
           leadingWidth: 50,
           titleSpacing: 0,
-          backgroundColor: AppConsts.primaryColor,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+
           title: Container(
             width: size.width,
             // height: 120,
@@ -123,76 +126,58 @@ class _HomeState extends State<Home> {
           ),
     
           collapsedHeight: 60,
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(horizontal: 52, vertical: 90),
-            centerTitle: true,
-            expandedTitleScale: 1.5,
-            title: Text("", style: TextStyle(color: AppConsts.tertiaryColor[200])),
-            background: CarouselSlider.builder(
-              itemCount: 5,
-              itemBuilder: (context, index, realIndex) {
-                return Container(
-                  padding: EdgeInsetsDirectional.only(),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: CacheImg(AppConsts.imageUrl + "1${index + 1}.jpg", boxFit: BoxFit.cover),
-                      ),
-                      Positioned(top: 0, left: 0, right: 0, bottom: 0, child: Container(color: Colors.black.withValues(alpha: 0.3))),
-                      Positioned.directional(
-                        top: 0,
-                        start: 0,
-                        // end: 0,
-                        bottom: 0,
-                        textDirection: TextDirection.rtl,
-                        child: Container(
-                          padding: EdgeInsetsDirectional.only(start: 16, end: 16),
-                          // alignment: Alignment.center,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 20),
-                              Text(
-                                "Experience Lifestyle",
-                                style: TextStyle(color: Colors.white, fontSize: AppConsts.xlg, fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                "with Alzajel Travel",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: AppConsts.normal,
-                                  // fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              options: CarouselOptions(
-                // height: 300,
-                viewportFraction: 1,
-                aspectRatio: 1,
-                initialPage: 0,
-                enableInfiniteScroll: true,
-                reverse: true,
-                autoPlay: true,
-                autoPlayInterval: const Duration(seconds: 5),
-                autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                autoPlayCurve: Curves.fastOutSlowIn,
-                scrollDirection: Axis.horizontal,
+
+
+flexibleSpace: Stack(
+  fit: StackFit.expand,
+  children: [
+    // 🔵 الخلفية المتدرجة
+    Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xff0f1a3f), // أغمق
+            Color(0xff132057), // اللون الأساسي
+            Color(0xff1b2f6f), // أفتح
+          ],
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+        ),
+      ),
+    ),
+
+    // 🖼️ المحتوى السابق (الصور + الكاروسيل)
+    FlexibleSpaceBar(
+      titlePadding: const EdgeInsets.symmetric(horizontal: 52, vertical: 90),
+      centerTitle: true,
+      expandedTitleScale: 1.5,
+      title: const Text(""),
+      background: CarouselSlider.builder(
+        itemCount: 5,
+        itemBuilder: (context, index, realIndex) {
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              CacheImg(
+                AppConsts.imageUrl + "1${index + 1}.jpg",
+                boxFit: BoxFit.cover,
               ),
-            ),
-          ),
-    
+              Container(color: Colors.black.withValues(alpha: 0.35)),
+            ],
+          );
+        },
+        options: CarouselOptions(
+          viewportFraction: 1,
+          aspectRatio: 1,
+          autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 5),
+        ),
+      ),
+    ),
+  ],
+),
+
+
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(70),
             child: Padding(

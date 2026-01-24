@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -156,7 +157,7 @@ class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderSt
               height: 50,
               child: GetBuilder<SearchFlightController>(
                 builder: (ctrl) {
-                  return ElevatedButton(
+                  return CustomButton(
                     onPressed: (ctrl.isRequesting)? null : () async {
                       
                       GlobalKey<FormState>? currentKey;
@@ -220,7 +221,7 @@ class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderSt
                       // Get.to(() => FlightsResults());
                       
                     },
-                    child: (ctrl.isRequesting)? SizedBox(height: 24, width: 24, child: CircularProgressIndicator()) : Text("Search Flight".tr),
+                    label: (ctrl.isRequesting)? SizedBox(height: 24, width: 24, child: CircularProgressIndicator()) : Text("Search Flight".tr),
                   );
                 }
               ),

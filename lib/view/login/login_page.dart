@@ -99,6 +99,8 @@ class _LoginPageState extends State<LoginPage> {
                         labelText: 'Password'.tr,
                         hintText: 'Password Hint'.tr,
                         prefixIcon: const Icon(Icons.lock_outlined),
+
+
                         suffixIcon: IconButton(
                           onPressed: c.togglePasswordVisibility,
                           icon: Icon(
@@ -108,6 +110,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           tooltip: 'Toggle Password'.tr,
                         ),
+
+                        
                       ),
                       onFieldSubmitted: (_) {
                         FocusScope.of(context).requestFocus(c.agencyFocus);

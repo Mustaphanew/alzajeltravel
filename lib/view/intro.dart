@@ -1,4 +1,5 @@
 
+import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:flutter/material.dart';
 
@@ -145,13 +146,13 @@ class _IntroState extends State<Intro> {
                             height: 60,
                             child: GetBuilder<CheckAmadeusController>(
                               builder: (c) {
-                                return ElevatedButton(
+                                return CustomButton(
                                   onPressed: (c.loading == true)
                                       ? null
                                       : () async {
                                           Get.offAll(() => LoginPage());
                                         },
-                                  child: Text(
+                                  label: Text(
                                     "Get Started".tr,
                                     style: TextStyle(
                                       fontSize: AppConsts.xlg,

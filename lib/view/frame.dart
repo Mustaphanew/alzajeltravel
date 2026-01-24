@@ -44,9 +44,10 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   int timeout = 20;
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      print("paused");
+    if (state == AppLifecycleState.paused) {
+      print("paused 1: ${_leftAt}");
       _leftAt = DateTime.now();
+      print("paused 2: ${_leftAt}");
     } else if (state == AppLifecycleState.resumed) {
       final leftAt = _leftAt;
       _leftAt = null;

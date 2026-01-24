@@ -145,6 +145,7 @@ class Themes {
         style: ElevatedButton.styleFrom(
           foregroundColor: cs.onPrimary,
           backgroundColor: cs.primary,
+          
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),

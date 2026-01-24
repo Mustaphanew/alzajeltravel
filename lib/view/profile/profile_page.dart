@@ -173,6 +173,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 20),
 
                   Container(padding: const EdgeInsets.symmetric(horizontal: 12), child: ChangePassword()),
+                
+                  const SizedBox(height: 30),
                 ],
               ),
             ),

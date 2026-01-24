@@ -5,6 +5,7 @@ import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
 import 'package:alzajeltravel/controller/flight/other_prices_controller.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
+import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:alzajeltravel/view/frame/flights/filter_offers_page.dart';
 import 'package:alzajeltravel/view/frame/flights/other_prices/other_prices_page.dart';
 import 'package:flutter/cupertino.dart';
@@ -445,7 +446,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
     }
 
     final String airlineNamesText = secondaryName == null ? primaryName : '$primaryName, $secondaryName';
-
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: widget.onDetails,
       child: Card(
@@ -489,14 +490,24 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   ),
                   const SizedBox(width: 8),
                   if (widget.showFare ?? true)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          AppFuns.priceWithCoin(offer.totalAmount, offer.currency),
-                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[900]!.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column( 
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            AppFuns.priceWithCoin(offer.totalAmount, offer.currency),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -531,22 +542,28 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   if (widget.showSeatLeft)
                     Row(
                       children: [
-                        const Icon(Icons.event_seat, size: 18),
-                        const SizedBox(width: 4),
-                        Text('${offer.seatsRemaining} ${'Seats left'.tr}', style: theme.textTheme.bodySmall),
+                        const Icon(Icons.event_seat, size: 20,),
+                        const SizedBox(width: 0),
+                        Text(
+                          '${offer.seatsRemaining} ${'Seats left'.tr}', style: theme.textTheme.bodySmall!.copyWith(
+                            fontSize: 14, color: Colors.red[800], fontWeight: FontWeight.w600)),
                       ],
                     ),
-                  const SizedBox(width: 12),
+                  const Spacer(),
                   if (widget.showBaggage)
                     Row(
                       children: [
-                        const Icon(Icons.luggage, size: 18),
-                        const SizedBox(width: 4),
-                        Text((offer.baggageInfo ?? '').split(',').first, style: theme.textTheme.bodySmall),
+                        Icon(Icons.luggage, size: 20, color: Colors.blue[900]!.withOpacity(0.8)),
+                        const SizedBox(width: 0),
+                        Text((offer.baggageInfo ?? '').split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
                       ],
                     ),
                   if (widget.showSeatLeft && widget.showBaggage) const Spacer(),
-                  Text(offer.cabinClassText.tr, style: theme.textTheme.bodySmall),
+                  Text(
+                    (offer.cabinClassText.replaceAll("Standard", "")).tr, 
+                    style: theme.textTheme.bodySmall!.copyWith(
+                      fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
 
@@ -557,7 +574,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   children: [
                     if (widget.onBook != null)
                       Expanded(
-                        child: ElevatedButton.icon(
+                        child: CustomButton(
                           onPressed: widget.onBook!,
                           icon: const Icon(Icons.flight_takeoff),
                           label: Text('Book now'.tr),
@@ -665,7 +682,7 @@ class _LegRowState extends State<_LegRow> {
 
     final bool isArabic = AppVars.lang == 'ar';
     final double planeAngle = isArabic ? -math.pi / 2 : math.pi / 2;
-
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -765,7 +782,13 @@ class _LegRowState extends State<_LegRow> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFf7efe9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(color: Color(0xFF9c5627), fontWeight: FontWeight.bold, fontSize: 13))),
                 const SizedBox(height: 26),
               ],
             ),
