@@ -226,13 +226,23 @@ class _BalanceCardState extends State<BalanceCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Remaining Balance'.tr,
-              style: TextStyle(
-                fontSize: AppConsts.xlg,
-                // fontWeight: FontWeight.bold,
-                color: cs.onSurface,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Remaining Balance'.tr,
+                  style: TextStyle(
+                    fontSize: AppConsts.xlg,
+                    // fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
+                // copy icon
+                InkWell(
+                  onTap: _copyBalance,
+                  child: const Icon(Icons.copy),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
@@ -276,27 +286,27 @@ class _BalanceCardState extends State<BalanceCard> {
             const SizedBox(height: 8),
 
             // Copy button bottom-right like the image
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                onPressed: _copyBalance,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 0),
-                  backgroundColor: cs.onTertiaryFixedVariant,
-                  // raduis
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Copy Balance'.tr,
-                  style: TextStyle(
-                    fontSize: AppConsts.sm, 
-                    fontWeight: FontWeight.w600, 
-                    color: cs.surfaceContainerLow,
-                  ),
-                ),
-              ),
-            ),
+            // Align(
+            //   alignment: AlignmentDirectional.centerStart,
+            //   child: TextButton(
+            //     onPressed: _copyBalance,
+            //     style: TextButton.styleFrom(
+            //       padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 0),
+            //       backgroundColor: cs.onTertiaryFixedVariant,
+            //       // raduis
+            //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            //       elevation: 0,
+            //     ),
+            //     child: Text(
+            //       'Copy Balance'.tr,
+            //       style: TextStyle(
+            //         fontSize: AppConsts.sm, 
+            //         fontWeight: FontWeight.w600, 
+            //         color: cs.surfaceContainerLow,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

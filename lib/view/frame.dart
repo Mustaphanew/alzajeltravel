@@ -3,6 +3,7 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/bookings_report/bookings_report_page.dart';
+import 'package:alzajeltravel/view/frame/home_2.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,8 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   // ✅ الشاشات لكل تبويب
   List<Widget> _buildScreens() {
     return [
-      Home(persistentTabController: frameController.persistentTabController),
+      // Home(persistentTabController: frameController.persistentTabController),
+      Home2(),
       SearchFlight(frameContext: context),
       const BookingsReportPage(),
       AppVars.profile != null ? ProfilePage(data: AppVars.profile!) : const Center(child: Text("No Profile")),

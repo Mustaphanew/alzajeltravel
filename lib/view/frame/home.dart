@@ -203,43 +203,44 @@ flexibleSpace: Stack(
         ),
     
         // ✅ Carousel Slider
-        // SliverToBoxAdapter(
-        //   child: Padding(
-        //     padding: const EdgeInsets.only(top: 18, bottom: 12),
-        //     child: CarouselSlider(
-        //       options: CarouselOptions(
-        //         height: 140,
-        //         enlargeCenterPage: true,
-        //         enableInfiniteScroll: true,
-        //         autoPlay: true,
-        //         autoPlayInterval: const Duration(seconds: 3),
-        //         viewportFraction: 0.6,
-        //       ),
-        //       items: List.generate(6, (index) {
-        //         return Builder(
-        //           builder: (BuildContext context) {
-        //             return Padding(
-        //               padding: const EdgeInsets.symmetric(vertical: 8),
-        //               child: Card(
-        //                 elevation: 1,
-        //                 color: Colors.white,
-        //                 shape: RoundedRectangleBorder(
-        //                   borderRadius: BorderRadius.circular(20),
-        //                 ),
-        //                 child: Center(
-        //                   child: Padding(
-        //                     padding: const EdgeInsets.all(8.0),
-        //                     child: CacheImg(AppConsts.imageSliderUrl + "${index + 1}.png"),
-        //                   ),
-        //                 ),
-        //               ),
-        //             );
-        //           },
-        //         );
-        //       }),
-        //     ),
-        //   ),
-        // ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 18, bottom: 12),
+            child: CarouselSlider(
+              options: CarouselOptions(
+                height: 140,
+                enlargeCenterPage: true,
+                enableInfiniteScroll: true,
+                autoPlay: true,
+                autoPlayInterval: const Duration(seconds: 3),
+                viewportFraction: 0.6,
+              ),
+              items: List.generate(6, (index) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Card(
+                        elevation: 1,
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CacheImg(AppConsts.imageSliderUrl + "${index + 1}.png"),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+          ),
+        ),
+        
         if(profileModel != null) ...[
           SliverToBoxAdapter(
             child: Padding(

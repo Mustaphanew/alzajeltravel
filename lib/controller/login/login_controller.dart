@@ -126,8 +126,8 @@ class LoginController extends GetxController {
         }
         return;
       }
-
-      final accessToken = response['access_token']?.toString();
+      print("response['_kAccessToken'] ${response[_kAccessToken]}");
+      final accessToken = response[_kAccessToken]?.toString();
       if (accessToken == null || accessToken.isEmpty) {
         if (context.mounted) {
           CustomSnackBar.error(context, 'Missing Token'.tr);
@@ -244,15 +244,15 @@ class LoginController extends GetxController {
     Get.offAllNamed(Routes.frame.path);
   }
 
-  @override
-  void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
-    agencyNumberController.dispose();
+  // @override
+  // void onClose() {
+  //   emailController.dispose();
+  //   passwordController.dispose();
+  //   agencyNumberController.dispose();
 
-    emailFocus.dispose();
-    passwordFocus.dispose();
-    agencyFocus.dispose();
-    super.onClose();
-  }
+  //   emailFocus.dispose();
+  //   passwordFocus.dispose();
+  //   agencyFocus.dispose();
+  //   super.onClose();
+  // }
 }
