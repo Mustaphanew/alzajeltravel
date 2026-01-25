@@ -18,6 +18,7 @@ void initDio() {
           final token = await AuthStorage.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+            print("Authorization: $token");
           }
         }
 

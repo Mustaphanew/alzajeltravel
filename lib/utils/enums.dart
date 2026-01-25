@@ -88,6 +88,7 @@ enum AgeGroup {
 
 
 enum BookingStatus {
+  all('all'),
   confirmed('confirmed'),
   preBooking('pre-book'),
   canceled('cancelled'),

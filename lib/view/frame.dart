@@ -80,7 +80,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   List<Widget> _buildScreens() {
     return [
       // Home(persistentTabController: frameController.persistentTabController),
-      Home2(),
+      Home2(persistentTabController: frameController.persistentTabController),
       SearchFlight(frameContext: context),
       const BookingsReportPage(),
       AppVars.profile != null ? ProfilePage(data: AppVars.profile!) : const Center(child: Text("No Profile")),

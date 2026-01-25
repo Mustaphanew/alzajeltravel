@@ -1,14 +1,16 @@
 import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
-import 'package:alzajeltravel/view/tmp/translator/translator_page.dart';
+import 'package:alzajeltravel/view/tmp/glassmorphism/glassmorphism.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:pwa_install/pwa_install.dart';
-
+import '../tmp/glassmorphism/particles_fly.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,185 +21,298 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late final LoginController controller;
-
   final formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    controller = Get.put(LoginController(), permanent: false,);
+    controller = Get.put(LoginController(), permanent: false);
     AppVars.getStorage.write("first_run", false);
   }
 
   Future<void> login(BuildContext context) async {
     context.loaderOverlay.show();
-    await controller.login(context, validateForm: (formKey.currentState?.validate() ?? false));
-    if(context.mounted) context.loaderOverlay.hide();
+    await controller.login(
+      context,
+      validateForm: (formKey.currentState?.validate() ?? false),
+    );
+    if (context.mounted) context.loaderOverlay.hide();
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final size = MediaQuery.sizeOf(context);
+
+    final iconFieldColor = MaterialStateColor.resolveWith((states) {
+      if (states.contains(MaterialState.error)) return cs.error;
+      if (states.contains(MaterialState.focused)) return cs.secondary;
+      if (states.contains(MaterialState.disabled)) return cs.onSurface.withOpacity(0.38);
+      return cs.onPrimary.withOpacity(0.85);
+    });
+
+    OutlineInputBorder _border(Color color) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: color, width: 1),
+        );
+
+    InputDecoration deco({
+      required String hint,
+      required Widget prefix,
+      Widget? suffix,
+    }) {
+      return InputDecoration(
+        filled: false,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        hintText: hint.tr,
+        hintStyle: TextStyle(color: cs.onPrimary.withOpacity(0.6)),
+        prefixIcon: prefix,
+        prefixIconColor: iconFieldColor,
+        suffixIcon: suffix,
+        suffixIconColor: iconFieldColor,
+        enabledBorder: _border(cs.onPrimary.withOpacity(0.32)),
+        focusedBorder: _border(cs.secondary.withOpacity(0.95)),
+        errorBorder: _border(cs.error.withOpacity(0.95)),
+        focusedErrorBorder: _border(cs.error.withOpacity(0.95)),
+      );
+    }
+
     return GetBuilder<LoginController>(
       builder: (c) {
         return Scaffold(
-          appBar: AppBar(
-            title: Text('Login'.tr),
-            titleSpacing: 15,
-            actions: [
-              IconButton(
-                tooltip: "Settings".tr,
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () {
-                  Get.to(() => SettingsPage());
-                },
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 32),
-
-                    Text("Login".tr, style: TextStyle(fontSize: AppConsts.normal * 2, fontWeight: FontWeight.bold),),
-                    const SizedBox(height: 8),
-                    Text("Access to competitive global airfare content through the New Horizons system.".tr, style: TextStyle(fontSize: AppConsts.normal),),
-                    const SizedBox(height: 24), 
-
-                    // Email
-                    TextFormField(
-                      controller: c.emailController, 
-                      focusNode: c.emailFocus,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      validator: c.validateEmail,
-                      decoration: InputDecoration(
-                        labelText: 'Email'.tr,
-                        hintText: 'Email Hint'.tr,
-                        prefixIcon: const Icon(Icons.email_outlined),
-                      ),
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).requestFocus(c.passwordFocus);
-                      },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Password
-                    TextFormField(
-                      controller: c.passwordController,
-                      focusNode: c.passwordFocus,
-                      obscureText: c.isPasswordHidden,
-                      textInputAction: TextInputAction.next,
-                      validator: c.validatePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password'.tr,
-                        hintText: 'Password Hint'.tr,
-                        prefixIcon: const Icon(Icons.lock_outlined),
-
-
-                        suffixIcon: IconButton(
-                          onPressed: c.togglePasswordVisibility,
-                          icon: Icon(
-                            c.isPasswordHidden
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          tooltip: 'Toggle Password'.tr,
-                        ),
-
-                        
-                      ),
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).requestFocus(c.agencyFocus);
-                      },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Agency Number
-                    TextFormField(
-                      controller: c.agencyNumberController,
-                      focusNode: c.agencyFocus,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done, // Done
-                      validator: c.validateAgencyNumber,
-                      decoration: InputDecoration(
-                        labelText: 'Agency Number'.tr,
-                        hintText: 'Agency Number Hint'.tr,
-                        prefixIcon: const Icon(Icons.numbers_outlined),
-                      ),
-                      onFieldSubmitted: (_) {
-                        // نفس زر تسجيل الدخول
-                        login(context);
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-                    if(!kIsWeb)
-                      ElevatedButton(
-                        onPressed: () {
-                          Get.to(() => TranslatorPage());
-                        },
-                        child: Text('Translator'.tr),
-                      ),
-                    const SizedBox(height: 20),
-
-                    // Login Button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 58,
-                            child: ElevatedButton(
-                              onPressed: c.isLoading ? null : () async {
-                                await login(context);
-                                if(PWAInstall().installPromptEnabled) {
-                                  PWAInstall().promptInstall_();
-                                }
-                              },
-                              child: c.isLoading
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : Text('Login'.tr, style: TextStyle(fontSize: AppConsts.lg),),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if(c.biometricEnabled)
-                          if(!kIsWeb)
-                            SizedBox(
-                              height: 58,
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  context.loaderOverlay.show(
-                                    widgetBuilder: (context) => Center(
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: cs.primaryContainer,),
-                                    ),
-                                  );
-                                  await c.loginWithBiometrics(context);
-                                  if(context.mounted) context.loaderOverlay.hide();
-                                },
-                                child: Icon(Icons.fingerprint_outlined, size: 32,),
-                              ),
-                            ),
-                      ],
-                    ),
-                  
-                    SizedBox(height: 34),
-                  
-                  ],
+          backgroundColor: cs.primary,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // الخلفية (Particles)
+              Positioned.fill(
+                child: ParticlesFly(
+                  height: size.height,
+                  width: size.width,
+                  connectDots: true,
+                  numberOfParticles: 100,
+                  speedOfParticles: 1,
+                  maxParticleSize: 3.0,
+                  particleColor: Colors.white,
+                  lineColor: const Color(0xffe7b245),
+                  lineStrokeWidth: 1,
+                  onTapAnimation: true,
                 ),
               ),
-            ),
+
+              // الكرت (Glass)
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    top: size.height * 0.06,
+                    left: 16,
+                    right: 16,
+                    bottom: 34,
+                  ),
+                  child: Form(
+                    key: formKey,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: GlassContainer(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 34),
+                      
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    AppConsts.logo3,
+                                    // height: 48,
+                                    // width: 48,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  SvgPicture.asset(
+                                    AppConsts.brand,
+                                    // height: 48,
+                                    // width: 128,
+                                  ),
+                                ],
+                              ),
+                      
+                              const SizedBox(height: 44),
+                      
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Agent Login".tr,
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: cs.onPrimary,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(horizontal: 16),
+                                      foregroundColor: cs.onPrimary,
+                                      backgroundColor: Colors.transparent,
+                                      side: BorderSide(
+                                        color: cs.secondary.withOpacity(0.5),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    onPressed: (){
+                                      Get.to(() => const SettingsPage());
+                                    }, 
+                                    child: Text("Settings".tr),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                "Get competitive global airfares via New Horizon.".tr,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: cs.onPrimary,
+                                ),
+                              ),
+                      
+                              const SizedBox(height: 24),
+                      
+                              // Email
+                              TextFormField(
+                                controller: c.emailController,
+                                focusNode: c.emailFocus,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: c.validateEmail,
+                                cursorColor: cs.secondary,
+                                style: TextStyle(color: cs.onPrimary),
+                                decoration: deco(
+                                  hint: 'Email Hint',
+                                  prefix: const Icon(Icons.email_outlined),
+                                ),
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).requestFocus(c.passwordFocus);
+                                },
+                              ),
+                      
+                              const SizedBox(height: 24),
+                      
+                              // Password
+                              TextFormField(
+                                controller: c.passwordController,
+                                focusNode: c.passwordFocus,
+                                obscureText: c.isPasswordHidden,
+                                textInputAction: TextInputAction.next,
+                                validator: c.validatePassword,
+                                cursorColor: cs.secondary,
+                                style: TextStyle(color: cs.onPrimary),
+                                decoration: deco(
+                                  hint: 'Password Hint',
+                                  prefix: const Icon(Icons.lock_outlined),
+                                  suffix: IconButton(
+                                    onPressed: c.togglePasswordVisibility,
+                                    icon: Icon(
+                                      c.isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                                    ),
+                                    tooltip: 'Toggle Password'.tr,
+                                  ),
+                                ),
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).requestFocus(c.agencyFocus);
+                                },
+                              ),
+                      
+                              const SizedBox(height: 24),
+                      
+                              // Agency Number
+                              TextFormField(
+                                controller: c.agencyNumberController,
+                                focusNode: c.agencyFocus,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                validator: c.validateAgencyNumber,
+                                cursorColor: cs.secondary,
+                                style: TextStyle(color: cs.onPrimary),
+                                decoration: deco(
+                                  hint: 'Agency Number Hint',
+                                  prefix: const Icon(Icons.numbers_outlined),
+                                ),
+                                onFieldSubmitted: (_) => login(context),
+                              ),
+                      
+                              const SizedBox(height: 32),
+                      
+                              // Login Button
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFf6b122),
+                                    foregroundColor: cs.onSecondary,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: c.isLoading
+                                      ? null
+                                      : () async {
+                                          await login(context);
+                                          if (PWAInstall().installPromptEnabled) {
+                                            PWAInstall().promptInstall_();
+                                          }
+                                        },
+                                  child: c.isLoading
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : Text(
+                                          "Login".tr,
+                                          style: const TextStyle(fontSize: 18),
+                                        ),
+                                ),
+                              ),
+                      
+                              // بصمة (اختياري) تحت الزر بدون ما تكسر التصميم
+                              if (c.biometricEnabled && !kIsWeb) ...[
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: IconButton(
+                                    iconSize: 34,
+                                    color: cs.onPrimary.withOpacity(0.9),
+                                    onPressed: () async {
+                                      context.loaderOverlay.show(
+                                        widgetBuilder: (_) => Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: cs.primaryContainer,
+                                          ),
+                                        ),
+                                      );
+                                      await c.loginWithBiometrics(context);
+                                      if (context.mounted) context.loaderOverlay.hide();
+                                    },
+                                    icon: const Icon(Icons.fingerprint_outlined),
+                                  ),
+                                ),
+                              ],
+                      
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

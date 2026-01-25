@@ -79,6 +79,7 @@ dependencies:
   image_cropper: ^11.0.0
   # google_mlkit_text_recognition: ^0.15.0
   google_mlkit_translation: ^0.13.0
+  particles_fly: ^0.0.9
 
 
 dev_dependencies:
@@ -124,6 +125,7 @@ flutter:
 
   assets:
     - assets/
+    - assets/tmp/
     - assets/images/
     - assets/images/icons/
     - assets/images/gifs/

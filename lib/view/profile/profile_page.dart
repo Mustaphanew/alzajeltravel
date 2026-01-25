@@ -217,10 +217,11 @@ class _BalanceCardState extends State<BalanceCard> {
 
     return Card(
       elevation: 0,
+      color: cs.primary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: cs.outlineVariant),
-      ),
+      ), 
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
         child: Column(
@@ -234,13 +235,13 @@ class _BalanceCardState extends State<BalanceCard> {
                   style: TextStyle(
                     fontSize: AppConsts.xlg,
                     // fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+                    color: cs.onPrimary,
                   ),
                 ),
                 // copy icon
                 InkWell(
                   onTap: _copyBalance,
-                  child: const Icon(Icons.copy),
+                  child: Icon(Icons.more_vert, color: cs.onPrimary),
                 ),
               ],
             ),
@@ -248,7 +249,7 @@ class _BalanceCardState extends State<BalanceCard> {
 
             // Inner "field" like the image
             Container(
-              decoration: BoxDecoration(color: cs.onTertiaryFixedVariant, borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: cs.primary, borderRadius: BorderRadius.circular(14)),
               padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 12, 10),
               child: Row(
                 children: [
@@ -259,20 +260,20 @@ class _BalanceCardState extends State<BalanceCard> {
                         ? Text(
                             '********',
                             key: const ValueKey('hidden'),
-                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, letterSpacing: 6, color: cs.onSurface),
+                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, letterSpacing: 6, color: cs.onPrimary),
                           )
                         : SelectableText(
                             _formattedBalance,
                             key: const ValueKey('value'),
                             textDirection: TextDirection.ltr,
-                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: cs.onSurface),
+                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: cs.onPrimary),
                           ),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => setState(() => isHidden = !isHidden),
                     icon: Icon(isHidden ? Icons.visibility : Icons.visibility_off),
-                    color: cs.onSurfaceVariant,
+                    color: cs.onPrimary,
                     iconSize: 26,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 40, minHeight: 40),

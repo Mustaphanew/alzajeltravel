@@ -559,4 +559,9 @@ Map<String, String> ar = {
   "Business": "رجال اعمال",
   "First": "الدرجة الاولى",
 
+  "Agent Login": "تسجيل الدخول",
+  "Get competitive global airfares via New Horizon.": "احصل على أسعار تذاكر طيران عالمية تنافسية عبر شركة نيو هورايزون.",
+
+  "Logout": "تسجيل الخروج",
+
 };

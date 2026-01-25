@@ -180,13 +180,13 @@ class LoginController extends GetxController {
 
     final enabled = await _storage.read(key: _kBiometricEnabled);
     if (enabled != 'true') {
-      Get.snackbar('Info'.tr, 'Login First Then Enable Biometrics'.tr);
+      if(context.mounted) CustomSnackBar.error(context, 'Login First Then Enable Biometrics'.tr);
       return;
     }
 
     final canUse = await _biometric.canUseBiometrics();
     if (!canUse) {
-      Get.snackbar('Error'.tr, 'Biometrics Not Available On This Device'.tr);
+      if(context.mounted) CustomSnackBar.error(context, 'Biometrics Not Available On This Device'.tr);
       return;
     }
 
@@ -200,18 +200,18 @@ class LoginController extends GetxController {
       if (e.code == LocalAuthExceptionCode.userCanceled) return;
 
       if (e.code == LocalAuthExceptionCode.noBiometricsEnrolled) {
-        Get.snackbar('Info'.tr, 'No Biometrics Enrolled'.tr);
+        if(context.mounted) CustomSnackBar.error(context, 'No Biometrics Enrolled'.tr);
         return;
       }
 
       if (e.code == LocalAuthExceptionCode.noBiometricHardware) {
-        Get.snackbar('Error'.tr, 'Biometrics Not Available On This Device'.tr);
+        if(context.mounted) CustomSnackBar.error(context, 'Biometrics Not Available On This Device'.tr);
         return;
       }
 
-      Get.snackbar('Error'.tr, 'Biometric Login Failed'.tr);
+      if(context.mounted) CustomSnackBar.error(context, 'Biometric Login Failed'.tr);
     } catch (_) {
-      Get.snackbar('Error'.tr, 'Biometric Login Failed'.tr);
+      if(context.mounted) CustomSnackBar.error(context, 'Biometric Login Failed'.tr);
     }
   }
 
