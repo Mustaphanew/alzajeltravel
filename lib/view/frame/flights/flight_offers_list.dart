@@ -242,7 +242,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
             ),
             icon: const Icon(Icons.filter_alt_outlined),
             label: Text(
-              'Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
+              'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
               style: TextStyle(fontSize: AppConsts.lg),
             ),
             onPressed: () async {
@@ -583,7 +583,11 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                     if (widget.onBook != null && widget.onOtherPrices != null) ...[const SizedBox(width: 8)],
                     if (widget.onOtherPrices != null)
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cs.secondary,
+                            foregroundColor: Colors.black,
+                          ),
                           onPressed: widget.onOtherPrices!,
                           icon: const Icon(Icons.attach_money),
                           label: Text('Other Prices'.tr),
@@ -591,6 +595,16 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                       ),
                   ],
                 ),
+
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: widget.onDetails!,
+                  icon: Icon(Icons.info),
+                  label: Text('Details'.tr),
+                ),
+              ),
             ],
           ),
         ),
@@ -723,120 +737,146 @@ class _LegRowState extends State<_LegRow> {
 
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Departure
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(depDate, style: theme.textTheme.bodySmall),
-                  Row(
-                    children: [
-                      if (AppVars.lang == 'en') ...[
-                        Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 2),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            periodDepTime,
-                            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                        ),
-                      ] else ...[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            periodDepTime,
-                            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(widget.leg.fromCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  Text(fromName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-
-            // Middle
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.leg.totalDurationText,
-                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                SizedBox(
-                  width: 140,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const SizedBox.shrink(),
-                      DividerLine(),
-                      Transform.rotate(angle: planeAngle, child: const Icon(Icons.airplanemode_active, size: 27)),
+                Text(depDate, style: theme.textTheme.bodySmall),
+                Row(
+                  children: [
+                    if (AppVars.lang == 'en') ...[
+                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 2),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          periodDepTime,
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                    ] else ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          periodDepTime,
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                     ],
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFf7efe9),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(color: Color(0xFF9c5627), fontWeight: FontWeight.bold, fontSize: 13))),
-                const SizedBox(height: 26),
+                Text(widget.leg.fromCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(fromName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
               ],
+            ),
+            
+            // Middle
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    widget.leg.totalDurationText,
+                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+
+                  Row(
+                    children: [
+                      Container(
+                        height: 12,
+                        width: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cs.primaryFixed,
+                        ),
+                      ),
+                      Expanded(
+                        child: DividerLine(),
+                      ),
+                      Transform.flip(
+                        flipX: !isArabic,
+                        child: Image.asset(AppConsts.plane, width: 44,),
+                      ),
+                    ],
+                  ),
+                  
+                  // Padding(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 12),
+                  //   child: Stack(
+                  //     alignment: AlignmentDirectional.centerEnd,
+                  //     children: [
+                  //       Padding(
+                  //         padding: const EdgeInsetsDirectional.only(end: 40),
+                  //         child: DividerLine(),
+                  //       ), 
+                  //       // Transform.rotate(angle: planeAngle, child: const Icon(Icons.airplanemode_active, size: 27)),
+                  //       Image.asset(AppConsts.plane, width: 44,),
+                  //     ],
+                  //   ),
+                  // ),
+
+
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFf7efe9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(color: Color(0xFF9c5627), fontWeight: FontWeight.bold, fontSize: 13))),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
 
             // Arrival
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(arrDate, style: theme.textTheme.bodySmall),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      if (AppVars.lang == 'en') ...[
-                        Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 2),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            periodArrTime,
-                            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(arrDate, style: theme.textTheme.bodySmall),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (AppVars.lang == 'en') ...[
+                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 2),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          periodArrTime,
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
-                      ] else ...[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            periodArrTime,
-                            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
+                      ),
+                    ] else ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          periodArrTime,
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
-                        const SizedBox(width: 2),
-                        Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
+                      ),
+                      const SizedBox(width: 2),
+                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(widget.leg.toCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  Text(
-                    toName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(widget.leg.toCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(
+                  toName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ),
           ],
         ),

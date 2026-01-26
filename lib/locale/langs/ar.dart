@@ -564,4 +564,24 @@ Map<String, String> ar = {
 
   "Logout": "تسجيل الخروج",
 
+  'Flightss': 'الرحلات',
+  'HOTELS': 'الفنادق',
+  'Cars': 'السيارات',
+  'Train': 'القطارات',
+  'Packages': 'الباقات',
+  'Visa': 'التأشيرة',
+
+  "Show more": "عرض المزيد",
+
+  "Latest operations": "العمليات الأخيرة",
+
+  "All": "الكل",
+  "notFound": "غير محدد",
+  "not_found": "غير محدد", 
+
+  "Details": "تفاصيل",
+
+  "Sort & Filter": "فرز وفلترة",
+
+
 };

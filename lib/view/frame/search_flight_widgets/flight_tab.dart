@@ -161,22 +161,21 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            DepartureWidget(index: 0, tmpJourneyType: widget.tmpJourneyType),
-                            SizedBox(height: 26),
                             TextFieldTravelersAndClassType(widget: widget),
+                            DepartureWidget(index: 0, tmpJourneyType: widget.tmpJourneyType),
                           ],
                         ),
                       ),
 
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(height: 16),
-                        AirlineIncludeDropDown(),
-                        SizedBox(height: 8),
-                        // AirlineExcludeDropDown(),
-                      ],
-                    ),
+                    // Column(
+                    //   mainAxisSize: MainAxisSize.min,
+                    //   children: [
+                    //     SizedBox(height: 16),
+                    //     AirlineIncludeDropDown(),
+                    //     SizedBox(height: 8),
+                    //     // AirlineExcludeDropDown(),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
@@ -278,6 +277,7 @@ class DepartureWidget extends StatelessWidget {
                             prefixIcon: Icon(Icons.flight_takeoff_outlined),
                             hintText: "${'Enter Departing From'.tr} ...",
                             labelText: " ${'Departing From'.tr} ",
+                            floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
                           ),
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
@@ -286,7 +286,7 @@ class DepartureWidget extends StatelessWidget {
                             return null;
                           },
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: 12),
                         TextFormField(
                           controller: form.txtTo,
                           readOnly: true,
@@ -302,6 +302,7 @@ class DepartureWidget extends StatelessWidget {
                             prefixIcon: Icon(Icons.flight_land_outlined),
                             hintText: "${'Enter Departing to'.tr} ...",
                             labelText: " ${'Departing to'.tr} ",
+                            floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
                           ),
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
@@ -343,6 +344,7 @@ class DepartureWidget extends StatelessWidget {
                   prefixIcon: Icon(Icons.date_range),
                   hintText: "${'Enter Departure Dates'.tr} ...",
                   labelText: " ${'Departure Dates'.tr} ",
+                  floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
                 ),
                 validator: (String? value) {
                   if (value == null || value.isEmpty || value.endsWith("⇄ ")) {
@@ -364,6 +366,7 @@ class DepartureWidget extends StatelessWidget {
                   prefixIcon: Icon(Icons.date_range),
                   hintText: "${'Enter Departure Date'.tr} ...",
                   labelText: " ${'Departure Date'.tr} ",
+                  floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
                 ),
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {

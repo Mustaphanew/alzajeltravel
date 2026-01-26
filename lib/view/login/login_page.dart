@@ -3,14 +3,14 @@ import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
-import 'package:alzajeltravel/view/tmp/glassmorphism/glassmorphism.dart';
+import 'package:alzajeltravel/utils/glassmorphism/glassmorphism.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:pwa_install/pwa_install.dart';
-import '../tmp/glassmorphism/particles_fly.dart';
+import '../../utils/glassmorphism/particles_fly.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -80,7 +80,9 @@ class _LoginPageState extends State<LoginPage> {
 
     return GetBuilder<LoginController>(
       builder: (c) {
+        final kb = MediaQuery.of(context).viewInsets.bottom;
         return Scaffold(
+          resizeToAvoidBottomInset: false, // ✅ يمنع رفع التصميم
           backgroundColor: cs.primary,
           body: Stack(
             fit: StackFit.expand,
@@ -106,9 +108,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: SingleChildScrollView(
                   padding: EdgeInsets.only(
                     top: size.height * 0.06,
-                    left: 16,
-                    right: 16,
-                    bottom: 34,
+                    left: 22,
+                    right: 22,
+                    bottom: 34 + kb, // ✅ مساحة إضافية عند ظهور الكيبورد
                   ),
                   child: Form(
                     key: formKey,

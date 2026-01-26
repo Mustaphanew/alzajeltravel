@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/controller/airline_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
@@ -31,6 +32,7 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   TranslationController translationController = Get.put(TranslationController());
   // MainController mainController = Get.put(MainController());
   FrameController frameController = Get.put(FrameController());
+  AirlineController airlineController = Get.put(AirlineController());
 
   @override
   void initState() {

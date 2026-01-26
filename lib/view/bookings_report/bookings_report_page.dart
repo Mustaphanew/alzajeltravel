@@ -46,7 +46,7 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
 
   late final BookingsReportController c;
 
-  final ExpansionTileController _filterTileController = ExpansionTileController();
+  final ExpansibleController _filterTileController = ExpansibleController();
 
   SearchAndFilterState? parentState;
 
@@ -60,9 +60,39 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
       c = Get.put(BookingsReportController());
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _filterTileController.expand(); // ✅ expanded في البداية
+
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _filterTileController.collapse();
+
+      // ✅ default: All + untilDay(today)
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final from = DateTime(2010, 1, 1);
+
+      parentState = SearchAndFilterState(
+        applied: true,
+        status: BookingStatus.all,
+        dateFrom: from,
+        dateTo: today,
+        keyword: '',
+        dateField: ReportDateField.createdAt,
+        period: ReportPeriod.untilDay,
+      );
+      setState(() {});
+
+      context.loaderOverlay.show();
+      await c.search(
+        status: BookingStatus.all,
+        dateFrom: from,
+        dateTo: today,
+        fullDetails: 0,
+      );
+      if (mounted) context.loaderOverlay.hide();
     });
+
+
+
   }
 
   @override
@@ -76,10 +106,20 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
         children: [
           ExpansionTile(
             controller: _filterTileController,
-            initiallyExpanded: true,
+            initiallyExpanded: false,
             maintainState: true,
             // show status
-            title: Text('Search and Filter'.tr + " (${parentState?.status?.toJson().tr})"),
+
+
+            title: Text(
+              'Search and Filter'.tr +
+              ' (' +
+              ((parentState?.status == BookingStatus.all)
+                  ? 'All'.tr
+                  : (parentState?.status?.toJson() ?? '').tr) +
+              ')',
+            ),            
+            
             // collapsedBackgroundColor:
             //     (parentState == null || parentState!.applied == false) 
             //         ? Colors.transparent
@@ -109,6 +149,7 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
               ),
             ],
           ),
+          const Divider(),
           const Expanded(
             child: _BookingsReportList(),
           ),
@@ -188,9 +229,9 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
 
         return RefreshIndicator(
           onRefresh: () => controller.refreshData(),
-          child: ListView.builder(
+          child: ListView.separated(
             controller: _scroll,
-            padding: const EdgeInsets.only(top: 8, bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             itemCount: controller.items.length + 1,
             itemBuilder: (context, index) {
               if (index < controller.items.length) {
@@ -221,6 +262,9 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
                   ],
                 ),
               );
+            },
+            separatorBuilder: (context, index) {
+              return const SizedBox(height: 12);
             },
           ),
         );
@@ -271,19 +315,37 @@ class _ReportCardState extends State<_ReportCard> {
     final issueOn = item.issueOn != null ? _formatDate(item.issueOn!) : null;
     final issueOnDetail = item.issueOn != null ? _formatDateTimeDetail(item.issueOn!) : null;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () async {
+
+    Color bgStatus = Colors.green[800]!.withOpacity(0.2);
+    if(item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry){
+      bgStatus = Colors.pink[800]!.withOpacity(0.2); 
+    } else if(item.flightStatus == BookingStatus.confirmed){
+      bgStatus = Colors.green[800]!.withOpacity(0.2);
+    } else if(item.flightStatus == BookingStatus.preBooking){
+      bgStatus = Colors.yellow[800]!.withOpacity(0.2);
+    }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
+      bgStatus = Colors.red.withOpacity(0.6);
+    }else if(item.flightStatus == BookingStatus.notFound){
+      bgStatus = Colors.black.withOpacity(0.2); 
+    }
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.all(12),
+        backgroundColor: cs.onInverseSurface,
+        foregroundColor: cs.primaryFixed,
+      ),
+      onPressed: () async {
         context.loaderOverlay.show();
         try {
           final insertId = item.tripApi.split("/").last;
           final response = await AppVars.api.get(AppApis.tripDetail + insertId);
-
+    
           final pnr = response['flight']['UniqueID'];
           final booking = BookingDetail.bookingDetail(response['booking']);
           final flight = FlightDetail.flightDetail(response['flight']);
           final travelers = TravelersDetail.travelersDetail(response['flight'], response['passengers']);
-
+    
           final contact = ContactModel.fromApiJson({
             'title': "MR",
             'first_name': booking.customerId.split("@").first,
@@ -293,211 +355,241 @@ class _ReportCardState extends State<_ReportCard> {
             'country_code': booking.countryCode,
             'nationality': "ye",
           });
-
+    
           Get.to(() => IssuingPage(offerDetail: flight, travelers: travelers, contact: contact, pnr: pnr, booking: booking));
         } catch (e) {
           // ممكن تعرض Dialog بدل print
           print("error: $e");
         }
         if (context.mounted) context.loaderOverlay.hide();
+    
       },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // booking & amount
+          Row(
             children: [
-              // booking & amount
-              Row(
-                children: [
-                  Text(
-                    item.bookingId,
-                    style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
-                  ),
-                  
-                  InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
-                      Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
-                    },
-                    child: Tooltip(
-                      message: "Copy booking".tr,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        child: Icon(Icons.copy_outlined, size: 18),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    AppFuns.priceWithCoin(item.totalAmount, item.currency),
-                    style: TextStyle(
-                      color: cs.error,
-                      fontSize: AppConsts.xxlg, 
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              Text(
+                item.bookingId,
+                style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 6),
-
-              // PNR
-              Text('PNR'.tr),
-              Text(item.pnr, style: const TextStyle(fontWeight: FontWeight.bold)),
-
-              const SizedBox(height: 12),
-
-              // route
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.origin.name[AppVars.lang],
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg),
-                      ),
-                      Text(item.origin.code, style: TextStyle(fontSize: AppConsts.lg)),
-                    ],
+              
+              InkWell(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
+                  Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
+                },
+                child: Tooltip(
+                  message: "Copy booking".tr,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Icon(Icons.copy_outlined, size: 18),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const DividerLine(),
-                          if (item.journeyType == JourneyType.oneWay) const Icon(Icons.arrow_forward),
-                          if (item.journeyType == JourneyType.roundTrip)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              color: cs.surfaceContainerHighest,
-                              child: const Icon(Icons.sync_alt, size: 28),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(item.destination.name[AppVars.lang], style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(item.destination.code),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              const Divider(),
-              const SizedBox(height: 8),
-
-              // travel date (departure & return)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Flight Date'.tr),
-                      Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ), 
-                  if (item.reportStatus == BookingStatus.preBooking)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Time Deadline'.tr),
-                        GestureDetector(
-                          onTap: () => setState(() => showTimeDeadlineDetail = !showTimeDeadlineDetail),
-                          child: Text(showTimeDeadlineDetail ? (timeDeadlineDetail ?? '_') : (timeDeadline ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  if (item.reportStatus == BookingStatus.confirmed)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Issue On'.tr),
-                        GestureDetector(
-                          onTap: () => setState(() => showIssueOnDetail = !showIssueOnDetail),
-                          child: Text(showIssueOnDetail ? (issueOnDetail ?? '_') : (issueOn ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // cancel_on
-              if (item.reportStatus == BookingStatus.canceled || item.reportStatus == BookingStatus.expiry)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Cancel On'.tr),
-                    GestureDetector(
-                      onTap: () => setState(() => showCancelledDetail = !showCancelledDetail),
-                      child: Text(
-                        showCancelledDetail ? (cancelledDetail ?? '_') : (cancelled ?? '_'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-
-              // void_on
-              if (item.reportStatus == BookingStatus.voided || item.reportStatus == BookingStatus.voide)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Void On'.tr),
-                    GestureDetector(
-                      onTap: () => setState(() => showVoidedDetail = !showVoidedDetail),
-                      child: Text(
-                        showVoidedDetail ? (voidedDetail ?? '_') : (voided ?? '_'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-
-              const SizedBox(height: 8),
-
-              // count adult children and infants
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(children: [const Icon(Icons.person_outline, size: 22), Text(item.adult.toString())]),
-                    Column(children: [const Icon(Icons.child_care_outlined, size: 22), Text(item.child.toString())]),
-                    Column(children: [const Icon(Icons.child_friendly_outlined, size: 22), Text(item.inf.toString())]),
-                  ],
                 ),
               ),
-
-              const SizedBox(height: 8),
-
-              // created at (relative / detail toggle)
-              GestureDetector(
-                onTap: () => setState(() => showCreatedAtDetail = !showCreatedAtDetail),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    Text(showCreatedAtDetail ? createdDetail : created, style: TextStyle(fontSize: AppConsts.sm)),
-                  ],
+              const Spacer(),
+              Text(
+                AppFuns.priceWithCoin(item.totalAmount, item.currency),
+                style: TextStyle(
+                  fontSize: AppConsts.xxlg, 
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 6),
+          
+          // PNR
+          Text('PNR'.tr),
+          Text(item.pnr, style: const TextStyle(fontWeight: FontWeight.bold)),
+          
+          const SizedBox(height: 12),
+          
+          // route
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.origin.name[AppVars.lang],
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg),
+                  ),
+                  Text(item.origin.code, style: TextStyle(fontSize: AppConsts.lg)),
+                ],
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const DividerLine(),
+                      if (item.journeyType == JourneyType.oneWay) const Icon(Icons.arrow_forward),
+                      if (item.journeyType == JourneyType.roundTrip)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          color: cs.surfaceContainerHighest,
+                          child: const Icon(Icons.sync_alt, size: 28),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(item.destination.name[AppVars.lang], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(item.destination.code),
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          const Divider(),
+          const SizedBox(height: 8),
+          
+          // travel date (departure & return)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Flight Date'.tr),
+                  Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ), 
+              if (item.flightStatus == BookingStatus.preBooking)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Time Deadline'.tr),
+                    GestureDetector(
+                      onTap: () => setState(() => showTimeDeadlineDetail = !showTimeDeadlineDetail),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: cs.outlineVariant),
+                        ),
+                        child: Text(showTimeDeadlineDetail ? (timeDeadlineDetail ?? '_') : (timeDeadline ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold))),
+                    ),
+                  ],
+                ),
+              if (item.flightStatus == BookingStatus.confirmed)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Issue On'.tr),
+                    GestureDetector(
+                      onTap: () => setState(() => showIssueOnDetail = !showIssueOnDetail),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: cs.outlineVariant),
+                        ),
+                        child: Text(showIssueOnDetail ? (issueOnDetail ?? '_') : (issueOn ?? '_'), style: const TextStyle(fontWeight: FontWeight.bold))),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // cancel_on
+          if (item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Cancel On'.tr),
+                GestureDetector(
+                  onTap: () => setState(() => showCancelledDetail = !showCancelledDetail),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: cs.outlineVariant),
+                    ),
+                    child: Text(
+                      showCancelledDetail ? (cancelledDetail ?? '_') : (cancelled ?? '_'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          
+          // void_on
+          if (item.flightStatus == BookingStatus.voided || item.flightStatus == BookingStatus.voide)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Void On'.tr),
+                GestureDetector(
+                  onTap: () => setState(() => showVoidedDetail = !showVoidedDetail),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: cs.outlineVariant),
+                    ),
+                    child: Text(
+                      showVoidedDetail ? (voidedDetail ?? '_') : (voided ?? '_'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          
+          const SizedBox(height: 8),
+          
+          // count adult children and infants
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(children: [const Icon(Icons.person_outline, size: 22), Text(item.adult.toString())]),
+                Column(children: [const Icon(Icons.child_care_outlined, size: 22), Text(item.child.toString())]),
+                Column(children: [const Icon(Icons.child_friendly_outlined, size: 22), Text(item.inf.toString())]),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // created at (relative / detail toggle)
+          GestureDetector(
+            onTap: () => setState(() => showCreatedAtDetail = !showCreatedAtDetail),
+            child: Row(
+              children: [
+                // show status
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: bgStatus,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
+                ),
+          
+                const Spacer(),
+                Text(showCreatedAtDetail ? createdDetail : created, style: TextStyle(fontSize: AppConsts.sm)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -241,7 +241,7 @@ class _BalanceCardState extends State<BalanceCard> {
                 // copy icon
                 InkWell(
                   onTap: _copyBalance,
-                  child: Icon(Icons.more_vert, color: cs.onPrimary),
+                  child: Icon(Icons.copy_all, color: cs.onPrimary),
                 ),
               ],
             ),

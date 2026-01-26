@@ -37,7 +37,7 @@ class SearchAndFilterState {
 }
 
 class SearchAndFilter extends StatefulWidget {
-  final ExpansionTileController tileController;
+  final ExpansibleController tileController;
   final void Function(SearchAndFilterState state)? onSearch;
 
   const SearchAndFilter({
@@ -53,10 +53,10 @@ class SearchAndFilter extends StatefulWidget {
 class _SearchAndFilterState extends State<SearchAndFilter> {
   final TextEditingController keywordCtrl = TextEditingController();
 
-  BookingStatus? selectedStatus;
+  BookingStatus? selectedStatus = BookingStatus.all; // ✅ default All
 
   ReportDateField dateField = ReportDateField.createdAt;
-  ReportPeriod period = ReportPeriod.withinDay;
+  ReportPeriod period = ReportPeriod.untilDay;       // ✅ better default for All
 
   DateTime? singleDate;
 
@@ -76,11 +76,11 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
   }
 
   late final List<_StatusOption> statusOptions = <_StatusOption>[
+    _StatusOption(BookingStatus.all, 'All'), // ✅ first
     _StatusOption(_pickStatus(['pre-book']), 'Pre-book'),
     _StatusOption(_pickStatus(['confirmed']), 'Confirmed'),
     _StatusOption(_pickStatus(['cancelled', 'canceled']), 'Cancelled'),
-    _StatusOption(_pickStatus(['void', 'voided']), 'Void'),
-    _StatusOption(_pickStatus(['refund']), 'Refund'),
+    _StatusOption(_pickStatus(['void', 'void']), 'Void'),
   ].where((e) => e.status != BookingStatus.notFound).toList();
 
   DateTime _todayOnly() {

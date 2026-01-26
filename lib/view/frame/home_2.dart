@@ -40,16 +40,16 @@ class _Home2State extends State<Home2> {
     services = [
       {
         'icon': Icons.flight_outlined,
-        'title': 'Flight',
+        'title': 'Flightss'.tr,
         'onTap': () {
           widget.persistentTabController.jumpToTab(1);
         },
       },
-      {'icon': Icons.hotel_outlined, 'title': 'HOTELS', 'onTap': () {}},
-      {'icon': Icons.car_rental_outlined, 'title': 'Cars', 'onTap': () {}},
-      {'icon': Icons.train_outlined, 'title': 'Train', 'onTap': () {}},
-      {'icon': Icons.card_giftcard_outlined, 'title': 'Packages', 'onTap': () {}},
-      {'icon': Icons.card_travel_outlined, 'title': 'Visa', 'onTap': () {}},
+      {'icon': Icons.hotel_outlined, 'title': 'HOTELS'.tr, 'onTap': () {}},
+      {'icon': Icons.car_rental_outlined, 'title': 'Cars'.tr, 'onTap': () {}},
+      {'icon': Icons.train_outlined, 'title': 'Train'.tr, 'onTap': () {}},
+      {'icon': Icons.card_giftcard_outlined, 'title': 'Packages'.tr, 'onTap': () {}},
+      {'icon': Icons.card_travel_outlined, 'title': 'Visa'.tr, 'onTap': () {}},
     ];
     super.initState();
     profileModel = GetStorage().read('profile') != null ? ProfileModel.fromJson(GetStorage().read('profile')) : null;
@@ -154,9 +154,16 @@ class _Home2State extends State<Home2> {
                 child: Row(
                   children: [
                     Text(
-                      "Latest operations",
+                      "Latest operations".tr,
                       style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
                     ),
+                    Spacer(),
+                    IconButton(
+                      onPressed: () { 
+                        widget.persistentTabController.jumpToTab(2);
+                      }, 
+                      icon: Icon(Icons.arrow_forward_ios, size: 20),
+                    )
                   ],
                 ),
               ),
@@ -186,8 +193,10 @@ class _Home2State extends State<Home2> {
                           bgStatus = Colors.green[800]!.withOpacity(0.2);
                         } else if(item.flightStatus == BookingStatus.preBooking){
                           bgStatus = Colors.yellow[800]!.withOpacity(0.2);
-                        } else if(item.flightStatus == BookingStatus.notFound){
-                          bgStatus = Colors.black.withOpacity(0.2);
+                        }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
+                          bgStatus = Colors.red[800]!.withOpacity(0.4);
+                        }else if(item.flightStatus == BookingStatus.notFound){
+                          bgStatus = Colors.black.withOpacity(0.2); 
                         }
                         return Container(
                           margin: const EdgeInsets.only(bottom: 0),
@@ -231,35 +240,39 @@ class _Home2State extends State<Home2> {
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                   child: Row(
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text("${item.origin.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                              Icon(Icons.navigate_next, size: 24),
-                                              Text("${item.destination.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                            ],
-                                          ),
-                                          Text("${item.createdAt}", style: TextStyle(fontSize: 14)),
-                                          const SizedBox(height: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: bgStatus,
-                                              borderRadius: BorderRadius.circular(4),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Wrap( 
+                                              children: [
+                                                Text("${item.origin.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                                Icon(Icons.navigate_next, size: 24),
+                                                Text("${item.destination.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                              ],
                                             ),
-                                            child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
-                                          ),
-                                        ],
+                                            const SizedBox(height: 4),
+                                            Text("${item.createdAt}", style: TextStyle(fontSize: 14)),
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: bgStatus,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      Spacer(),
                                       Text(
                                         AppFuns.priceWithCoin(item.totalAmount, item.currency),
                                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
+                                
+                                
                                 ),
                               ),
                             ],
@@ -273,13 +286,14 @@ class _Home2State extends State<Home2> {
               Container(
                 // alignment: Alignment.center,
                 width: MediaQuery.of(context).size.width,
-                child: TextButton(
+                child: TextButton.icon(
                   onPressed: () {
                     widget.persistentTabController.jumpToTab(2);
                   }, 
-                  child: Text("View all".tr + " ...",
+                  icon: Text("Show more".tr,
                     style: TextStyle(fontSize: AppConsts.xlg),
                   ),
+                  label: Icon(Icons.arrow_forward_ios, size: 20),
                 ),
               ),
             ],
