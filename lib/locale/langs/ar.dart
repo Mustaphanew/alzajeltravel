@@ -352,7 +352,7 @@ Map<String, String> ar = {
   "Booking": "بيانات الحجز",
   "PNR": "PNR",
   "Number": "رقم الحجز",
-  "N/A": "غير متوفر",
+  // "N/A": "غير متوفر",
   "Full Name": "الاسم الكامل",
   "Date of Birth": "تاريخ الميلاد",
   "Ticket": "رقم التذكرة",
@@ -381,6 +381,8 @@ Map<String, String> ar = {
   "type": "النوع",
   "Weight": "الوزن",
   "Economic Standard": "المعيار الاقتصادي",
+  "Economic": "اقتصادي", 
+  "Economic ": "اقتصادي", 
   "Premium": "المعيار الممتاز",
   "Close": "إغلاق",
 
@@ -582,6 +584,14 @@ Map<String, String> ar = {
   "Details": "تفاصيل",
 
   "Sort & Filter": "فرز وفلترة",
+  "N/A": "لا يوجد",
 
+  "Cabin": "المقصورة",
+  "Booking class": "فئة الحجز",
+  "Cancelation fee": "رسوم الغاء الحجز",
+  "Exchange fee": "رسوم التعديل",
+
+  "Do not close the page, you will be redirected automatically.": "لا تغلق الصفحة، سيتم إعادة توجيهك تلقائيًا.",
+  "Search for flights": "جاري البحث عن رحلات",
 
 };

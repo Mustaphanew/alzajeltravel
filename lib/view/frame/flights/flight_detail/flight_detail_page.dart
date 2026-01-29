@@ -399,7 +399,7 @@ class _FlightExtraDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _LabelValueRow(label: "Cabin".tr, value: offer.cabinClassText),
+        _LabelValueRow(label: "Cabin".tr, value: offer.cabinClassText.tr),
         const SizedBox(height: 8),
 
         if (int.tryParse(offer.seatsRemaining.toString()) != null && int.parse(offer.seatsRemaining.toString()) <= 6) ...[
@@ -412,10 +412,10 @@ class _FlightExtraDetails extends StatelessWidget {
         _LabelValueRow(label: "Baggage".tr, value: hasBaggage ? (offer.baggageInfo ?? '_').split(',').first : "No checked baggage".tr),
         const SizedBox(height: 8),
 
-        _LabelValueRow(label: "Cancelation fee".tr, value: AppFuns.priceWithCoin(20, "\$")),
+        _LabelValueRow(label: "Cancelation fee".tr, value: AppFuns.priceWithCoin(20, "USD")),
         const SizedBox(height: 8),
 
-        _LabelValueRow(label: "Exchange fee".tr, value: AppFuns.priceWithCoin(25, "\$")),
+        _LabelValueRow(label: "Exchange fee".tr, value: AppFuns.priceWithCoin(25, "USD")),
         const SizedBox(height: 16),
       ],
     );

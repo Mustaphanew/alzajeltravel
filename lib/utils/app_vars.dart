@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:alzajeltravel/model/api.dart';
-import 'package:alzajeltravel/model/db/db_helper.dart';
 import '../controller/main_controller.dart';
 import 'package:uuid/uuid.dart';
 
@@ -15,7 +14,6 @@ class AppVars {
   static String? lang;
   static ThemeMode? appThemeMode;
   static Api api = Api();
-  static DbHelper dbHelper = DbHelper();
 
   static String? apiSessionId;
 

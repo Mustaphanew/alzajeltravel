@@ -72,94 +72,107 @@ class _PassportsFormsPageState extends State<PassportsFormsPage> {
         // نضبط عدد الـ keys بحسب عدد المسافرين
         _ensureTileKeysLength(travelers.length);
 
-        return Scaffold(
-          appBar: AppBar(title: Text('Passport forms'.tr)),
-          body: SafeArea(
-            child: Column(
-              children: [
-                _buildHeaderRow(cs, formsController),
+        return WillPopScope(
+          onWillPop: () async {
+            final ok = await AppFuns.confirmExit(
+              title: "Exit".tr,
+              message: "Are you sure you want to exit?".tr,
+            );
+            if (ok) {
+              return true;
+            }
+            return false;
+          },
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                    child: Column(
-                      children: [
-                        // المسافرين + الـ Divider بينهم
-                        for (int index = 0; index < travelers.length; index++) ...[
-                          if (index > 0) const Divider(),
-                          Container(
-                            key: _tileKeys[index],
-                            child: PassportFormTile(
-                              tag: travelers[index].tag,
-                              travelerIndex: travelers[index].index,
-                              ageGroupLabel: formsController.ageGroupLabel(travelers[index].ageGroup),
-                              lang: formsController.lang,
-                              isExpanded: formsController.expandedFlags[index],
-                              minDob: formsController.minDob(travelers[index].ageGroup),
-                              maxDob: formsController.maxDob(travelers[index].ageGroup),
-                              onExpansionChanged: (expanded) {
-                                formsController.onTileExpansionChanged(index, expanded);
-                                if (expanded) {
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    _scrollToTraveler(index);
-                                  });
-                                }
-                              },
-                              onNext: (index < travelers.length - 1)
-                                  ? () {
-                                      formsController.goToNextTraveler(index);
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        _scrollToTraveler(index + 1);
-                                      });
-                                    }
-                                  : null,
+          child: Scaffold(
+            appBar: AppBar(title: Text('Passport forms'.tr)),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeaderRow(cs, formsController),
+          
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                      child: Column(
+                        children: [
+                          // المسافرين + الـ Divider بينهم
+                          for (int index = 0; index < travelers.length; index++) ...[
+                            if (index > 0) const Divider(),
+                            Container(
+                              key: _tileKeys[index],
+                              child: PassportFormTile(
+                                tag: travelers[index].tag,
+                                travelerIndex: travelers[index].index,
+                                ageGroupLabel: formsController.ageGroupLabel(travelers[index].ageGroup),
+                                lang: formsController.lang,
+                                isExpanded: formsController.expandedFlags[index],
+                                minDob: formsController.minDob(travelers[index].ageGroup),
+                                maxDob: formsController.maxDob(travelers[index].ageGroup),
+                                onExpansionChanged: (expanded) {
+                                  formsController.onTileExpansionChanged(index, expanded);
+                                  if (expanded) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      _scrollToTraveler(index);
+                                    });
+                                  }
+                                },
+                                onNext: (index < travelers.length - 1)
+                                    ? () {
+                                        formsController.goToNextTraveler(index);
+                                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                                          _scrollToTraveler(index + 1);
+                                        });
+                                      }
+                                    : null,
+                              ),
                             ),
-                          ),
-                        ],
-
-                        const Divider(),
-
-                        // 👉 فورم بيانات الاتصال في النهاية
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                          child: ContactInformationForm(controller: formsController),
-                        ), 
-                        SizedBox(height: 36),
-                      ], 
+                          ],
+          
+                          const Divider(),
+          
+                          // 👉 فورم بيانات الاتصال في النهاية
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                            child: ContactInformationForm(controller: formsController),
+                          ), 
+                          SizedBox(height: 36),
+                        ], 
+                      ),
                     ),
                   ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  width: double.infinity,
-                  height: 80,
-                  decoration: BoxDecoration(color: cs.surfaceContainer),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Total flight".tr),
-                            Text(AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                          ],
+          
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    width: double.infinity,
+                    height: 80,
+                    decoration: BoxDecoration(color: cs.surfaceContainer),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text("Total flight".tr),
+                              Text(AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                            ],
+                          ),
                         ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () async { 
-                          context.loaderOverlay.show();
-                          await formsController.saveAll();
-                          if(context.mounted) context.loaderOverlay.hide();
-                        },
-                        child: Text("Save and continue".tr),
-                      ),
-                    ],
+                        ElevatedButton(
+                          onPressed: () async { 
+                            context.loaderOverlay.show();
+                            await formsController.saveAll();
+                            if(context.mounted) context.loaderOverlay.hide();
+                          },
+                          child: Text("Save and continue".tr),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

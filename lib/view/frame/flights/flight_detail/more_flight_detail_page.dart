@@ -30,8 +30,8 @@ class MoreFlightDetailPage extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final timeFormat = DateFormat('hh:mm a', 'en');
-    final dateFormat = DateFormat('EEE, MMM dd', 'en'); // Wed, Dec 10
+    final timeFormat = DateFormat('hh:mm a', AppVars.lang);
+    final dateFormat = DateFormat('EEE, MMM dd', AppVars.lang); // Wed, Dec 10
 
     // لو فيه revalidated نشتغل عليه، غير كذا نستخدم flightOffer العادي
     final FlightOfferModel offer = revalidatedDetails?.offer ?? flightOffer;
@@ -61,7 +61,7 @@ class MoreFlightDetailPage extends StatelessWidget {
 
               // ---------- معلومات عامة مشتركة ----------
               const SizedBox(height: 16),
-              _InfoRow(label: "Cabin".tr, value: offer.cabinClassText),
+              _InfoRow(label: "Cabin".tr, value: offer.cabinClassText.tr),
               const SizedBox(height: 4),
               _InfoRow(
                 label: "Baggage".tr,
@@ -70,13 +70,13 @@ class MoreFlightDetailPage extends StatelessWidget {
               const SizedBox(height: 12),
               _InfoRow(
                 label: "Cancellation fee".tr,
-                value: AppFuns.priceWithCoin(20, "\$"),
+                value: AppFuns.priceWithCoin(20, "USD"),
               ),
               const SizedBox(height: 4),
               _InfoRow(
                 label: "Change fee".tr,
-                value: AppFuns.priceWithCoin(15, "\$"),
-              ),
+                value: AppFuns.priceWithCoin(15, "USD"),
+              ), 
 
               const SizedBox(height: 30),
               
@@ -175,10 +175,10 @@ class MoreFlightDetailPage extends StatelessWidget {
       shrinkWrap: true,
       itemBuilder: (context, index) {
         final seg = segments[index];
-        final depTime = timeFormat.format(seg.departureDateTime);
-        final arrTime = timeFormat.format(seg.arrivalDateTime);
-        final depDate = dateFormat.format(seg.departureDateTime);
-        final arrDate = dateFormat.format(seg.arrivalDateTime);
+        final depTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.departureDateTime));
+        final arrTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.arrivalDateTime));
+        final depDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.departureDateTime));
+        final arrDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.arrivalDateTime));
 
         String fromName = "";
         String toName = "";
@@ -377,7 +377,7 @@ class MoreFlightDetailPage extends StatelessWidget {
 
                                 // Travel time
                                 Text(
-                                  '${"Travel time:".tr} ${seg.journeyText ?? '_'}',
+                                  '${"Travel time".tr}: ${seg.journeyText ?? '_'}',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: theme.textTheme.bodyMedium?.color
                                         ?.withOpacity(0.8),

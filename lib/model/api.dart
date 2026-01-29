@@ -18,8 +18,6 @@ Dio dio = Dio(
   ),
 );
 
-
-
 class Api {
   Future<dynamic> get(
     String uri, {
@@ -35,6 +33,11 @@ class Api {
         url,
         queryParameters: params,
         options: Options(headers: headers),
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            debugPrint("Downloading progress get: ${received / total * 100}%");
+          }
+        },
       );
 
       if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
@@ -114,6 +117,16 @@ class Api {
         url,
         data: body,
         options: options,
+        onSendProgress: (received, total) {
+          if (total != -1) {
+            debugPrint("Uploading progress post: ${received / total * 100}%");
+          }
+        },
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            debugPrint("Downloading progress post: ${received / total * 100}%");
+          }
+        },
       );
 
       if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {

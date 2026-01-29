@@ -14,9 +14,13 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+// import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
+class SimpleDatePickerController {
+  DateTime? selectedDate;
 
+  SimpleDatePickerController({this.selectedDate});
+}
 
 class SearchFlightForm {
   TextEditingController txtFrom = TextEditingController();
@@ -28,10 +32,11 @@ class SearchFlightForm {
   final TextEditingController txtDepartureDates = TextEditingController();
   final TextEditingController txtDepartureDate = TextEditingController();
 
-  final DateRangePickerController departureDatePickerController =
-      DateRangePickerController();
-  final DateRangePickerController returnDatePickerController =
-      DateRangePickerController();
+  final SimpleDatePickerController departureDatePickerController =
+      SimpleDatePickerController();
+  final SimpleDatePickerController returnDatePickerController =
+      SimpleDatePickerController();
+
 
   bool isSwappedIcon = false;
 

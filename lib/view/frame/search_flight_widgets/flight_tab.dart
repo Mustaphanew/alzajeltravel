@@ -1,3 +1,5 @@
+import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_range_widget2.dart';
+import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_single_widget2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,10 +8,7 @@ import 'package:alzajeltravel/model/airport_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
-import 'package:alzajeltravel/view/frame/search_flight_widgets/airline.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/class_type_and_travelers.dart';
-import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker_range_widget.dart';
-import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker_single_widget.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/airport_search.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/swap_widget.dart';
 
@@ -335,7 +334,8 @@ class DepartureWidget extends StatelessWidget {
             if (tmpJourneyType == JourneyType.roundTrip)
               TextFormField(
                 onTap: () async {
-                  await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
+                  // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
+                  await Get.to(() => DatePickerRangeWidget2(index: index), transition: Transition.downToUp);
                   await controller.setTxtDepartureDates(index);
                 },
                 readOnly: true,
@@ -357,7 +357,8 @@ class DepartureWidget extends StatelessWidget {
             if (tmpJourneyType == JourneyType.oneWay || tmpJourneyType == JourneyType.multiCity)
               TextFormField(
                 onTap: () async {
-                  await Get.to(() => DatePickerSingleWidget(index: index), transition: Transition.downToUp);
+                  // await Get.to(() => DatePickerSingleWidget(index: index), transition: Transition.downToUp);
+                  await Get.to(() => DatePickerSingleWidget2(index: index), transition: Transition.downToUp);
                   await controller.setTxtDepartureDates(index);
                 },
                 readOnly: true,

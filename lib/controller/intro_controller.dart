@@ -17,11 +17,7 @@ class IntroController extends GetxController {
 
   getData({String condition = ""}) async {
     try {
-      final response = await AppVars.dbHelper.select(
-        column: "*",
-        table: table,
-        condition: " 1 $condition ",
-      );
+      final response = await AppVars.api.get(uri);
       if (response.isNotEmpty) {
         dataList = [];
         for (var element in response) {

@@ -55,7 +55,7 @@ class PassportFormTile extends StatefulWidget {
   /// لو كانت null لا نعرض الزر (مثلاً آخر مسافر)
   final VoidCallback? onNext;
 
-  PassportFormTile({
+  const PassportFormTile({
     super.key,
     required this.tag,
     required this.travelerIndex,
@@ -251,6 +251,15 @@ class _PassportFormTileState extends State<PassportFormTile> {
                   ),
                   const SizedBox(height: 8),
 
+                  // Document number
+                  _textField(
+                    controller: controller.documentNumberCtr,
+                    label: 'DOCUMENT NUMBER'.tr,
+                    formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                    caps: TextCapitalization.characters,
+                  ),
+
+
                   // Nationality
                   _countryPickerField(
                     context: context,
@@ -265,13 +274,6 @@ class _PassportFormTileState extends State<PassportFormTile> {
                     },
                   ),
 
-                  // Document number
-                  _textField(
-                    controller: controller.documentNumberCtr,
-                    label: 'DOCUMENT NUMBER'.tr,
-                    formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
-                    caps: TextCapitalization.characters,
-                  ),
 
                   // Issuing country
                   _countryPickerField(

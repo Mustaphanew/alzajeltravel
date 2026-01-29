@@ -1,7 +1,9 @@
 import 'package:alzajeltravel/controller/bookings_report/trip_detail/flight_detail.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/routes.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
@@ -63,94 +65,106 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
           top: false,
           left: false,
           right: false,
-          child: Scaffold(
-            appBar: AppBar(title: Text('Travelers review'.tr)),
-            body: Column(
-              children: [
-                // ======= المحتوى الرئيسي القابل للتمرير =======
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 33),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // if(timeLimit != null) ...[
-                        //   const SizedBox(height: 12),
-                        //   Card(
-                        //     margin: EdgeInsets.symmetric(horizontal: 8),
-                        //     child: Container(
-                        //       padding: EdgeInsets.only(top: 12, bottom: 16,),
-                        //       width: double.infinity,
-                        //       child: Column(
-                        //         children: [
-                        //           Text(
-                        //             "Time Left".tr,
-                        //             style: TextStyle(
-                        //               fontSize: AppConsts.lg
-                        //             ),
-                        //           ),
-                        //           SizedBox(height: 8), 
-                        //           TimeRemaining(
-                        //             timeLimit: timeLimit,
-                        //             expiredText: 'Expired'.tr,
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ), 
-                        //   ),
-                        // ],
-                        if (offerDetail != null) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 
-                            child: FlightMainCard(revalidatedDetails: offerDetail),
-                          ),
-                          SizedBox(height: 8),
-                        ],
-
-                        // ======= قائمة المسافرين كسلايدر =======
-                        if (c.travelers.isNotEmpty) ...[
-                          const SizedBox(height: 0),
-
-                          CarouselSlider.builder(
-                            itemCount: c.travelers.length,
-                            itemBuilder: (context, index, realIndex) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                child: _buildTravelerTile(
-                                  context: context,
-                                  index: index,
-                                  traveler: c.travelers[index],
-                                  travelersCount: c.travelers.length,
-                                ),
-                              );
-                            },
-                            options: CarouselOptions(
-                              viewportFraction: 0.98, // الكرت ياخذ 90% من عرض الشاشة
-                              enlargeCenterPage: true, // يكبر الكرت اللي في النص
-                              enableInfiniteScroll: false, // بدون سكول لا نهائي
-                              height: 300, // عدّلها حسب ارتفاع الكرت عندك
-                              onPageChanged: (index, reason) {
-                                setState(() {
-                                  _currentTravelerIndex = index;
-                                });
-                              },
+          child: WillPopScope(
+            onWillPop: () async {
+              final ok = await AppFuns.confirmExit(
+                title: "Exit".tr,
+                message: "Are you sure you want to exit?".tr,
+              );
+              if (ok) {
+                return true;
+              }
+              return false;
+            },
+            child: Scaffold(
+              appBar: AppBar(title: Text('Travelers review'.tr)),
+              body: Column(
+                children: [
+                  // ======= المحتوى الرئيسي القابل للتمرير =======
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 33),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // if(timeLimit != null) ...[
+                          //   const SizedBox(height: 12),
+                          //   Card(
+                          //     margin: EdgeInsets.symmetric(horizontal: 8),
+                          //     child: Container(
+                          //       padding: EdgeInsets.only(top: 12, bottom: 16,),
+                          //       width: double.infinity,
+                          //       child: Column(
+                          //         children: [
+                          //           Text(
+                          //             "Time Left".tr,
+                          //             style: TextStyle(
+                          //               fontSize: AppConsts.lg
+                          //             ),
+                          //           ),
+                          //           SizedBox(height: 8), 
+                          //           TimeRemaining(
+                          //             timeLimit: timeLimit,
+                          //             expiredText: 'Expired'.tr,
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ), 
+                          //   ),
+                          // ],
+                          if (offerDetail != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 
+                              child: FlightMainCard(revalidatedDetails: offerDetail),
                             ),
-                          ),
-
-                          const SizedBox(height: 0),
-
+                            SizedBox(height: 8),
+                          ],
+            
+                          // ======= قائمة المسافرين كسلايدر =======
+                          if (c.travelers.isNotEmpty) ...[
+                            const SizedBox(height: 0),
+            
+                            CarouselSlider.builder(
+                              itemCount: c.travelers.length,
+                              itemBuilder: (context, index, realIndex) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                  child: _buildTravelerTile(
+                                    context: context,
+                                    index: index,
+                                    traveler: c.travelers[index],
+                                    travelersCount: c.travelers.length,
+                                  ),
+                                );
+                              },
+                              options: CarouselOptions(
+                                viewportFraction: 0.98, // الكرت ياخذ 90% من عرض الشاشة
+                                enlargeCenterPage: true, // يكبر الكرت اللي في النص
+                                enableInfiniteScroll: false, // بدون سكول لا نهائي
+                                height: 300, // عدّلها حسب ارتفاع الكرت عندك
+                                onPageChanged: (index, reason) {
+                                  setState(() {
+                                    _currentTravelerIndex = index;
+                                  });
+                                },
+                              ),
+                            ),
+            
+                            const SizedBox(height: 0),
+            
+                          ],
+            
+                          // ======= بيانات الاتصال =======
+                          Padding(padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8), child: _buildContactTile(context)),
                         ],
-
-                        // ======= بيانات الاتصال =======
-                        Padding(padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8), child: _buildContactTile(context)),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-
-                // ======= شريط التلخيص + زر التأكيد =======
-                _buildSummaryBar(context, c, cs),
-              ],
+            
+                  // ======= شريط التلخيص + زر التأكيد =======
+                  _buildSummaryBar(context, c, cs),
+                ],
+              ),
             ),
           ),
         );
@@ -193,21 +207,13 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                     // العنوان: Traveler 1: Adult
                     Row(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            // border under line
-                            border: Border(
-                              bottom: BorderSide(
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            '${'Traveler'.tr} ${index + 1}: ',
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppConsts.xlg),
-                          ),
+                        Icon(CupertinoIcons.person_circle, color: cs.primaryContainer, size: 28,),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${'Traveler'.tr} ${index + 1}: ',
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppConsts.xlg),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(ageGroupLabel, style: const TextStyle(fontSize: AppConsts.xlg),),
                         const Spacer(),
                         Text('${index + 1} / $travelersCount'),
@@ -215,52 +221,84 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                     ),
                     const SizedBox(height: 8),
                         
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.only(start: 8, end: 16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 2,
-                          children: [ 
-                            ...[
-                              Text('Full name', style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                              Text(p.fullName, style: const TextStyle(fontSize: AppConsts.normal),),
-                            ],
-                            ...[
-                              Text('Passport number', style: const TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.bold),),
-                              Text(p.documentNumber??'_', style: const TextStyle(fontSize: AppConsts.normal),),
-                            ],
-                            const SizedBox(height: 4),
-                            Divider(),
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 8, end: 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 2,
+                        children: [ 
+                          ...[
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Icon(Icons.person, color: cs.primaryContainer, size: 28,),
+                                const SizedBox(width: 8),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Date of birth', style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                    Text(AppFuns.formatDobPretty(p.dateOfBirth, locale: 'en')), 
-                                    const SizedBox(height: 4),
-                                    Text('Nationality', style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                    Text(p.nationality?.name['en'] ?? '-',), 
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Date of expiry', style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                    Text(AppFuns.formatDobPretty(p.dateOfExpiry, locale: 'en')), 
-                                    const SizedBox(height: 4), 
-                                    Text('Issuing country', style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                    Text(p.issuingCountry?.name['en'] ?? '-'), 
+                                    Text('Full name'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
+                                    Text(p.fullName, style: const TextStyle(fontSize: AppConsts.normal),),
                                   ],
                                 ),
                               ],
                             ),
                           ],
-                        ),
+                          ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(FontAwesomeIcons.solidIdCard, color: cs.primaryContainer, size: 26,),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Passport number'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
+                                    Text(p.documentNumber??'_', style: const TextStyle(fontSize: AppConsts.normal),), 
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 4),
+                          Divider(),
+                          const SizedBox(height: 4),
+                          IntrinsicHeight(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Date of birth'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
+                                      Text(AppFuns.formatDobPretty(p.dateOfBirth,)), 
+                                      const SizedBox(height: 4),
+                                      Text('Nationality'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
+                                      Text(p.nationality?.name['en'] ?? '-',), 
+                                    ],
+                                  ),
+                                ),
+                                VerticalDivider(),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsetsDirectional.only(start: 12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Date of expiry'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
+                                        Text(AppFuns.formatDobPretty(p.dateOfExpiry)), 
+                                        const SizedBox(height: 4), 
+                                        Text('Issuing country'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
+                                        Text(p.issuingCountry?.name['en'] ?? '-'), 
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -305,61 +343,116 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
 
     final phoneLabel = (dialCode.isEmpty && phoneNumber.isEmpty) ? '-' : '${dialCode.isNotEmpty ? dialCode + ' ' : ''}$phoneNumber';
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      tileColor: cs.surfaceContainer,
-      onTap: () {},
-      title: Row(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              // border under line
-              border: Border(
-                bottom: BorderSide(
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Text(
-              'Contact: '.tr,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        elevation: 2, 
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
-      ),
-      subtitle: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 2,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          tileColor: cs.surfaceContainer,
+          onTap: () {},
+          title: Column(
             children: [
-              const SizedBox(height: 4),
-              ...[
-                Text('Full name', style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                Text(fullname, style: const TextStyle(fontSize: AppConsts.lg),),
-              ],
-              const SizedBox(height: 2),
-              ...[
-                Text('Email', style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                Text(email.isEmpty ? '-' : email, style: const TextStyle(fontSize: AppConsts.normal),),
-              ],
-              const SizedBox(height: 2),
-              ...[
-                Text('Phone', style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                Text('+' + phoneLabel, style: const TextStyle(fontSize: AppConsts.normal),),
-              ],
-              // const SizedBox(height: 2),
-              // ...[
-              //   Text('Nationality', style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-              //   Text(nationality, style: const TextStyle(fontSize: AppConsts.normal),),
-              // ],
+              Row(
+                children: [
+                  Icon(Icons.list_alt, color: cs.primaryContainer, size: 28,),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Contact'.tr,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Divider(thickness: 1.5,),
+              const SizedBox(height: 8),
             ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 2, 
+              children: [
+                // const SizedBox(height: 4),
+                ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.person, 
+                        color: cs.primaryContainer,
+                        size: 28, 
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Full name'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
+                          Text(fullname, style: const TextStyle(fontSize: AppConsts.lg),),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 2),
+                Divider(),
+                const SizedBox(height: 2),
+                ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.email, 
+                        color: cs.primaryContainer,
+                        size: 28, 
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Email'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
+                          Text(email.isEmpty ? '-' : email, style: const TextStyle(fontSize: AppConsts.normal),),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 2),
+                Divider(),
+                const SizedBox(height: 2),
+                ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.phone, 
+                        color: cs.primaryContainer,
+                        size: 28, 
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [ 
+                          Text('Phone'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
+                          Text('+' + phoneLabel, textDirection: TextDirection.ltr, style: const TextStyle(fontSize: AppConsts.normal),),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
     );
+
+
   }
 
   Widget _buildSummaryBar(BuildContext context, TravelersReviewController c, ColorScheme cs) {

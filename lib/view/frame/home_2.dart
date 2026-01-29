@@ -73,7 +73,7 @@ class _Home2State extends State<Home2> {
         actions: [
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),
-            child: IconButton(onPressed: () {}, icon: SvgPicture.asset(AppConsts.logo, width: 38)),
+            child: IconButton(onPressed: () {}, icon: SvgPicture.asset(AppConsts.logo3, width: 38)),
           ),
         ],
       ),
@@ -196,7 +196,7 @@ class _Home2State extends State<Home2> {
                         }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
                           bgStatus = Colors.red[800]!.withOpacity(0.4);
                         }else if(item.flightStatus == BookingStatus.notFound){
-                          bgStatus = Colors.black.withOpacity(0.2); 
+                          bgStatus = cs.primaryFixed.withOpacity(0.2); 
                         }
                         return Container(
                           margin: const EdgeInsets.only(bottom: 0),
@@ -205,7 +205,8 @@ class _Home2State extends State<Home2> {
                               TextButton(
                                 style: ElevatedButton.styleFrom(
                                   elevation: 0,
-                                  backgroundColor: Colors.white,
+                                  backgroundColor: cs.surfaceContainer, 
+                                  foregroundColor: cs.primaryFixed,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
                                 ),
                                 onPressed: () async {
@@ -314,8 +315,9 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Material(
-      color: Colors.white,
+      color: cs.surfaceContainer,
       borderRadius: BorderRadius.circular(14),
       elevation: 2,
       shadowColor: Colors.black.withOpacity(0.08),
@@ -327,12 +329,12 @@ class ServiceCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 32, color: const Color(0xff132057)),
+              Icon(icon, size: 32, color: cs.primaryFixed),
               const SizedBox(height: 10),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: TextStyle(color: cs.primaryFixed, fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ],
           ),

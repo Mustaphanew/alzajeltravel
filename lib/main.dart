@@ -4,6 +4,7 @@ import 'package:alzajeltravel/firebase_options.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
+import 'package:alzajeltravel/view/tmp/my_lottie.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -52,19 +53,23 @@ Future<void> main() async {
   // 4) إشعارات: تهيئة القناة + المستمعات + طلب إذن إذا لزم
   await NotificationService.init();
   initDio(); // 👈 مهم عشان الكوكيز تشتغل
-  // تهيئة مبكرة (خصوصًا للويب لأن تحميل wasm يأخذ لحظة)
-  await AppVars.dbHelper.createDatabase();
   // لازم قبل runApp 
   if (kIsWeb) {
     PWAInstall().setup(installCallback: () {
       debugPrint('APP INSTALLED!');
     });
   }
+  
   runApp(
     GlobalLoaderOverlay(
-      overlayColor: Colors.black.withValues(alpha: 0.3),
+      // overlayColor: (Get.context?.theme.brightness == Brightness.light)? 
+      //   Colors.white.withValues(alpha: 1):
+      //   Colors.black.withValues(alpha: 1),
+      
       overlayWidgetBuilder: (progress) {
-        return Container(height: 300, width: 300, child: FlightLoader());
+        print("brightness: ${Get.context?.theme.brightness}");
+        // return Container(height: 300, width: 300, child: FlightLoader());
+        return MyLottie();
       },
       child: const MyApp(),
     ),

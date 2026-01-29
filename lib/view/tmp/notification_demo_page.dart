@@ -1,7 +1,6 @@
 // lib/ui/notification_demo_page.dart
 import 'package:flutter/material.dart';
 import 'package:alzajeltravel/services/notification_service.dart';
-import 'package:alzajeltravel/utils/enums.dart';
 
 class NotificationDemoPage extends StatefulWidget {
   const NotificationDemoPage({super.key});
@@ -11,6 +10,8 @@ class NotificationDemoPage extends StatefulWidget {
 }
 
 class _NotificationDemoPageState extends State<NotificationDemoPage> {
+
+
   // حقول نصية للغتين + رابط صورة اختياري
   final _titleAr = TextEditingController(text: 'تنبيه جديد');
   final _bodyAr  = TextEditingController(text: 'هذه تفاصيل الإشعار بالعربية.');

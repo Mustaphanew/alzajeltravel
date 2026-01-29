@@ -232,161 +232,174 @@ class _FlightOffersListState extends State<FlightOffersList> {
   Widget build(BuildContext context) {
     final bool isFilter = filterState.isFilter;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${'Flight Offers'.tr} (${offers.length})'),
-        actions: [
-          OutlinedButton.icon(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            icon: const Icon(Icons.filter_alt_outlined),
-            label: Text(
-              'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
-              style: TextStyle(fontSize: AppConsts.lg),
-            ),
-            onPressed: () async {
-              try {
-                final result = await Get.to<FilterOffersResult>(
-                  () => FilterOffersPage(offers: allOffers, state: filterState),
-                );
+    return WillPopScope(
+      onWillPop: () async {
+        final ok = await AppFuns.confirmExit(
+          title: "Exit".tr,
+          message: "Are you sure you want to exit?".tr,
+        );
+        if (ok) {
+          return true;
+        }
+        return false;
+      },
 
-                if (result != null) {
-                  filterState = result.state;
-                  await _rebuildOffersFromState(scrollTop: true);
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('${'Flight Offers'.tr} (${offers.length})'),
+          actions: [
+            OutlinedButton.icon(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              icon: const Icon(Icons.filter_alt_outlined),
+              label: Text(
+                'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
+                style: TextStyle(fontSize: AppConsts.lg),
+              ),
+              onPressed: () async {
+                try {
+                  final result = await Get.to<FilterOffersResult>(
+                    () => FilterOffersPage(offers: allOffers, state: filterState),
+                  );
+      
+                  if (result != null) {
+                    filterState = result.state;
+                    await _rebuildOffersFromState(scrollTop: true);
+                  }
+                } catch (e) {
+                  Get.snackbar('Error'.tr, e.toString());
                 }
-              } catch (e) {
-                Get.snackbar('Error'.tr, e.toString());
-              }
-            },
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
-      body: (offers.isNotEmpty)
-          ? Column(
-              children: [
-                // ===== Sort dropdown (same value synced with FilterOffersPage) =====
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: DropdownButtonFormField<SortOffersOption?>(
-                    value: filterState.sort,
-                    decoration: InputDecoration(
-                      hintText: 'Select sort'.tr,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      isDense: true,
-                    ),
-                    items: <DropdownMenuItem<SortOffersOption?>>[
-                      DropdownMenuItem<SortOffersOption?>(
-                        value: null,
-                        child: Text('No sorting'.tr),
+              },
+            ),
+            const SizedBox(width: 12),
+          ],
+        ),
+        body: (offers.isNotEmpty)
+            ? Column(
+                children: [
+                  // ===== Sort dropdown (same value synced with FilterOffersPage) =====
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: DropdownButtonFormField<SortOffersOption?>(
+                      value: filterState.sort,
+                      decoration: InputDecoration(
+                        hintText: 'Select sort'.tr,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        isDense: true,
                       ),
-                      DropdownMenuItem(
-                        value: SortOffersOption.priceLow,
-                        child: Text(FilterOffersController.sortLabel(SortOffersOption.priceLow).tr),
-                      ),
-                      DropdownMenuItem(
-                        value: SortOffersOption.priceHigh,
-                        child: Text(FilterOffersController.sortLabel(SortOffersOption.priceHigh).tr),
-                      ),
-                      DropdownMenuItem(
-                        value: SortOffersOption.travelTimeLow,
-                        child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeLow).tr),
-                      ),
-                      DropdownMenuItem(
-                        value: SortOffersOption.travelTimeHigh,
-                        child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeHigh).tr),
-                      ),
-                    ],
-                    onChanged: (v) async {
-                      setState(() {
-                        // requires copyWith supports sort + setSortNull
-                        filterState = filterState.copyWith(sort: v, setSortNull: v == null);
-                      });
-                      await _rebuildOffersFromState(scrollTop: true);
-                    },
-                  ),
-                ),
-
-                Expanded(
-                  child: CupertinoScrollbar(
-                    controller: scrollController,
-                    child: ListView.separated(
-                      controller: scrollController,
-                      itemCount: offers.length,
-                      separatorBuilder: (_, __) => const SizedBox.shrink(),
-                      itemBuilder: (context, index) {
-                        final offer = offers[index];
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: FlightOfferCard(
-                            offer: offer,
-                            onBook: () async {
-                              context.loaderOverlay.show();
-                              await detailCtrl.revalidateAndOpen(offer: offer);
-                              if (context.mounted) context.loaderOverlay.hide();
-                            },
-                            onOtherPrices: () async {
-                              context.loaderOverlay.show();
-                              try {
-                                final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                if (!ok) {
-                                  Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                } else {
-                                  Get.to(() => OtherPricesPage());
-                                }
-                              } finally {
-                                if (context.mounted) context.loaderOverlay.hide();
-                              }
-                            },
-                            onDetails: () {
-                              Get.to(
-                                () => FlightDetailPage(
-                                  detail: RevalidatedFlightModel(
-                                    offer: offer,
-                                    isRefundable: offer.isRefundable,
-                                    isPassportMandatory: false,
-                                    firstNameCharacterLimit: 0,
-                                    lastNameCharacterLimit: 0,
-                                    paxNameCharacterLimit: 0,
-                                    fareRules: const [],
-                                  ),
-                                  showContinueButton: false,
-                                  onBook: () async {
-                                    context.loaderOverlay.show();
-                                    await detailCtrl.revalidateAndOpen(offer: offer);
-                                    if (context.mounted) context.loaderOverlay.hide();
-                                  },
-                                  onOtherPrices: () async {
-                                    context.loaderOverlay.show();
-                                    try {
-                                      final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                      if (!ok) {
-                                        Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                      }
-                                    } finally {
-                                      if (context.mounted) context.loaderOverlay.hide();
-                                    }
-                                  },
-                                ),
-                              );
-                            },
-                            onMoreDetails: () {
-                              Get.to(() => MoreFlightDetailPage(
-                                flightOffer: offer,
-                                fareRules: [],
-                              ));
-                            },
-                          ),
-                        );
+                      items: <DropdownMenuItem<SortOffersOption?>>[
+                        DropdownMenuItem<SortOffersOption?>(
+                          value: null,
+                          child: Text('No sorting'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: SortOffersOption.priceLow,
+                          child: Text(FilterOffersController.sortLabel(SortOffersOption.priceLow).tr),
+                        ),
+                        DropdownMenuItem(
+                          value: SortOffersOption.priceHigh,
+                          child: Text(FilterOffersController.sortLabel(SortOffersOption.priceHigh).tr),
+                        ),
+                        DropdownMenuItem(
+                          value: SortOffersOption.travelTimeLow,
+                          child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeLow).tr),
+                        ),
+                        DropdownMenuItem(
+                          value: SortOffersOption.travelTimeHigh,
+                          child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeHigh).tr),
+                        ),
+                      ],
+                      onChanged: (v) async {
+                        setState(() {
+                          // requires copyWith supports sort + setSortNull
+                          filterState = filterState.copyWith(sort: v, setSortNull: v == null);
+                        });
+                        await _rebuildOffersFromState(scrollTop: true);
                       },
                     ),
                   ),
-                ),
-              ],
-            )
-          : Center(child: Text('No offers found'.tr)),
+      
+                  Expanded(
+                    child: CupertinoScrollbar(
+                      controller: scrollController,
+                      child: ListView.separated(
+                        controller: scrollController,
+                        itemCount: offers.length,
+                        separatorBuilder: (_, __) => const SizedBox.shrink(),
+                        itemBuilder: (context, index) {
+                          final offer = offers[index];
+      
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: FlightOfferCard(
+                              offer: offer,
+                              onBook: () async {
+                                context.loaderOverlay.show();
+                                await detailCtrl.revalidateAndOpen(offer: offer);
+                                if (context.mounted) context.loaderOverlay.hide();
+                              },
+                              onOtherPrices: () async {
+                                context.loaderOverlay.show();
+                                try {
+                                  final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                  if (!ok) {
+                                    Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                  } else {
+                                    Get.to(() => OtherPricesPage());
+                                  }
+                                } finally {
+                                  if (context.mounted) context.loaderOverlay.hide();
+                                }
+                              },
+                              onDetails: () {
+                                Get.to(
+                                  () => FlightDetailPage(
+                                    detail: RevalidatedFlightModel(
+                                      offer: offer,
+                                      isRefundable: offer.isRefundable,
+                                      isPassportMandatory: false,
+                                      firstNameCharacterLimit: 0,
+                                      lastNameCharacterLimit: 0,
+                                      paxNameCharacterLimit: 0,
+                                      fareRules: const [],
+                                    ),
+                                    showContinueButton: false,
+                                    onBook: () async {
+                                      context.loaderOverlay.show();
+                                      await detailCtrl.revalidateAndOpen(offer: offer);
+                                      if (context.mounted) context.loaderOverlay.hide();
+                                    },
+                                    onOtherPrices: () async {
+                                      context.loaderOverlay.show();
+                                      try {
+                                        final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                        if (!ok) {
+                                          Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                        }
+                                      } finally {
+                                        if (context.mounted) context.loaderOverlay.hide();
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                              onMoreDetails: () {
+                                Get.to(() => MoreFlightDetailPage(
+                                  flightOffer: offer,
+                                  fareRules: [],
+                                ));
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Center(child: Text('No offers found'.tr)),
+      ),
     );
   }
 }
@@ -555,12 +568,12 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                       children: [
                         Icon(Icons.luggage, size: 20, color: Colors.blue[900]!.withOpacity(0.8)),
                         const SizedBox(width: 0),
-                        Text((offer.baggageInfo ?? '').split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text((offer.baggageInfo ?? 'N/A'.tr).split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
                       ],
                     ),
                   if (widget.showSeatLeft && widget.showBaggage) const Spacer(),
                   Text(
-                    (offer.cabinClassText.replaceAll("Standard", "")).tr, 
+                    (offer.cabinClassText.replaceAll("Standard", "").trim()).tr, 
                     style: theme.textTheme.bodySmall!.copyWith(
                       fontSize: 14, fontWeight: FontWeight.w600),
                   ),
@@ -757,6 +770,7 @@ class _LegRowState extends State<_LegRow> {
                         ),
                       ),
                     ] else ...[
+                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
@@ -765,7 +779,6 @@ class _LegRowState extends State<_LegRow> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                     ],
                   ],
                 ),
@@ -788,6 +801,7 @@ class _LegRowState extends State<_LegRow> {
 
                   Row(
                     children: [
+                      const SizedBox(width: 12),
                       Container(
                         height: 12,
                         width: 12,
@@ -803,6 +817,7 @@ class _LegRowState extends State<_LegRow> {
                         flipX: !isArabic,
                         child: Image.asset(AppConsts.plane, width: 44,),
                       ),
+                      const SizedBox(width: 12),
                     ],
                   ),
                   
@@ -854,6 +869,7 @@ class _LegRowState extends State<_LegRow> {
                         ),
                       ),
                     ] else ...[
+                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
@@ -862,7 +878,6 @@ class _LegRowState extends State<_LegRow> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                     ],
                   ],
                 ),

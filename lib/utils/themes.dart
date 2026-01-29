@@ -14,7 +14,8 @@ class Themes {
       onTertiary: Colors.white,
       primaryContainer: AppConsts.primaryColor,
       secondaryContainer: AppConsts.secondaryColor,
-      surface: const Color(0xFFF6F7FB), // سطح عام فاتح (خلفية شاشات)
+      // surface: const Color(0xFFF6F7FB), // سطح عام فاتح (خلفية شاشات)
+      surface: const Color(0xFFf7f9fc), // سطح عام فاتح (خلفية شاشات)
       onSurface: const Color(0xFF101318),
       surfaceContainer: Colors.white,
       surfaceContainerHighest: Colors.white,
