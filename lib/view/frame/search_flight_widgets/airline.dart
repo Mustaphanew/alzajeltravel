@@ -19,6 +19,7 @@ class AirlineIncludeDropDown extends StatelessWidget {
     return GetBuilder<AirlineController>(
       builder: (controller) {
         return DropdownSearch<AirlineModel>.multiSelection(
+        
           items: (String? filter, LoadProps? _) => controller.getData(filter),
 
           filterFn: (item, filter) {
@@ -39,7 +40,9 @@ class AirlineIncludeDropDown extends StatelessWidget {
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
               labelText: 'Included Airlines'.tr,
+              labelStyle: TextStyle(fontSize: 12),
               hintText: 'Select Airlines'.tr,
+              hintStyle: TextStyle(fontSize: 12),
               border: OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
@@ -53,8 +56,8 @@ class AirlineIncludeDropDown extends StatelessWidget {
               runSpacing: 4,
               children: selected.map((e) {
                 return InputChip(
-                  label: Text('${e.code} — ${e.name[AppVars.lang]}'),
-                  deleteIcon: const Icon(Icons.clear, size: 16),
+                  label: Text('${e.code} — ${e.name[AppVars.lang]}', style: TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.clear, size: 12),
                   onDeleted: () => controller.removeInclude(e),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -196,7 +199,10 @@ class AirlineIncludeDropDown extends StatelessWidget {
             ),
           ),
 
-          suffixProps: const DropdownSuffixProps(clearButtonProps: ClearButtonProps(isVisible: true)),
+          suffixProps: const DropdownSuffixProps(
+            clearButtonProps: ClearButtonProps(isVisible: true),
+          ),
+          
 
           // validator: (vals) => (vals == null || vals.isEmpty) ? 'Please select at least one item' : null,
         );
@@ -236,6 +242,8 @@ class AirlineExcludeDropDown extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Excluded Airlines'.tr,
               hintText: 'Select Airlines'.tr,
+              labelStyle: TextStyle(fontSize: 12),
+              hintStyle: TextStyle(fontSize: 12),
               border: OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
@@ -248,8 +256,8 @@ class AirlineExcludeDropDown extends StatelessWidget {
               runSpacing: 4,
               children: selected.map((e) {
                 return InputChip(
-                  label: Text('${e.code} — ${e.name[AppVars.lang]}'),
-                  deleteIcon: const Icon(Icons.clear, size: 16),
+                  label: Text('${e.code} — ${e.name[AppVars.lang]}', style: TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.clear, size: 12),
                   onDeleted: () => controller.removeExclude(e),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -375,8 +383,10 @@ class AirlineExcludeDropDown extends StatelessWidget {
             ),
           ),
 
-          suffixProps: const DropdownSuffixProps(clearButtonProps: ClearButtonProps(isVisible: true)),
-
+          suffixProps: const DropdownSuffixProps(
+            clearButtonProps: ClearButtonProps(isVisible: true),
+          ),
+          
           // validator: (vals) => (vals == null || vals.isEmpty) ? 'Please select at least one item' : null,
         );
       },

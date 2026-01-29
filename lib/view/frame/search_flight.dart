@@ -64,7 +64,7 @@ class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderSt
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(
           children: [
             SizedBox(height: 20),
@@ -132,19 +132,19 @@ class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderSt
                   physics: NeverScrollableScrollPhysics(),
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.oneWay),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.roundTrip),
                     ),
                     // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                    //   padding: const EdgeInsets.symmetric(horizontal: 12),
                     //   child: FlightTab(frameContext: widget.frameContext, tmpJourneyType: JourneyType.multiCity),
                     // ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Center(child: Text("Not currently available".tr)),
                     ),
                   ],

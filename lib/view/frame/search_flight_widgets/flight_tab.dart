@@ -1,7 +1,9 @@
+import 'package:alzajeltravel/view/frame/search_flight_widgets/airline.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_range_widget2.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_single_widget2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/model/airport_model.dart';
@@ -161,20 +163,25 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             TextFieldTravelersAndClassType(widget: widget),
+                            SizedBox(height: 8),
                             DepartureWidget(index: 0, tmpJourneyType: widget.tmpJourneyType),
                           ],
                         ),
                       ),
 
-                    // Column(
-                    //   mainAxisSize: MainAxisSize.min,
-                    //   children: [
-                    //     SizedBox(height: 16),
-                    //     AirlineIncludeDropDown(),
-                    //     SizedBox(height: 8),
-                    //     // AirlineExcludeDropDown(),
-                    //   ],
-                    // ),
+                    SizedBox(height: 16),
+                    Divider(),
+                    ExpansionTile(
+                      title: Text("Advanced options".tr),
+                      children: [
+                        AirlineIncludeDropDown(), 
+                        SizedBox(height: 8),
+                        AirlineExcludeDropDown(),
+                        SizedBox(height: 8),
+                      ],
+                    ),
+                    Divider(),
+
                   ],
                 ),
               ),
@@ -197,34 +204,72 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
     return Container(
       child: GetBuilder<SearchFlightController>(
         builder: (controller) {
-          return TextFormField(
-            controller: controller.txtTravelersAndClassType,
-            readOnly: true,
-            onTap: () async {
-              await showModalBottomSheet(
-                context: widget.frameContext,
-                isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
-                // backgroundColor: Colors.white,
-                backgroundColor: cs.surface,
-                isDismissible: true,
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-                builder: (BuildContext context) {
-                  return ClassTypeAndTravelers();
-                },
-              );
-              controller.setTxtTravelersAndClassType();
-            },
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.person_outline),
-              hintText: "${'Enter Travelers and Cabin Class'.tr} ...",
-              labelText: " ${'Travelers and Cabin Class'.tr} ",
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text'.tr;
-              }
-              return null;
-            },
+          return Row(
+            children: [
+              Expanded(
+                child: TextFormField( 
+                  controller: controller.txtClassType,
+                  readOnly: true,
+                  onTap: () async { 
+                    await showModalBottomSheet(
+                      context: widget.frameContext,
+                      isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
+                      // backgroundColor: Colors.white,
+                      backgroundColor: cs.surface,
+                      isDismissible: true,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                      builder: (BuildContext context) {
+                        return ClassTypeAndTravelers();
+                      },
+                    );
+                    controller.setTxtTravelersAndClassType();
+                  },
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.class_),
+                    hintText: "${'Type Cabin'.tr} ...",
+                    labelText: " ${'Type Cabin'.tr} ",
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some text'.tr;
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: TextFormField( 
+                  controller: controller.txtTravelers,
+                  readOnly: true,
+                  onTap: () async { 
+                    await showModalBottomSheet(
+                      context: widget.frameContext,
+                      isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
+                      // backgroundColor: Colors.white,
+                      backgroundColor: cs.surface,
+                      isDismissible: true,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                      builder: (BuildContext context) {
+                        return ClassTypeAndTravelers();
+                      },
+                    );
+                    controller.setTxtTravelersAndClassType();
+                  },
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(FontAwesomeIcons.users, size: 20,),
+                    hintText: "${'Travelers'.tr} ...",
+                    labelText: " ${'Travelers'.tr} ",
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some text'.tr;
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -248,67 +293,73 @@ class DepartureWidget extends StatelessWidget {
           children: [
             Container(
               color: Colors.transparent,
-              height: 150,
+              height: 75,
               child: Stack(
-                alignment: AlignmentDirectional.bottomCenter,
+                alignment: AlignmentDirectional.center,
                 children: [
                   PositionedDirectional(
                     top: 0,
                     end: 0,
                     start: 0,
                     bottom: 0,
-                    child: Column(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextFormField(
-                          controller: form.txtFrom,
-                          readOnly: true,
-                          onTap: () async {
-                            final AirportModel? airport = await Get.to(() => const AirportSearch());
-                            if (airport != null) {
-                              form.fromLocation = airport;
-                              form.txtFrom.text = "${airport.name[AppVars.lang]} - ${airport.code}";
-                              controller.update(['form-$index']);
-                            }
-                          },
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(Icons.flight_takeoff_outlined),
-                            hintText: "${'Enter Departing From'.tr} ...",
-                            labelText: " ${'Departing From'.tr} ",
-                            floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                        Expanded(
+                          child: TextFormField(
+                            controller: form.txtFrom,
+                            readOnly: true,
+                            onTap: () async {
+                              final AirportModel? airport = await Get.to(() => const AirportSearch());
+                              if (airport != null) {
+                                form.fromLocation = airport;
+                                form.txtFrom.text = "${airport.name[AppVars.lang]} - ${airport.code}";
+                                controller.update(['form-$index']);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(Icons.flight_takeoff_outlined),
+                              hintText: "${'Enter Departing From'.tr} ...",
+                              hintStyle: TextStyle(fontSize: 12),
+                              labelText: " ${'Departing From'.tr} ",
+                              floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                            ),
+                            validator: (String? value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter some text'.tr;
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text'.tr;
-                            }
-                            return null;
-                          },
                         ),
-                        SizedBox(height: 12),
-                        TextFormField(
-                          controller: form.txtTo,
-                          readOnly: true,
-                          onTap: () async {
-                            final AirportModel? airport = await Get.to(() => const AirportSearch());
-                            if (airport != null) {
-                              form.toLocation = airport;
-                              form.txtTo.text = "${airport.name[AppVars.lang]} - ${airport.code}";
-                              controller.update(['form-$index']);
-                            }
-                          },
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(Icons.flight_land_outlined),
-                            hintText: "${'Enter Departing to'.tr} ...",
-                            labelText: " ${'Departing to'.tr} ",
-                            floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: form.txtTo,
+                            readOnly: true,
+                            onTap: () async {
+                              final AirportModel? airport = await Get.to(() => const AirportSearch());
+                              if (airport != null) {
+                                form.toLocation = airport;
+                                form.txtTo.text = "${airport.name[AppVars.lang]} - ${airport.code}";
+                                controller.update(['form-$index']);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(Icons.flight_land_outlined),
+                              hintText: "${'Enter Departing to'.tr} ...",
+                              hintStyle: TextStyle(fontSize: 12),
+                              labelText: " ${'Departing to'.tr} ",
+                              floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                            ),
+                            validator: (String? value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter some text'.tr;
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text'.tr;
-                            }
-                            return null;
-                          },
                         ),
                       ],
                     ),
@@ -318,7 +369,9 @@ class DepartureWidget extends StatelessWidget {
                     bottom: 0,
                     end: 0,
                     top: 0,
+                    start: 0,
                     child: Stack(
+                      alignment: AlignmentDirectional.center,
                       children: [
                         IgnorePointer(ignoring: true, child: Container(width: 75, color: Colors.transparent)),
                         // مرّر الفهرس بدلاً من كائن Controller
@@ -329,30 +382,70 @@ class DepartureWidget extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 0),
+            const SizedBox(height: 8),
 
             if (tmpJourneyType == JourneyType.roundTrip)
-              TextFormField(
-                onTap: () async {
-                  // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
-                  await Get.to(() => DatePickerRangeWidget2(index: index), transition: Transition.downToUp);
-                  await controller.setTxtDepartureDates(index);
-                },
-                readOnly: true,
-                controller: form.txtDepartureDates,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.date_range),
-                  hintText: "${'Enter Departure Dates'.tr} ...",
-                  labelText: " ${'Departure Dates'.tr} ",
-                  floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+              ...[
+
+
+                Row(
+                  children: [
+
+                    Expanded(
+                      child: TextFormField(
+                        onTap: () async {
+                          // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
+                          await Get.to(() => DatePickerRangeWidget2(index: index), transition: Transition.downToUp);
+                          await controller.setTxtDepartureDates(index);
+                        },
+                        readOnly: true,
+                        controller: form.txtDepartureDate,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.date_range),
+                          hintText: "${'Enter Departure Date'.tr} ...",
+                          hintStyle: TextStyle(fontSize: 12),
+                          labelText: " ${'Departure Date'.tr} ",
+                          floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                        ),
+                        validator: (String? value) {
+                          if (value == null || value.isEmpty || value.endsWith("⇄ ")) {
+                            return 'Please enter some text'.tr;
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        onTap: () async {
+                          // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
+                          await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 1), transition: Transition.downToUp);
+                          await controller.setTxtDepartureDates(index);
+                        },
+                        readOnly: true,
+                        controller: form.txtReturnDate,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.date_range),
+                          hintText: "${'Enter Return Date'.tr} ...",
+                          hintStyle: TextStyle(fontSize: 12),
+                          labelText: " ${'Return Date'.tr} ",
+                          floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
+                        ),
+                        validator: (String? value) {
+                          if (value == null || value.isEmpty || value.endsWith("⇄ ")) {
+                            return 'Please enter some text'.tr;
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+
+
+                  ],
                 ),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty || value.endsWith("⇄ ")) {
-                    return 'Please enter some text'.tr;
-                  }
-                  return null;
-                },
-              ),
+
+              ],
 
             if (tmpJourneyType == JourneyType.oneWay || tmpJourneyType == JourneyType.multiCity)
               TextFormField(
@@ -366,6 +459,7 @@ class DepartureWidget extends StatelessWidget {
                 decoration: InputDecoration(
                   prefixIcon: Icon(Icons.date_range),
                   hintText: "${'Enter Departure Date'.tr} ...",
+                  
                   labelText: " ${'Departure Date'.tr} ",
                   floatingLabelBehavior: FloatingLabelBehavior.always, // 👈 المهم
                 ),

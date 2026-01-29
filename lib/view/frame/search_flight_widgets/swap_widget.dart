@@ -17,14 +17,14 @@ class SwapWidget extends StatelessWidget {
         final form = controller.forms[index];
 
         return Align(
-          alignment: AlignmentDirectional.centerStart,
+          alignment: AlignmentDirectional.center,
           child: InkWell(
             onTap: () {
               controller.swapCities(index);
             },
             child: Container(
-              height: 50,
-              width: 50,
+              height: 40,
+              width: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: cs.surfaceContainer,
@@ -32,8 +32,8 @@ class SwapWidget extends StatelessWidget {
                 border: Border.all(color: AppConsts.primaryColor, width: 1),
               ),
               child: Icon(
-                Icons.swap_vert,
-                size: 32,
+                Icons.swap_horiz,
+                size: 28,
               )
                   .animate(target: form.isSwappedIcon ? 1 : 0)
                   .rotate(

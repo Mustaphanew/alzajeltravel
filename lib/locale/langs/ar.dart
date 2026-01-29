@@ -594,4 +594,8 @@ Map<String, String> ar = {
   "Do not close the page, you will be redirected automatically.": "لا تغلق الصفحة، سيتم إعادة توجيهك تلقائيًا.",
   "Search for flights": "جاري البحث عن رحلات",
 
+  "Type Cabin": "نوع المقصورة",
+  "Enter Return Date": "أدخل تاريخ العودة",
+  "Advanced options": "خيارات متقدمة",
+
 };

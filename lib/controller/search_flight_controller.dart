@@ -31,6 +31,7 @@ class SearchFlightForm {
 
   final TextEditingController txtDepartureDates = TextEditingController();
   final TextEditingController txtDepartureDate = TextEditingController();
+  final TextEditingController txtReturnDate = TextEditingController();
 
   final SimpleDatePickerController departureDatePickerController =
       SimpleDatePickerController();
@@ -56,6 +57,10 @@ class SearchFlightController extends GetxController {
   ScrollController roundTripScrollController = ScrollController();
   ScrollController oneWayScrollController = ScrollController();
   ScrollController multiCityScrollController = ScrollController();
+
+
+  TextEditingController txtClassType = TextEditingController(); 
+  TextEditingController txtTravelers = TextEditingController();
 
   TextEditingController txtTravelersAndClassType = TextEditingController();
 
@@ -141,6 +146,9 @@ class SearchFlightController extends GetxController {
     form.txtDepartureDate.text = AppFuns.replaceArabicNumbers(
       formattedLeavingDate,
     );
+    form.txtReturnDate.text = AppFuns.replaceArabicNumbers(
+      formattedGoingDate,
+    );
 
     update(['form-$index']); // حدّث فقط ويدجت هذا السيجمنت
   }
@@ -178,9 +186,11 @@ class SearchFlightController extends GetxController {
     int infantsInLap = travelersController.infantsInLapCounter;
     int travelers = adults + children + infantsInSeat + infantsInLap;
     if (classType != null) {
+      txtClassType.text = classType.name[AppVars.lang];
+      txtTravelers.text = "$travelers ${(travelers > 1)? 'Travelers'.tr: 'Traveler'.tr}";
       txtTravelersAndClassType.text = "$travelers ${(travelers > 1)? 'Travelers'.tr: 'Traveler'.tr}, ${classType.name[AppVars.lang]}";
     }
-    update();
+    update(); 
   }
 
   bool isRequesting = false;

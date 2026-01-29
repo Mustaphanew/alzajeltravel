@@ -10,7 +10,8 @@ enum _PickerMode { day, month }
 
 class DatePickerRangeWidget2 extends StatefulWidget {
   final int index; // <-- مهم: أي form هذا
-  const DatePickerRangeWidget2({super.key, required this.index});
+  final int initialIndex;
+  const DatePickerRangeWidget2({super.key, required this.index, this.initialIndex = 0});
 
   @override
   State<DatePickerRangeWidget2> createState() => _DatePickerRangeWidget2State();
@@ -143,7 +144,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 2, vsync: this, initialIndex: 0);
+    tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
 
     _minDay = _dateOnly(DateTime.now());
     _maxDay = _minDay.add(const Duration(days: 360));
