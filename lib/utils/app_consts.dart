@@ -28,6 +28,7 @@ class AppConsts {
   static const String plane = "assets/images/plane.png";
   static const String planeAroundEarth = "assets/images/plane_around_earth.json";
   static const String planeAroundEarthGif = "assets/images/plane_around_earth.gif";
+  static const String plnGif = "assets/images/pln.gif";
 
   static const String logo = "assets/images/icons/logo.svg";
   static const String logo2 = "assets/images/icons/logo_2.svg";

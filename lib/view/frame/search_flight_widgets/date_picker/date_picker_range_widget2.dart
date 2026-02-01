@@ -9,9 +9,18 @@ import 'package:table_calendar/table_calendar.dart';
 enum _PickerMode { day, month }
 
 class DatePickerRangeWidget2 extends StatefulWidget {
-  final int index; // <-- مهم: أي form هذا
+  final int index; // أي form هذا
   final int initialIndex;
-  const DatePickerRangeWidget2({super.key, required this.index, this.initialIndex = 0});
+
+  /// ✅ مهم لو عندك SearchFlightController بنظام tag
+  final String? controllerTag;
+
+  const DatePickerRangeWidget2({
+    super.key,
+    required this.index,
+    this.initialIndex = 0,
+    this.controllerTag,
+  });
 
   @override
   State<DatePickerRangeWidget2> createState() => _DatePickerRangeWidget2State();
@@ -45,8 +54,9 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
   String _localeTag() {
     final loc = Get.locale;
     if (loc == null) return 'en';
-    if (loc.countryCode == null || loc.countryCode!.isEmpty) return loc.languageCode;
-    return '${loc.languageCode}_${loc.countryCode}';
+    final cc = loc.countryCode;
+    if (cc == null || cc.isEmpty) return loc.languageCode;
+    return '${loc.languageCode}_$cc';
   }
 
   String _monthName(DateTime d) {
@@ -141,6 +151,20 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
     });
   }
 
+  // ✅ قبل بناء GetBuilder لازم نتأكد أن controller موجود (tag أو default)
+  bool _hasController() {
+    final t = widget.controllerTag;
+    if (t != null && Get.isRegistered<SearchFlightController>(tag: t)) return true;
+    return Get.isRegistered<SearchFlightController>();
+  }
+
+  // ✅ tag آمن: لو ما هو مسجل لا نمرره
+  String? _safeTag() {
+    final t = widget.controllerTag;
+    if (t != null && Get.isRegistered<SearchFlightController>(tag: t)) return t;
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -212,7 +236,6 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
     );
   }
 
-  // ✅ Month picker بنفس ستايل DatePickerSingleWidget2 (Light/Dark)
   Widget _buildMonthPicker({
     required bool isLeaving,
     required DateTime minDay,
@@ -262,7 +285,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
               alignment: Alignment.center,
               decoration: selectedMonth
                   ? BoxDecoration(
-                      border: Border.all(color: cs.primaryFixed, width: 1.6),
+                      border: Border.all(color: cs.primary, width: 1.6),
                       borderRadius: BorderRadius.circular(999),
                     )
                   : null,
@@ -271,9 +294,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: !enabled
-                      ? Colors.grey.shade500
-                      : cs.primaryFixed,
+                  color: !enabled ? Colors.grey.shade500 : cs.onSurface,
                 ),
               ),
             ),
@@ -283,7 +304,6 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
     );
   }
 
-  // ✅ Day calendar بنفس ستايل DatePickerSingleWidget2 (Light/Dark)
   Widget _buildDayCalendar({
     required bool isLeaving,
     required SearchFlightController controller,
@@ -291,6 +311,11 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
     required DateTime minDay,
     required DateTime maxDay,
   }) {
+    // ✅ حماية من index
+    if (i < 0 || i >= controller.forms.length) {
+      return Center(child: Text("Invalid form index".tr));
+    }
+
     final form = controller.forms[i];
 
     // لمنع Assertion: firstDay/lastDay على مستوى الشهر
@@ -315,7 +340,6 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
       availableCalendarFormats: const {CalendarFormat.month: 'Month'},
       headerVisible: false,
 
-      // Divider + أسماء الأيام بنفس تصميم Single
       daysOfWeekHeight: 40,
       daysOfWeekStyle: DaysOfWeekStyle(
         decoration: BoxDecoration(
@@ -327,8 +351,8 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
           ),
         ),
         dowTextFormatter: (date, locale) => DateFormat.EEEE(locale).format(date),
-        weekdayStyle: TextStyle(color: cs.primaryFixed, fontSize: 14),
-        weekendStyle: TextStyle(color: cs.primaryFixed, fontSize: 14),
+        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 14),
+        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 14),
       ),
 
       enabledDayPredicate: (day) => _dayEnabled(day, minDay, maxDay),
@@ -338,8 +362,8 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
         outsideDaysVisible: false,
         isTodayHighlighted: false,
         disabledTextStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-        defaultTextStyle: TextStyle(color: cs.primaryFixed, fontSize: 16),
-        weekendTextStyle: TextStyle(color: cs.primaryFixed, fontSize: 16),
+        defaultTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
+        weekendTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
 
         selectedDecoration: BoxDecoration(
           color: AppConsts.secondaryColor,
@@ -369,7 +393,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
         if (!_dayEnabled(picked, minDay, maxDay)) return;
 
         if (isLeaving) {
-          // ✅ Leaving: خزّن + صفّر العودة + روح لتبويب العودة
+          // Leaving: خزّن + صفّر العودة + روح لتبويب العودة
           setState(() {
             _leaveSelectedDay = picked;
             _leaveFocusedDay = newFocused;
@@ -388,7 +412,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
           return;
         }
 
-        // ✅ Return: لازم يكون >= leaving
+        // Return: لازم يكون >= leaving
         final leaving = form.departureDatePickerController.selectedDate;
         if (leaving == null) {
           tabController.animateTo(0);
@@ -406,7 +430,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
         form.returnDatePickerController.selectedDate = picked;
 
         controller.update(['form-$i']);
-        Get.back(result: 1);
+        Get.back(result: picked);
       },
     );
   }
@@ -415,9 +439,38 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
   Widget build(BuildContext context) {
     final int i = widget.index;
 
+    // ✅ لو ما في Controller مسجل، اعرض صفحة آمنة بدل crash
+    if (!_hasController()) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("Select Dates".tr),
+          leading: IconButton(
+            icon: const Icon(CupertinoIcons.clear),
+            onPressed: () => Get.back(),
+          ),
+        ),
+        body: Center(child: Text("Search controller not ready".tr)),
+      );
+    }
+
     return GetBuilder<SearchFlightController>(
+      tag: _safeTag(),
       id: 'form-$i',
       builder: (controller) {
+        // ✅ حماية من index
+        if (i < 0 || i >= controller.forms.length) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("Select Dates".tr),
+              leading: IconButton(
+                icon: const Icon(CupertinoIcons.clear),
+                onPressed: () => Get.back(),
+              ),
+            ),
+            body: Center(child: Text("Invalid form index".tr)),
+          );
+        }
+
         final form = controller.forms[i];
 
         // init مرة واحدة من القيم المحفوظة
@@ -441,8 +494,10 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
                 _returnFocusedDay = depD;
               }
             } else {
+              _returnSelectedDay = null;
               _returnFocusedDay = depD;
             }
+
             _returnMonthPickerYear = _returnFocusedDay.year;
           } else {
             _leaveFocusedDay = _minDay;
@@ -525,7 +580,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
                     ),
                   ],
                 ),
-          
+
                 // ===== Return =====
                 Column(
                   children: [

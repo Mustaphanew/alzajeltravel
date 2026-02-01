@@ -101,17 +101,23 @@ class _IssuingPageState extends State<IssuingPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+
+      canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
         final ok = await AppFuns.confirmExit(
           title: "Exit".tr,
           message: "Are you sure you want to exit?".tr,
         );
-        if (ok) {
-          return true;
+
+        if (ok && context.mounted) {
+          Navigator.of(context).pop(result); 
+          // أو فقط pop() إذا ما تحتاج result
         }
-        return false;
       },
+      
       child: SafeArea(
         top: false,
         child: Scaffold(

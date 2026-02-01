@@ -598,4 +598,15 @@ Map<String, String> ar = {
   "Enter Return Date": "أدخل تاريخ العودة",
   "Advanced options": "خيارات متقدمة",
 
+  "Please wait": "يرجى الانتظار",
+  "The process may take several seconds": "العملية قد تأخذ عدة ثواني",
+
+  "View flight details": "عرض تفاصيل الرحلة",
+
+  "Edit Search": "تعديل البحث",
+
+  "All stops": "جميع التوقفات",
+  "No selection": "فلترة ذكية",
+  "There is no weight": "لا يوجد وزن",
+
 };

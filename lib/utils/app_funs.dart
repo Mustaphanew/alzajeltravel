@@ -249,9 +249,11 @@ class AppFuns {
   }
 
   static String priceWithCoin(dynamic price, String coin) {
-    final NumberFormat moneyFormat = NumberFormat('#,##0.00', 'en_US');
+    final NumberFormat moneyFormat = NumberFormat('#,##0', 'en_US');
     if (price == null) return '';
-    return '${moneyFormat.format(toNum(price))} $coin';
+    final priceDouble = double.parse(price.toString()).ceil();
+    final priceInt = priceDouble.toInt();
+    return '${moneyFormat.format(priceInt)} $coin';
   }
 
   static String formatDobPretty(DateTime? date, {String? locale}) {

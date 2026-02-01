@@ -86,21 +86,24 @@ class FilterOffersPage extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    FilterChip(
-                      label: Text('Non-stop'.tr),
-                      selected: c.selectedStops.contains(0),
-                      onSelected: (_) => c.toggleStop(0),
-                    ),
-                    FilterChip(
-                      label: Text('1 Stop'.tr),
-                      selected: c.selectedStops.contains(1),
-                      onSelected: (_) => c.toggleStop(1),
-                    ),
-                    FilterChip(
-                      label: Text('2 Stops'.tr),
-                      selected: c.selectedStops.contains(2),
-                      onSelected: (_) => c.toggleStop(2),
-                    ),
+                    if(c.availableStops.contains(0))
+                      FilterChip(
+                        label: Text('Non-stop'.tr),
+                        selected: c.selectedStops.contains(0),
+                        onSelected: (_) => c.toggleStop(0),
+                      ),
+                    if(c.availableStops.contains(1))
+                      FilterChip(
+                        label: Text('1 Stop'.tr),
+                        selected: c.selectedStops.contains(1),
+                        onSelected: (_) => c.toggleStop(1),
+                      ),
+                    if(c.availableStops.contains(2))
+                      FilterChip(
+                        label: Text('2 Stops'.tr),
+                        selected: c.selectedStops.contains(2),
+                        onSelected: (_) => c.toggleStop(2),
+                      ),
                   ],
                 ),
 

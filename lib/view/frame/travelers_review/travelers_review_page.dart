@@ -65,17 +65,23 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
           top: false,
           left: false,
           right: false,
-          child: WillPopScope(
-            onWillPop: () async {
+          child: PopScope(
+
+            canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+
               final ok = await AppFuns.confirmExit(
                 title: "Exit".tr,
                 message: "Are you sure you want to exit?".tr,
               );
-              if (ok) {
-                return true;
+
+              if (ok && context.mounted) {
+                Navigator.of(context).pop(result); 
+                // أو فقط pop() إذا ما تحتاج result
               }
-              return false;
             },
+
             child: Scaffold(
               appBar: AppBar(title: Text('Travelers review'.tr)),
               body: Column(

@@ -1,15 +1,20 @@
 // lib/view/frame/flights/flight_offers_list.dart
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
 import 'package:alzajeltravel/controller/flight/other_prices_controller.dart';
+import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
+import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:alzajeltravel/view/frame/flights/filter_offers_page.dart';
 import 'package:alzajeltravel/view/frame/flights/other_prices/other_prices_page.dart';
+import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:loader_overlay/loader_overlay.dart';
@@ -56,16 +61,31 @@ class _FlightOffersListState extends State<FlightOffersList> {
     offers = List<FlightOfferModel>.from(allOffers);
 
     _rebuildOffersFromState();
+
+    scrollController.addListener(_handleScroll);
+
   }
+
+  void _handleScroll() {
+  if (!scrollController.hasClients) return;
+
+  final dir = scrollController.position.userScrollDirection;
+
+  if (dir == ScrollDirection.reverse && _showFab) {
+    setState(() => _showFab = false);
+  } else if (dir == ScrollDirection.forward && !_showFab) {
+    setState(() => _showFab = true);
+  }
+}
+
+  bool _showFab = true;
+  Timer? _showTimer;
 
   @override
   void dispose() {
-    // if (Get.isRegistered<FlightDetailApiController>()) {
-    //   Get.delete<FlightDetailApiController>();
-    // }
-    // if (Get.isRegistered<OtherPricesController>()) {
-    //   Get.delete<OtherPricesController>();
-    // }
+    scrollController.removeListener(_handleScroll);
+    scrollController.dispose();
+    _showTimer?.cancel();
     super.dispose();
   }
 
@@ -228,177 +248,418 @@ class _FlightOffersListState extends State<FlightOffersList> {
   // UI
   // =========================
 
+static List<int> _extractStops(List<FlightOfferModel> offers) {
+  final set = <int>{};
+
+  for (final o in offers) {
+    for (final leg in o.legs) {
+      final s = leg.stops;
+      final normalized = s >= 2 ? 2 : s;
+      set.add(normalized);
+    }
+  }
+
+  final list = set.toList()..sort(); // 0,1,2
+  return list;
+}
+
+  int? _stopsToDropdownValue(Set<int> stops) {
+    // null = All stops (no filter)
+    if (stops.isEmpty) return null;
+    if (stops.length == 1) return stops.first;
+    // لو كانت multi-selection (غير مستخدم هنا) اعتبرها All
+    return null;
+  }
+
+  OfferQuickOption _quickOptionFromState(FilterOffersState s) {
+    // إذا فيه sort (ومن الخيارات المسموحة)
+    if (s.sort == SortOffersOption.priceLow) return OfferQuickOption.priceLow;
+    if (s.sort == SortOffersOption.travelTimeLow) return OfferQuickOption.travelTimeLow;
+
+    // إذا فيه stops محدد (اختيار واحد)
+    if (s.stops.length == 1) {
+      final v = s.stops.first;
+      if (v == 0) return OfferQuickOption.stops0;
+      if (v == 1) return OfferQuickOption.stops1;
+      if (v == 2) return OfferQuickOption.stops2;
+    }
+
+    return OfferQuickOption.none;
+  }
+
+  
+
   @override
   Widget build(BuildContext context) {
-    final bool isFilter = filterState.isFilter;
 
-    return WillPopScope(
-      onWillPop: () async {
+    final bool isFilter = filterState.isFilter;
+    final cs = Theme.of(context).colorScheme;
+    final availableStops = _extractStops(allOffers); // ترجع List<int> مثل [0,1,2]
+
+    return PopScope(
+
+      canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
         final ok = await AppFuns.confirmExit(
           title: "Exit".tr,
           message: "Are you sure you want to exit?".tr,
         );
-        if (ok) {
-          return true;
-        }
-        return false;
-      },
 
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('${'Flight Offers'.tr} (${offers.length})'),
-          actions: [
-            OutlinedButton.icon(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              icon: const Icon(Icons.filter_alt_outlined),
-              label: Text(
-                'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
-                style: TextStyle(fontSize: AppConsts.lg),
-              ),
-              onPressed: () async {
-                try {
-                  final result = await Get.to<FilterOffersResult>(
-                    () => FilterOffersPage(offers: allOffers, state: filterState),
-                  );
+        if (ok && context.mounted) {
+          Navigator.of(context).pop(result); 
+          // أو فقط pop() إذا ما تحتاج result
+        }
+      },
       
-                  if (result != null) {
-                    filterState = result.state;
-                    await _rebuildOffersFromState(scrollTop: true);
-                  }
-                } catch (e) {
-                  Get.snackbar('Error'.tr, e.toString());
-                }
-              },
-            ),
-            const SizedBox(width: 12),
-          ],
+
+      child: SafeArea(
+        bottom: true,
+        top: false,
+        left: false,
+        right: false,
+        child: Scaffold(
+          appBar: AppBar(
+            // title: Text('${'Flight Offers'.tr} (${offers.length})'),
+            title: Row(
+              children: [
+
+
+                Expanded(
+  child: SizedBox(
+    height: 45,
+    child: DropdownButtonFormField<OfferQuickOption>(
+      initialValue: _quickOptionFromState(filterState),
+      icon: SizedBox.shrink(),
+      iconSize: 0,
+      isDense: true,
+      decoration: InputDecoration(
+        hintText: 'Select option'.tr,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        isDense: true,
+      ),
+      items: <DropdownMenuItem<OfferQuickOption>>[
+        DropdownMenuItem(
+          value: OfferQuickOption.none,
+          child: Text('No selection'.tr, style: TextStyle(fontSize: AppConsts.normal)),
         ),
-        body: (offers.isNotEmpty)
-            ? Column(
-                children: [
-                  // ===== Sort dropdown (same value synced with FilterOffersPage) =====
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: DropdownButtonFormField<SortOffersOption?>(
-                      value: filterState.sort,
-                      decoration: InputDecoration(
-                        hintText: 'Select sort'.tr,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        isDense: true,
-                      ),
-                      items: <DropdownMenuItem<SortOffersOption?>>[
-                        DropdownMenuItem<SortOffersOption?>(
-                          value: null,
-                          child: Text('No sorting'.tr),
-                        ),
-                        DropdownMenuItem(
-                          value: SortOffersOption.priceLow,
-                          child: Text(FilterOffersController.sortLabel(SortOffersOption.priceLow).tr),
-                        ),
-                        DropdownMenuItem(
-                          value: SortOffersOption.priceHigh,
-                          child: Text(FilterOffersController.sortLabel(SortOffersOption.priceHigh).tr),
-                        ),
-                        DropdownMenuItem(
-                          value: SortOffersOption.travelTimeLow,
-                          child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeLow).tr),
-                        ),
-                        DropdownMenuItem(
-                          value: SortOffersOption.travelTimeHigh,
-                          child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeHigh).tr),
-                        ),
-                      ],
-                      onChanged: (v) async {
-                        setState(() {
-                          // requires copyWith supports sort + setSortNull
-                          filterState = filterState.copyWith(sort: v, setSortNull: v == null);
-                        });
-                        await _rebuildOffersFromState(scrollTop: true);
-                      },
-                    ),
-                  ),
-      
-                  Expanded(
-                    child: CupertinoScrollbar(
-                      controller: scrollController,
-                      child: ListView.separated(
-                        controller: scrollController,
-                        itemCount: offers.length,
-                        separatorBuilder: (_, __) => const SizedBox.shrink(),
-                        itemBuilder: (context, index) {
-                          final offer = offers[index];
-      
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            child: FlightOfferCard(
-                              offer: offer,
-                              onBook: () async {
-                                context.loaderOverlay.show();
-                                await detailCtrl.revalidateAndOpen(offer: offer);
-                                if (context.mounted) context.loaderOverlay.hide();
-                              },
-                              onOtherPrices: () async {
-                                context.loaderOverlay.show();
-                                try {
-                                  final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                  if (!ok) {
-                                    Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                  } else {
-                                    Get.to(() => OtherPricesPage());
-                                  }
-                                } finally {
-                                  if (context.mounted) context.loaderOverlay.hide();
-                                }
-                              },
-                              onDetails: () {
-                                Get.to(
-                                  () => FlightDetailPage(
-                                    detail: RevalidatedFlightModel(
-                                      offer: offer,
-                                      isRefundable: offer.isRefundable,
-                                      isPassportMandatory: false,
-                                      firstNameCharacterLimit: 0,
-                                      lastNameCharacterLimit: 0,
-                                      paxNameCharacterLimit: 0,
-                                      fareRules: const [],
-                                    ),
-                                    showContinueButton: false,
-                                    onBook: () async {
-                                      context.loaderOverlay.show();
-                                      await detailCtrl.revalidateAndOpen(offer: offer);
-                                      if (context.mounted) context.loaderOverlay.hide();
-                                    },
-                                    onOtherPrices: () async {
-                                      context.loaderOverlay.show();
-                                      try {
-                                        final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                        if (!ok) {
-                                          Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                        }
-                                      } finally {
-                                        if (context.mounted) context.loaderOverlay.hide();
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                              onMoreDetails: () {
-                                Get.to(() => MoreFlightDetailPage(
-                                  flightOffer: offer,
-                                  fareRules: [],
-                                ));
-                              },
+    
+        // sort options (فقط المطلوبين)
+        DropdownMenuItem(
+          value: OfferQuickOption.priceLow,
+          child: Text(OfferQuickOption.priceLow.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
+        ),
+        DropdownMenuItem(
+          value: OfferQuickOption.travelTimeLow,
+          child: Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
+        ),
+    
+        // stops options (ديناميكي حسب نتائج allOffers)
+        if (availableStops.contains(0))
+          DropdownMenuItem(
+            value: OfferQuickOption.stops0,
+            child: Text(OfferQuickOption.stops0.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
+          ),
+        if (availableStops.contains(1))
+          DropdownMenuItem(
+            value: OfferQuickOption.stops1,
+            child: Text(OfferQuickOption.stops1.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
+          ),
+        if (availableStops.contains(2))
+          DropdownMenuItem(
+            value: OfferQuickOption.stops2,
+            child: Text(OfferQuickOption.stops2.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
+          ),
+      ],
+      onChanged: (v) async {
+        if (v == null) return;
+    
+        setState(() {
+          switch (v) {
+            case OfferQuickOption.none:
+              // لا شيء: امسح sort + امسح stops (no filter)
+              filterState = filterState.copyWith(
+                stops: <int>{},
+                sort: null,
+                setSortNull: true,
+              );
+              break;
+    
+            case OfferQuickOption.priceLow:
+              // sort فقط + امسح stops
+              filterState = filterState.copyWith(
+                stops: <int>{},
+                sort: SortOffersOption.priceLow,
+              );
+              break;
+    
+            case OfferQuickOption.travelTimeLow:
+              // sort فقط + امسح stops
+              filterState = filterState.copyWith(
+                stops: <int>{},
+                sort: SortOffersOption.travelTimeLow,
+              );
+              break;
+    
+            case OfferQuickOption.stops0:
+              // stops فقط + امسح sort
+              filterState = filterState.copyWith(
+                stops: <int>{0},
+                sort: null,
+                setSortNull: true,
+              );
+              break;
+    
+            case OfferQuickOption.stops1:
+              filterState = filterState.copyWith(
+                stops: <int>{1},
+                sort: null,
+                setSortNull: true,
+              );
+              break;
+    
+            case OfferQuickOption.stops2:
+              filterState = filterState.copyWith(
+                stops: <int>{2},
+                sort: null,
+                setSortNull: true,
+              );
+              break;
+          }
+        });
+    
+        await _rebuildOffersFromState(scrollTop: true);
+      },
+    ),
+  ),
+),
+
+
+
+            SizedBox(width: 12),
+
+              
+              ],
+            ),
+            actions: [
+              OutlinedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                icon: const Icon(Icons.filter_alt_outlined),
+                label: Text(
+                  'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
+                  style: TextStyle(fontSize: AppConsts.lg),
+                ),
+                onPressed: () async {
+                  try {
+                    final result = await Get.to<FilterOffersResult>(
+                      () => FilterOffersPage(offers: allOffers, state: filterState),
+                    );
+        
+                    if (result != null) {
+                      filterState = result.state;
+                      await _rebuildOffersFromState(scrollTop: true);
+                    }
+                  } catch (e) {
+                    Get.snackbar('Error'.tr, e.toString());
+                  }
+                },
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+          body: (offers.isNotEmpty)
+              ? Column(
+                  children: [
+
+                       // ===== Sort dropdown (same value synced with FilterOffersPage) =====
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey.shade400, 
                             ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+
+                  // edit search ______________
+                  Expanded(
+                    child: Container(
+                      // height: 40,
+                      // padding: EdgeInsetsDirectional.only(end: 12),
+                      child: ElevatedButton.icon( 
+                        icon: const Icon(Icons.edit),
+                        style: ElevatedButton.styleFrom(
+                          padding:  EdgeInsets.symmetric(horizontal: 12),
+                          // shape: const RoundedRectangleBorder(
+                          //   borderRadius: BorderRadius.zero,
+                          // ),
+                          backgroundColor: Colors.blue[800],
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () async {
+                          final result = await Get.to<FlightSearchResult>(
+                            () => SearchFlight(
+                              // frameContext: context,
+                              isEditor: true,
+                              // initialTabIndex: ... إذا تحتاج
+                            ),
+                            transition: Transition.downToUp,
                           );
+                          if (!mounted || result == null) return;
+                          // ✅ حدث نفس الصفحة لتصبح "النتائج الجديدة"
+                          AppVars.apiSessionId = result.apiSessionId;
+                          // setState(() {
+                            filterState = const FilterOffersState(); // اختياري: تصفير الفلاتر
+                            allOffers = result.outbound.map((e) => FlightOfferModel.fromJson(e)).toList();
+                            offers = List<FlightOfferModel>.from(allOffers);
+                          // }); 
+                          await _rebuildOffersFromState(scrollTop: true);
+                          setState(() {});
                         },
+                        label: Text('Edit Search'.tr),
                       ),
                     ),
                   ),
-                ],
-              )
-            : Center(child: Text('No offers found'.tr)),
+             
+            
+
+
+                          ],
+                        ),
+                      ),
+
+
+                    Expanded(
+                      child: CupertinoScrollbar(
+                        controller: scrollController,
+                        child: ListView.separated(
+                          // padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 4),
+                          controller: scrollController,
+                          itemCount: offers.length,
+                          separatorBuilder: (_, __) => const SizedBox.shrink(),
+                          itemBuilder: (context, index) {
+                            final offer = offers[index];
+                              
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              child: FlightOfferCard(
+                                offer: offer,
+                                onBook: () async {
+                                  context.loaderOverlay.show();
+                                  await detailCtrl.revalidateAndOpen(offer: offer);
+                                  if (context.mounted) context.loaderOverlay.hide();
+                                },
+                                onOtherPrices: () async {
+                                  context.loaderOverlay.show();
+                                  try {
+                                    final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                    if (!ok) {
+                                      Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                    } else {
+                                      Get.to(() => OtherPricesPage());
+                                    }
+                                  } finally {
+                                    if (context.mounted) context.loaderOverlay.hide();
+                                  }
+                                },
+                                onDetails: () {
+                                  Get.to(
+                                    () => FlightDetailPage(
+                                      detail: RevalidatedFlightModel(
+                                        offer: offer,
+                                        isRefundable: offer.isRefundable,
+                                        isPassportMandatory: false,
+                                        firstNameCharacterLimit: 0,
+                                        lastNameCharacterLimit: 0,
+                                        paxNameCharacterLimit: 0,
+                                        fareRules: const [],
+                                      ),
+                                      showContinueButton: false,
+                                      onBook: () async {
+                                        context.loaderOverlay.show();
+                                        await detailCtrl.revalidateAndOpen(offer: offer);
+                                        if (context.mounted) context.loaderOverlay.hide();
+                                      },
+                                      onOtherPrices: () async {
+                                        context.loaderOverlay.show();
+                                        try {
+                                          final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                          if (!ok) {
+                                            Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                          }
+                                        } finally {
+                                          if (context.mounted) context.loaderOverlay.hide();
+                                        }
+                                      },
+                                    ),
+                                  );
+                                },
+                                onMoreDetails: () {
+                                  Get.to(() => MoreFlightDetailPage(
+                                    flightOffer: offer,
+                                    fareRules: [],
+                                  ));
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Center(child: Text('No offers found'.tr)),
+        
+          // floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+          // floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterTop,
+          // floatingActionButton: AnimatedOpacity(
+          //   duration: const Duration(milliseconds: 180),
+          //   opacity: (_showFab == false) ? 1.0 : 0.0,
+          //   child: Container(
+          //     // height appbar
+          //     padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top - 5),
+          //     width: double.infinity,
+          //     child: ElevatedButton.icon( 
+          //       icon: const Icon(Icons.edit),
+          //       style: ElevatedButton.styleFrom(
+          //         shape: const RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.zero,
+          //         ),
+          //         backgroundColor: Colors.blue[800],
+          //         foregroundColor: Colors.white,
+          //       ),
+          // onPressed: () async {
+          //   final result = await Get.to<FlightSearchResult>(
+          //     () => SearchFlight(
+          //       // frameContext: context,
+          //       isEditor: true,
+          //       // initialTabIndex: ... إذا تحتاج
+          //     ),
+          //     transition: Transition.downToUp,
+          //   );
+          //   if (!mounted || result == null) return;
+          //   // ✅ حدث نفس الصفحة لتصبح "النتائج الجديدة"
+          //   AppVars.apiSessionId = result.apiSessionId;
+          //   // setState(() {
+          //     filterState = const FilterOffersState(); // اختياري: تصفير الفلاتر
+          //     allOffers = result.outbound.map((e) => FlightOfferModel.fromJson(e)).toList();
+          //     offers = List<FlightOfferModel>.from(allOffers);
+          //   // }); 
+          //   await _rebuildOffersFromState(scrollTop: true);
+          //   setState(() {});
+          // },
+          //       label: Text('Edit Search'.tr),
+          //     ),
+          //   ),
+          // ),
+        
+        ),
       ),
     );
   }
@@ -566,9 +827,9 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   if (widget.showBaggage)
                     Row(
                       children: [
-                        Icon(Icons.luggage, size: 20, color: Colors.blue[900]!.withOpacity(0.8)),
+                        Icon(Icons.luggage, size: 20, color: (offer.baggageInfo != null) ? Colors.blue[900]!.withOpacity(0.8) : Colors.red),
                         const SizedBox(width: 0),
-                        Text((offer.baggageInfo ?? 'N/A'.tr).split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text((offer.baggageInfo ?? 'There is no weight'.tr).split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
                       ],
                     ),
                   if (widget.showSeatLeft && widget.showBaggage) const Spacer(),
@@ -587,23 +848,30 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                   children: [
                     if (widget.onBook != null)
                       Expanded(
-                        child: CustomButton(
-                          onPressed: widget.onBook!,
-                          icon: const Icon(Icons.flight_takeoff),
-                          label: Text('Book now'.tr),
+                        child: SizedBox( 
+                          height: 40,
+                          child: CustomButton(
+                            onPressed: widget.onBook!,
+                            icon: const Icon(Icons.flight_takeoff),
+                            label: Text('Book now'.tr),
+                          ),
                         ),
                       ),
                     if (widget.onBook != null && widget.onOtherPrices != null) ...[const SizedBox(width: 8)],
                     if (widget.onOtherPrices != null)
                       Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: cs.secondary,
-                            foregroundColor: Colors.black,
-                          ),
-                          onPressed: widget.onOtherPrices!,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric( vertical: 0),
+                              backgroundColor: cs.secondary,
+                              foregroundColor: Colors.black,
+                            ),
+                            onPressed: widget.onOtherPrices!,
                           icon: const Icon(Icons.attach_money),
                           label: Text('Other Prices'.tr),
+                        ),
                         ),
                       ),
                   ],
@@ -612,10 +880,16 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: widget.onDetails!,
-                  icon: Icon(Icons.info),
-                  label: Text('Details'.tr),
+                child: SizedBox(
+                  height: 40,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric( vertical: 0),
+                    ),
+                    onPressed: widget.onDetails!,
+                    icon: Icon(Icons.info),
+                    label: Text('View flight details'.tr),
+                  ),
                 ),
               ),
             ],
@@ -662,20 +936,16 @@ class _LegRowState extends State<_LegRow> {
   String fromName = '';
   String toName = '';
 
-  @override
-  void initState() {
-    super.initState();
-
-    final from = AirportRepo.searchByCode(widget.leg.fromCode);
-    fromName = from != null ? from.name[AppVars.lang] : widget.leg.fromCode;
-
-    final to = AirportRepo.searchByCode(widget.leg.toCode);
-    toName = to != null ? to.name[AppVars.lang] : widget.leg.toCode;
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final from = AirportRepo.searchByCode(widget.leg.fromCode);
+    fromName = from.name[AppVars.lang];
+
+    final to = AirportRepo.searchByCode(widget.leg.toCode);
+    toName = to.name[AppVars.lang];
 
     final depTimeFull = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.departureDateTime));
     final arrTimeFull = AppFuns.replaceArabicNumbers(widget.timeFormat.format(widget.leg.arrivalDateTime));
@@ -803,6 +1073,7 @@ class _LegRowState extends State<_LegRow> {
                     children: [
                       const SizedBox(width: 12),
                       Container(
+                        margin: const EdgeInsets.only(top: 6),
                         height: 12,
                         width: 12,
                         decoration: BoxDecoration(
@@ -811,7 +1082,10 @@ class _LegRowState extends State<_LegRow> {
                         ),
                       ),
                       Expanded(
-                        child: DividerLine(),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: DividerLine(),
+                        ),
                       ),
                       Transform.flip(
                         flipX: !isArabic,

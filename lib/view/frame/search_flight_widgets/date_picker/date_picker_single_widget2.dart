@@ -10,7 +10,15 @@ enum _PickerMode { day, month }
 
 class DatePickerSingleWidget2 extends StatefulWidget {
   final int index;
-  const DatePickerSingleWidget2({super.key, required this.index});
+
+  /// ✅ مهم لو عندك SearchFlightController بنظام tag
+  final String? controllerTag;
+
+  const DatePickerSingleWidget2({
+    super.key,
+    required this.index,
+    this.controllerTag,
+  });
 
   @override
   State<DatePickerSingleWidget2> createState() => _DatePickerSingleWidget2State();
@@ -24,14 +32,11 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
   late final DateTime _minDay; // اليوم
   late final DateTime _maxDay; // اليوم + 360
 
-  // حالة التقويم
   _PickerMode _mode = _PickerMode.day;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // للسنة في Month Picker
   int _monthPickerYear = DateTime.now().year;
-
   bool _initFromFormDone = false;
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -40,8 +45,9 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
   String _localeTag() {
     final loc = Get.locale;
     if (loc == null) return 'en';
-    if (loc.countryCode == null || loc.countryCode!.isEmpty) return loc.languageCode;
-    return '${loc.languageCode}_${loc.countryCode}';
+    final cc = loc.countryCode;
+    if (cc == null || cc.isEmpty) return loc.languageCode;
+    return '${loc.languageCode}_$cc';
   }
 
   String _monthName(DateTime d) {
@@ -64,7 +70,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
     if (_mode == _PickerMode.month) {
       return _monthPickerYear > _minDay.year;
     }
-    final minMonth = _monthStart(_minDay); // بداية شهر اليوم
+    final minMonth = _monthStart(_minDay);
     return _monthStart(_focusedDay).isAfter(minMonth);
   }
 
@@ -72,7 +78,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
     if (_mode == _PickerMode.month) {
       return _monthPickerYear < _maxDay.year;
     }
-    final maxMonth = _monthStart(_maxDay); // بداية شهر max
+    final maxMonth = _monthStart(_maxDay);
     return _monthStart(_focusedDay).isBefore(maxMonth);
   }
 
@@ -125,6 +131,20 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
   void dispose() {
     tabController.dispose();
     super.dispose();
+  }
+
+  /// ✅ قبل بناء GetBuilder لازم نتأكد أن controller موجود (tag أو default)
+  bool _hasController() {
+    final t = widget.controllerTag;
+    if (t != null && Get.isRegistered<SearchFlightController>(tag: t)) return true;
+    return Get.isRegistered<SearchFlightController>();
+  }
+
+  /// ✅ tag آمن: لو ما هو مسجل لا نمرره
+  String? _safeTag() {
+    final t = widget.controllerTag;
+    if (t != null && Get.isRegistered<SearchFlightController>(tag: t)) return t;
+    return null; // default
   }
 
   Widget _buildBlueHeader() {
@@ -186,9 +206,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
           final month = index + 1;
 
           final enabled = _monthEnabled(_monthPickerYear, month);
-          final selectedMonth =
-              (_focusedDay.year == _monthPickerYear && _focusedDay.month == month);
-
+          final selectedMonth = (_focusedDay.year == _monthPickerYear && _focusedDay.month == month);
           final monthLabel = DateFormat.MMMM(locale).format(DateTime(2020, month, 1));
 
           return InkWell(
@@ -205,7 +223,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
               alignment: Alignment.center,
               decoration: selectedMonth
                   ? BoxDecoration(
-                      border: Border.all(color: cs.primaryFixed, width: 1.6),
+                      border: Border.all(color: cs.primary, width: 1.6),
                       borderRadius: BorderRadius.circular(999),
                     )
                   : null,
@@ -216,7 +234,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
                   fontWeight: FontWeight.w500,
                   color: !enabled
                       ? Colors.grey.shade500
-                      : (selectedMonth ? cs.primaryFixed : cs.primaryFixed),
+                      : (selectedMonth ? cs.primary : cs.onSurface),
                 ),
               ),
             ),
@@ -226,15 +244,18 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
     );
   }
 
-  // ✅ هنا التعديل المهم لحل الخطأ
   Widget _buildDayCalendar({
     required SearchFlightController controller,
     required int i,
   }) {
+    // ✅ حماية من index
+    if (i < 0 || i >= controller.forms.length) {
+      return Center(child: Text("Invalid form index".tr));
+    }
+
     final form = controller.forms[i];
 
-    // ✅ بدلاً من firstDay = اليوم (الذي يسبب المشكلة)
-    // نجعل firstDay بداية الشهر، و lastDay نهاية شهر max
+    // ✅ نجعل firstDay بداية الشهر، و lastDay نهاية شهر max
     final calFirstDay = DateTime(_minDay.year, _minDay.month, 1);
     final calLastDay = DateTime(_maxDay.year, _maxDay.month + 1, 0);
 
@@ -255,8 +276,6 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
 
       daysOfWeekHeight: 40,
       daysOfWeekStyle: DaysOfWeekStyle(
-
-        // ✅ هذا هو الـ Divider بين أسماء الأيام وأرقام الأيام
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -266,21 +285,19 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
           ),
         ),
         dowTextFormatter: (date, locale) => DateFormat.EEEE(locale).format(date),
-        weekdayStyle: TextStyle(color: cs.primaryFixed, fontSize: 14),
-        weekendStyle: TextStyle(color: cs.primaryFixed, fontSize: 14),
+        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 14),
+        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 14),
       ),
 
-      // ✅ منع الماضي/المدى عن طريق predicate
       enabledDayPredicate: _dayEnabled,
-
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
 
       calendarStyle: CalendarStyle(
-        outsideDaysVisible: false, 
+        outsideDaysVisible: false,
         isTodayHighlighted: false,
         disabledTextStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-        defaultTextStyle: TextStyle(color: cs.primaryFixed, fontSize: 16),
-        weekendTextStyle: TextStyle(color: cs.primaryFixed, fontSize: 16),
+        defaultTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
+        weekendTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
 
         selectedDecoration: BoxDecoration(
           color: AppConsts.secondaryColor,
@@ -303,10 +320,16 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
         final picked = _dateOnly(selectedDay);
         if (!_dayEnabled(picked)) return;
 
+        // ✅ حدّث الحالة المحلية أيضًا
+        setState(() {
+          _selectedDay = picked;
+          _focusedDay = focusedDay;
+        });
+
         form.departureDatePickerController.selectedDate = picked;
 
         controller.update(['form-$i']);
-        Get.back(result: 1);
+        Get.back(result: picked);
       },
     );
   }
@@ -315,9 +338,40 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
   Widget build(BuildContext context) {
     final int i = widget.index;
 
+    // ✅ لو ما في Controller مسجل، اعرض صفحة آمنة بدل crash
+    if (!_hasController()) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("Select Date".tr),
+          leading: IconButton(
+            icon: const Icon(CupertinoIcons.clear),
+            onPressed: () => Get.back(),
+          ),
+        ),
+        body: Center(
+          child: Text("Search controller not ready".tr),
+        ),
+      );
+    }
+
     return GetBuilder<SearchFlightController>(
+      tag: _safeTag(),
       id: 'form-$i',
       builder: (controller) {
+        // ✅ حماية من index
+        if (i < 0 || i >= controller.forms.length) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("Select Date".tr),
+              leading: IconButton(
+                icon: const Icon(CupertinoIcons.clear),
+                onPressed: () => Get.back(),
+              ),
+            ),
+            body: Center(child: Text("Invalid form index".tr)),
+          );
+        }
+
         final form = controller.forms[i];
 
         // تهيئة أول مرة من قيمة الفورم (لو محفوظة)

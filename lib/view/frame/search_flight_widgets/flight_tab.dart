@@ -15,16 +15,16 @@ import 'package:alzajeltravel/view/frame/search_flight_widgets/airport_search.da
 import 'package:alzajeltravel/view/frame/search_flight_widgets/swap_widget.dart';
 
 class FlightTab extends StatefulWidget {
-  final BuildContext frameContext;
   final JourneyType tmpJourneyType;
-  const FlightTab({super.key, required this.frameContext, required this.tmpJourneyType});
+  final GlobalKey<FormState> formKey;
+  const FlightTab({super.key, required this.tmpJourneyType, required this.formKey});
 
   @override
   State<FlightTab> createState() => _FlightTabState();
 }
 
 class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixin {
-  final SearchFlightController searchFlightController = Get.find();
+  late SearchFlightController searchFlightController;
   late ScrollController scrollController;
 
   // مهم: احفظ الحالة بين التبويبات
@@ -34,6 +34,7 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
   @override
   void initState() {
     super.initState();
+    searchFlightController = Get.find<SearchFlightController>();
     if (widget.tmpJourneyType == JourneyType.roundTrip) {
       scrollController = searchFlightController.roundTripScrollController;
     } else if (widget.tmpJourneyType == JourneyType.oneWay) {
@@ -65,7 +66,7 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                   children: [
                     if (widget.tmpJourneyType == JourneyType.multiCity)
                       Form(
-                        key: controller.multiCityFormKey,
+                        key: widget.formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -158,7 +159,7 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
 
                     if (widget.tmpJourneyType == JourneyType.roundTrip || widget.tmpJourneyType == JourneyType.oneWay)
                       Form(
-                        key: (widget.tmpJourneyType == JourneyType.oneWay) ? controller.oneWayFormKey : controller.roundTripFormKey,
+                        key: widget.formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -212,7 +213,8 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
                   readOnly: true,
                   onTap: () async { 
                     await showModalBottomSheet(
-                      context: widget.frameContext,
+                      context: context,
+                      useRootNavigator: true,
                       isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
                       // backgroundColor: Colors.white,
                       backgroundColor: cs.surface,
@@ -244,7 +246,8 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
                   readOnly: true,
                   onTap: () async { 
                     await showModalBottomSheet(
-                      context: widget.frameContext,
+                      context: context,
+                      useRootNavigator: true,
                       isScrollControlled: true, // يسمح أن تكون القائمة طويلة أو قابلة للتمرير
                       // backgroundColor: Colors.white,
                       backgroundColor: cs.surface,
@@ -375,7 +378,10 @@ class DepartureWidget extends StatelessWidget {
                       children: [
                         IgnorePointer(ignoring: true, child: Container(width: 75, color: Colors.transparent)),
                         // مرّر الفهرس بدلاً من كائن Controller
-                        SwapWidget(index: index),
+                        SwapWidget(
+                          isSwapped: form.isSwappedIcon,
+                          onTap: () => controller.swapCities(index),
+                        ),
                       ],
                     ),
                   ),
@@ -395,7 +401,7 @@ class DepartureWidget extends StatelessWidget {
                       child: TextFormField(
                         onTap: () async {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
-                          await Get.to(() => DatePickerRangeWidget2(index: index), transition: Transition.downToUp);
+                          await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 0), transition: Transition.downToUp);
                           await controller.setTxtDepartureDates(index);
                         },
                         readOnly: true,

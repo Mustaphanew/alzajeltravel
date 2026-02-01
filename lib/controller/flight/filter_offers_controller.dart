@@ -13,6 +13,45 @@ enum SortOffersOption {
   travelTimeHigh,
 }
 
+
+enum OfferQuickOption {
+  none,
+
+  // sort
+  priceLow,
+  travelTimeLow,
+
+  // stops
+  stops0,
+  stops1,
+  stops2,
+}
+
+extension OfferQuickOptionX on OfferQuickOption {
+  String get label {
+    switch (this) {
+      case OfferQuickOption.none:
+        return 'No selection';
+
+      case OfferQuickOption.priceLow:
+        return FilterOffersController.sortLabel(SortOffersOption.priceLow);
+
+      case OfferQuickOption.travelTimeLow:
+        return FilterOffersController.sortLabel(SortOffersOption.travelTimeLow);
+
+      case OfferQuickOption.stops0:
+        return 'Non-stop';
+
+      case OfferQuickOption.stops1:
+        return '1 stop';
+
+      case OfferQuickOption.stops2:
+        return '2+ stops';
+    }
+  }
+}
+
+
 class FilterOffersState {
   final Set<int> stops; // 0,1,2 (2 = 2+)
   final Set<String> airlineCodes;
@@ -106,6 +145,9 @@ class FilterOffersController extends GetxController {
   final List<FlightOfferModel> originalOffers;
   final FilterOffersState initialState;
 
+  // available stops in current search results: 0,1,2 (2 = 2+)
+  late final List<int> availableStops;
+
   FilterOffersController({
     required this.originalOffers,
     required this.initialState,
@@ -162,6 +204,9 @@ class FilterOffersController extends GetxController {
     final travelBounds = _calcTravelBounds(originalOffers);
     minTravelMinutes = travelBounds.$1;
     maxTravelMinutes = travelBounds.$2;
+
+    // available stops in current search results: 0,1,2 (2 = 2+)
+    availableStops = _extractStops(originalOffers);
 
     // safe max for sliders (avoid min==max issues)
     sliderPriceMax = (maxPrice <= minPrice) ? (minPrice + 1) : maxPrice;
@@ -519,6 +564,21 @@ class FilterOffersController extends GetxController {
     }
     final list = set.toList();
     list.sort();
+    return list;
+  }
+
+  static List<int> _extractStops(List<FlightOfferModel> offers) {
+    final set = <int>{};
+
+    for (final o in offers) {
+      for (final leg in o.legs) {
+        final s = leg.stops;
+        final normalized = s >= 2 ? 2 : s;
+        set.add(normalized);
+      }
+    }
+
+    final list = set.toList()..sort(); // 0,1,2
     return list;
   }
 

@@ -134,7 +134,7 @@ class _MyAppState extends State<MyApp> {
             ),
             GetPage(
               name: Routes.searchFlight.path,
-              page: () => SearchFlight(frameContext: context),
+              page: () => SearchFlight(),
             ),
             GetPage(
               name: Routes.passportForms.path,
@@ -178,4 +178,5 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
+
 }

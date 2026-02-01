@@ -1,10 +1,10 @@
+// search_flight_controller.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-// import 'package:loader_overlay/loader_overlay.dart';
+
 import 'package:alzajeltravel/controller/class_type_controller.dart';
 import 'package:alzajeltravel/controller/travelers_controller.dart';
 import 'package:alzajeltravel/model/class_type_model.dart';
@@ -14,16 +14,17 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
-// import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 
 class SimpleDatePickerController {
   DateTime? selectedDate;
-
   SimpleDatePickerController({this.selectedDate});
 }
 
 class SearchFlightForm {
-  TextEditingController txtFrom = TextEditingController();
+  final TextEditingController txtFrom = TextEditingController();
   AirportModel? fromLocation;
 
   final TextEditingController txtTo = TextEditingController();
@@ -33,11 +34,8 @@ class SearchFlightForm {
   final TextEditingController txtDepartureDate = TextEditingController();
   final TextEditingController txtReturnDate = TextEditingController();
 
-  final SimpleDatePickerController departureDatePickerController =
-      SimpleDatePickerController();
-  final SimpleDatePickerController returnDatePickerController =
-      SimpleDatePickerController();
-
+  final SimpleDatePickerController departureDatePickerController = SimpleDatePickerController();
+  final SimpleDatePickerController returnDatePickerController = SimpleDatePickerController();
 
   bool isSwappedIcon = false;
 
@@ -46,193 +44,265 @@ class SearchFlightForm {
     txtTo.dispose();
     txtDepartureDates.dispose();
     txtDepartureDate.dispose();
-    // لا يوجد dispose للـ DateRangePickerController
+    txtReturnDate.dispose();
   }
 }
 
 class SearchFlightController extends GetxController {
-  ClassTypeController classTypeController = Get.put(ClassTypeController());
-  TravelersController travelersController = Get.put(TravelersController());
+  final ClassTypeController classTypeController = Get.put(ClassTypeController());
+  final TravelersController travelersController = Get.put(TravelersController());
+
   JourneyType journeyType = JourneyType.oneWay;
-  ScrollController roundTripScrollController = ScrollController();
-  ScrollController oneWayScrollController = ScrollController();
-  ScrollController multiCityScrollController = ScrollController();
 
+  final ScrollController roundTripScrollController = ScrollController();
+  final ScrollController oneWayScrollController = ScrollController();
+  final ScrollController multiCityScrollController = ScrollController();
 
-  TextEditingController txtClassType = TextEditingController(); 
-  TextEditingController txtTravelers = TextEditingController();
+  final TextEditingController txtClassType = TextEditingController();
+  final TextEditingController txtTravelers = TextEditingController();
+  final TextEditingController txtTravelersAndClassType = TextEditingController();
 
-  TextEditingController txtTravelersAndClassType = TextEditingController();
-
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-  final oneWayFormKey = GlobalKey<FormState>();
-  final roundTripFormKey = GlobalKey<FormState>();
-  final multiCityFormKey = GlobalKey<FormState>();
-
-  final maxFlightsForms = 5;
-  final forms = <SearchFlightForm>[];
+  final int maxFlightsForms = 5;
+  final List<SearchFlightForm> forms = <SearchFlightForm>[];
 
   @override
   void onInit() {
-    forms.addAll([SearchFlightForm(), SearchFlightForm(), SearchFlightForm()]);
     super.onInit();
+    // دائمًا جهّز الأقل Form واحد
+    if (forms.isEmpty) {
+      forms.add(SearchFlightForm());
+    }
+    // لو multiCity تحتاج أكثر، خليها عندك كما تحب
+  }
+
+void safeUpdate([List<Object>? ids]) {
+  final phase = SchedulerBinding.instance.schedulerPhase;
+
+  // أثناء build/layout/paint
+  final inBuildPhase = phase == SchedulerPhase.persistentCallbacks ||
+      phase == SchedulerPhase.midFrameMicrotasks;
+
+  if (inBuildPhase) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!isClosed) update(ids);
+    });
+  } else {
+    update(ids);
+  }
+}
+
+  void ensureMultiCityForms({int minCount = 3}) {
+    while (forms.length < minCount) {
+      forms.add(SearchFlightForm());
+    }
+    safeUpdate();
   }
 
   void addForm() {
     if (forms.length < maxFlightsForms) {
       forms.add(SearchFlightForm());
-      update();
+      safeUpdate();
     }
   }
 
   void removeForm(int index) {
+    if (index < 0 || index >= forms.length) return;
+    forms[index].dispose();
     forms.removeAt(index);
-    update();
+    safeUpdate();
   }
 
-  void swapCities(int index) {
-    final form = forms[index];
-
-    // قلّب الأيقونة
-    form.isSwappedIcon = !form.isSwappedIcon;
-
-    // سواب للمدن + تحديث النصوص
-    final tmp = form.fromLocation;
-    form.fromLocation = form.toLocation;
-    form.toLocation = tmp;
-
-    form.txtFrom.text = form.fromLocation == null
-        ? ''
-        : "${form.fromLocation!.name} - ${form.fromLocation!.code}";
-    form.txtTo.text = form.toLocation == null
-        ? ''
-        : "${form.toLocation!.name} - ${form.toLocation!.code}";
-
-    update(['form-$index']); // تحديث جزئي لهذا العنصر فقط
-  }
-
-  Future<void> setTxtDepartureDates(int index) async {
-    final form = forms[index];
-
-    String formattedLeavingDate = "";
-    String formattedGoingDate = "";
-
-    if (form.departureDatePickerController.selectedDate != null) {
-      final leavingDate = form.departureDatePickerController.selectedDate!;
-      formattedLeavingDate = Jiffy.parseFromDateTime(
-        leavingDate,
-      ).format(pattern: 'EEEE, d - MMMM - y');
-    }
-
-    if (form.returnDatePickerController.selectedDate != null &&
-        form.departureDatePickerController.selectedDate != null) {
-      if (form.returnDatePickerController.selectedDate!.compareTo(
-            form.departureDatePickerController.selectedDate!,
-          ) >=
-          0) {
-        final goingDate = form.returnDatePickerController.selectedDate!;
-        formattedGoingDate = Jiffy.parseFromDateTime(
-          goingDate,
-        ).format(pattern: 'EEEE, d - MMMM - y');
-      } else {
-        form.returnDatePickerController.selectedDate = null;
-      }
-    }
-
-    form.txtDepartureDates.text = AppFuns.replaceArabicNumbers(
-      "$formattedLeavingDate ⇄ $formattedGoingDate",
-    );
-    form.txtDepartureDate.text = AppFuns.replaceArabicNumbers(
-      formattedLeavingDate,
-    );
-    form.txtReturnDate.text = AppFuns.replaceArabicNumbers(
-      formattedGoingDate,
-    );
-
-    update(['form-$index']); // حدّث فقط ويدجت هذا السيجمنت
-  }
-
-  @override
-  void onClose() {
-    for (final form in forms) {
-      form.dispose();
-    }
-    txtTravelersAndClassType.dispose();
-    super.onClose();
-  }
-
-  changeJourneyType(int tabIndex) {
+  void changeJourneyType(int tabIndex) {
     if (tabIndex == 0) {
       journeyType = JourneyType.oneWay;
     } else if (tabIndex == 1) {
       journeyType = JourneyType.roundTrip;
     } else if (tabIndex == 2) {
       journeyType = JourneyType.multiCity;
+      ensureMultiCityForms(minCount: 3);
     }
-    update();
+    safeUpdate();
   }
 
-  setTxtTravelersAndClassType() async {
-    ClassTypeModel? classType;
-    if (classTypeController.selectedClassType == null) {
-      classType = await classTypeController.setDefaultClassType();
-    } else {
-      classType = classTypeController.selectedClassType;
+  void swapCities(int index) {
+    if (index < 0 || index >= forms.length) return;
+    final form = forms[index];
+
+    form.isSwappedIcon = !form.isSwappedIcon;
+
+    final tmp = form.fromLocation;
+    form.fromLocation = form.toLocation;
+    form.toLocation = tmp;
+
+    form.txtFrom.text = form.fromLocation == null
+        ? ''
+        : "${form.fromLocation!.name[AppVars.lang]} - ${form.fromLocation!.code}";
+    form.txtTo.text = form.toLocation == null
+        ? ''
+        : "${form.toLocation!.name[AppVars.lang]} - ${form.toLocation!.code}";
+
+    safeUpdate(['form-$index']);
+  }
+
+  Future<void> setTxtDepartureDates(int index) async {
+    if (index < 0 || index >= forms.length) return;
+    final form = forms[index];
+
+    String formattedLeavingDate = "";
+    String formattedGoingDate = "";
+
+    final leaving = form.departureDatePickerController.selectedDate;
+    final going = form.returnDatePickerController.selectedDate;
+
+    if (leaving != null) {
+      formattedLeavingDate = Jiffy.parseFromDateTime(leaving).format(pattern: 'EEEE, d - MMMM - y');
     }
-    int adults = travelersController.adultsCounter;
-    int children = travelersController.childrenCounter;
-    int infantsInSeat = travelersController.infantsInSeatCounter;
-    int infantsInLap = travelersController.infantsInLapCounter;
-    int travelers = adults + children + infantsInSeat + infantsInLap;
+
+    if (going != null && leaving != null) {
+      if (going.compareTo(leaving) >= 0) {
+        formattedGoingDate = Jiffy.parseFromDateTime(going).format(pattern: 'EEEE, d - MMMM - y');
+      } else {
+        form.returnDatePickerController.selectedDate = null;
+      }
+    }
+
+    form.txtDepartureDates.text = AppFuns.replaceArabicNumbers("$formattedLeavingDate ⇄ $formattedGoingDate");
+    form.txtDepartureDate.text = AppFuns.replaceArabicNumbers(formattedLeavingDate);
+    form.txtReturnDate.text = AppFuns.replaceArabicNumbers(formattedGoingDate);
+
+    safeUpdate(['form-$index']);
+  }
+
+  Future<void> setTxtTravelersAndClassType() async {
+    ClassTypeModel? classType = classTypeController.selectedClassType;
+    classType ??= await classTypeController.setDefaultClassType();
+
+    final adults = travelersController.adultsCounter;
+    final children = travelersController.childrenCounter;
+    final infantsInSeat = travelersController.infantsInSeatCounter;
+    final infantsInLap = travelersController.infantsInLapCounter;
+
+    final travelers = adults + children + infantsInSeat + infantsInLap;
+
     if (classType != null) {
       txtClassType.text = classType.name[AppVars.lang];
-      txtTravelers.text = "$travelers ${(travelers > 1)? 'Travelers'.tr: 'Traveler'.tr}";
-      txtTravelersAndClassType.text = "$travelers ${(travelers > 1)? 'Travelers'.tr: 'Traveler'.tr}, ${classType.name[AppVars.lang]}";
+      txtTravelers.text = "$travelers ${(travelers > 1) ? 'Travelers'.tr : 'Traveler'.tr}";
+      txtTravelersAndClassType.text =
+          "$travelers ${(travelers > 1) ? 'Travelers'.tr : 'Traveler'.tr}, ${classType.name[AppVars.lang]}";
     }
-    update(); 
+    safeUpdate();
   }
 
   bool isRequesting = false;
-  Future requestServer(BuildContext context) async {
-    AppVars.apiSessionId = null;
-    context.loaderOverlay.show();
-    isRequesting = true;
-    update();
-    List? data;
-    
-    final DateTime? departureDate = forms[0].departureDatePickerController.selectedDate;
-    final String formattedDepartureDate = DateFormat('yyyy-MM-dd', 'en').format(departureDate!);
-    final DateTime? returnDate = forms[0].returnDatePickerController.selectedDate;
-    final String? formattedReturnDate = returnDate == null ? null : DateFormat('yyyy-MM-dd', 'en').format(returnDate);
+
+
+
+Future<FlightSearchResult?> requestServer(BuildContext context) async {
+  if (forms.isEmpty) {
+    Get.snackbar("Error".tr, "No form data".tr, snackPosition: SnackPosition.BOTTOM);
+    return null;
+  }
+
+  final f0 = forms[0];
+
+  if (f0.fromLocation == null || f0.toLocation == null) {
+    Get.snackbar("Error".tr, "Please select airports".tr, snackPosition: SnackPosition.BOTTOM);
+    return null;
+  }
+
+  final departureDate = f0.departureDatePickerController.selectedDate;
+  if (departureDate == null) {
+    Get.snackbar("Error".tr, "Please select departure date".tr, snackPosition: SnackPosition.BOTTOM);
+    return null;
+  }
+
+  if (journeyType == JourneyType.roundTrip &&
+      f0.returnDatePickerController.selectedDate == null) {
+    Get.snackbar("Error".tr, "Please select return date".tr, snackPosition: SnackPosition.BOTTOM);
+    return null;
+  }
+
+  // Cabin
+  if (classTypeController.selectedClassType?.code == null) {
+    await setTxtTravelersAndClassType();
+  }
+
+  AppVars.apiSessionId = null;
+
+  context.loaderOverlay.show();
+  isRequesting = true;
+  safeUpdate();
+
+  try {
+    final formattedDepartureDate = DateFormat('yyyy-MM-dd', 'en').format(departureDate);
+
+    final returnDate = f0.returnDatePickerController.selectedDate;
+    final formattedReturnDate = returnDate == null
+        ? null
+        : DateFormat('yyyy-MM-dd', 'en').format(returnDate);
+
     final response = await AppVars.api.post(
       AppApis.searchFlight,
       params: {
-        "from": forms[0].fromLocation!.code,
-        "to": forms[0].toLocation!.code,
+        "from": f0.fromLocation!.code,
+        "to": f0.toLocation!.code,
         "departure_date": formattedDepartureDate,
         "return_date": formattedReturnDate,
-        'journey_type': journeyType.apiValue,
+        "journey_type": journeyType.apiValue,
         "adt": travelersController.adultsCounter,
         "chd": travelersController.childrenCounter,
         "inf": travelersController.infantsInLapCounter,
-        "cabin": classTypeController.selectedClassType!.code,
+        "cabin": classTypeController.selectedClassType?.code ?? "",
         "nonstop": "0",
-      }
+      },
     );
-    if(response != null) {
-      AppVars.apiSessionId = response['api_session_id'];
-      data = response['outbound'];
-      Get.to(() => FlightOffersList(flightOffers: data!));
-    } else {
-      Get.snackbar("Error", "Failed to search flights", snackPosition: SnackPosition.BOTTOM);
+
+    if (response == null) {
+      Get.snackbar("Error".tr, "Failed to search flights".tr, snackPosition: SnackPosition.BOTTOM);
+      return null;
     }
-    print("data ${AppApis.searchFlight}: $data");
-    print("apiSessionId: ${AppVars.apiSessionId}");
-    
+
+    AppVars.apiSessionId = response['api_session_id'];
+    final outbound = (response['outbound'] as List?) ?? const [];
+
+    return FlightSearchResult(
+      apiSessionId: AppVars.apiSessionId,
+      outbound: outbound,
+    );
+  } finally {
     isRequesting = false;
-    update();
+    safeUpdate();
     if (context.mounted) context.loaderOverlay.hide();
   }
-  
+}
+
+
+
+
+  @override
+  void onClose() {
+    for (final f in forms) {
+      f.dispose();
+    }
+    txtClassType.dispose();
+    txtTravelers.dispose();
+    txtTravelersAndClassType.dispose();
+
+    roundTripScrollController.dispose();
+    oneWayScrollController.dispose();
+    multiCityScrollController.dispose();
+
+    super.onClose();
+  }
+
+}
+
+class FlightSearchResult {
+  final String? apiSessionId;
+  final List<dynamic> outbound;
+
+  const FlightSearchResult({
+    required this.outbound,
+    required this.apiSessionId,
+  });
 }

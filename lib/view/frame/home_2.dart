@@ -73,7 +73,17 @@ class _Home2State extends State<Home2> {
         actions: [
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),
-            child: IconButton(onPressed: () {}, icon: SvgPicture.asset(AppConsts.logo3, width: 38)),
+            child: IconButton(
+              onPressed: () async {
+                context.loaderOverlay.show();
+                await Future.delayed(const Duration(seconds: 10));
+                context.loaderOverlay.hide();
+              }, 
+              icon: SvgPicture.asset(
+                (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,
+                 width: 38,
+              ),
+            ),
           ),
         ],
       ),
