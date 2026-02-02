@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
 import 'package:alzajeltravel/controller/flight/other_prices_controller.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
+import 'package:alzajeltravel/model/flight/flight_search_params.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/enums.dart';
@@ -32,8 +33,9 @@ import 'package:alzajeltravel/view/frame/flights/flight_detail/more_flight_detai
 
 class FlightOffersList extends StatefulWidget {
   final List<dynamic> flightOffers;
+  final FlightSearchParams searchInputs;
 
-  const FlightOffersList({super.key, required this.flightOffers});
+  const FlightOffersList({super.key, required this.flightOffers, required this.searchInputs});
 
   @override
   State<FlightOffersList> createState() => _FlightOffersListState();
@@ -50,9 +52,13 @@ class _FlightOffersListState extends State<FlightOffersList> {
   late List<FlightOfferModel> allOffers;
   List<FlightOfferModel> offers = [];
 
+  late FlightSearchParams searchInputs;
+
   @override
   void initState() {
     super.initState();
+
+    searchInputs = widget.searchInputs;
 
     detailCtrl = Get.put(FlightDetailApiController(), );
     otherPricesCtrl = Get.put(OtherPricesController(),);
@@ -322,150 +328,169 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
         child: Scaffold(
           appBar: AppBar(
             // title: Text('${'Flight Offers'.tr} (${offers.length})'),
+            titleSpacing: 0,
             title: Row(
               children: [
 
 
                 Expanded(
-  child: SizedBox(
-    height: 45,
-    child: DropdownButtonFormField<OfferQuickOption>(
-      initialValue: _quickOptionFromState(filterState),
-      icon: SizedBox.shrink(),
-      iconSize: 0,
-      isDense: true,
-      decoration: InputDecoration(
-        hintText: 'Select option'.tr,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        isDense: true,
-      ),
-      items: <DropdownMenuItem<OfferQuickOption>>[
-        DropdownMenuItem(
-          value: OfferQuickOption.none,
-          child: Text('No selection'.tr, style: TextStyle(fontSize: AppConsts.normal)),
-        ),
-    
-        // sort options (فقط المطلوبين)
-        DropdownMenuItem(
-          value: OfferQuickOption.priceLow,
-          child: Text(OfferQuickOption.priceLow.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
-        ),
-        DropdownMenuItem(
-          value: OfferQuickOption.travelTimeLow,
-          child: Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
-        ),
-    
-        // stops options (ديناميكي حسب نتائج allOffers)
-        if (availableStops.contains(0))
-          DropdownMenuItem(
-            value: OfferQuickOption.stops0,
-            child: Text(OfferQuickOption.stops0.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
-          ),
-        if (availableStops.contains(1))
-          DropdownMenuItem(
-            value: OfferQuickOption.stops1,
-            child: Text(OfferQuickOption.stops1.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
-          ),
-        if (availableStops.contains(2))
-          DropdownMenuItem(
-            value: OfferQuickOption.stops2,
-            child: Text(OfferQuickOption.stops2.label.tr, style: TextStyle(fontSize: AppConsts.normal)),
-          ),
-      ],
-      onChanged: (v) async {
-        if (v == null) return;
-    
-        setState(() {
-          switch (v) {
-            case OfferQuickOption.none:
-              // لا شيء: امسح sort + امسح stops (no filter)
-              filterState = filterState.copyWith(
-                stops: <int>{},
-                sort: null,
-                setSortNull: true,
-              );
-              break;
-    
-            case OfferQuickOption.priceLow:
-              // sort فقط + امسح stops
-              filterState = filterState.copyWith(
-                stops: <int>{},
-                sort: SortOffersOption.priceLow,
-              );
-              break;
-    
-            case OfferQuickOption.travelTimeLow:
-              // sort فقط + امسح stops
-              filterState = filterState.copyWith(
-                stops: <int>{},
-                sort: SortOffersOption.travelTimeLow,
-              );
-              break;
-    
-            case OfferQuickOption.stops0:
-              // stops فقط + امسح sort
-              filterState = filterState.copyWith(
-                stops: <int>{0},
-                sort: null,
-                setSortNull: true,
-              );
-              break;
-    
-            case OfferQuickOption.stops1:
-              filterState = filterState.copyWith(
-                stops: <int>{1},
-                sort: null,
-                setSortNull: true,
-              );
-              break;
-    
-            case OfferQuickOption.stops2:
-              filterState = filterState.copyWith(
-                stops: <int>{2},
-                sort: null,
-                setSortNull: true,
-              );
-              break;
-          }
-        });
-    
-        await _rebuildOffersFromState(scrollTop: true);
-      },
-    ),
-  ),
-),
+                  child: Container(
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
+                    height: 40,
+                    child: DropdownButtonFormField<OfferQuickOption>(
+                      initialValue: _quickOptionFromState(filterState),
+                      icon: SizedBox.shrink(),
+                      iconSize: 0,
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      isDense: true,
+                      style: TextStyle(
+                        fontFamily: AppConsts.font,
+                        color: cs.primaryFixed,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsetsDirectional.only(start: 8),
+                        filled: false,
+                        hintText: 'Select option'.tr,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        isDense: true,
+                      ),
+                      items: <DropdownMenuItem<OfferQuickOption>>[
+                        DropdownMenuItem(
+                          value: OfferQuickOption.none,
+                          child: Text(
+                            'Smart filtering'.tr + " ...", 
+                            style: TextStyle(
+                              fontSize: AppConsts.lg,
+                              color: cs.tertiary
+                            ),
+                          ),
+                        ),
+                    
+                        // sort options (فقط المطلوبين)
+                        DropdownMenuItem(
+                          value: OfferQuickOption.priceLow,
+                          child: Text(OfferQuickOption.priceLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                        ),
+                        DropdownMenuItem(
+                          value: OfferQuickOption.travelTimeLow,
+                          child: Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                        ),
+                    
+                        // stops options (ديناميكي حسب نتائج allOffers)
+                        if (availableStops.contains(0))
+                          DropdownMenuItem(
+                            value: OfferQuickOption.stops0,
+                            child: Text(OfferQuickOption.stops0.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          ),
+                        if (availableStops.contains(1))
+                          DropdownMenuItem(
+                            value: OfferQuickOption.stops1,
+                            child: Text(OfferQuickOption.stops1.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          ),
+                        if (availableStops.contains(2))
+                          DropdownMenuItem(
+                            value: OfferQuickOption.stops2,
+                            child: Text(OfferQuickOption.stops2.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          ),
+                      ],
+                      onChanged: (v) async {
+                        if (v == null) return;
+                    
+                        setState(() {
+                          switch (v) {
+                            case OfferQuickOption.none:
+                              // لا شيء: امسح sort + امسح stops (no filter)
+                              filterState = filterState.copyWith(
+                                stops: <int>{},
+                                sort: null,
+                                setSortNull: true,
+                              );
+                              break;
+                    
+                            case OfferQuickOption.priceLow:
+                              // sort فقط + امسح stops
+                              filterState = filterState.copyWith(
+                                stops: <int>{},
+                                sort: SortOffersOption.priceLow,
+                              );
+                              break;
+                    
+                            case OfferQuickOption.travelTimeLow:
+                              // sort فقط + امسح stops
+                              filterState = filterState.copyWith(
+                                stops: <int>{},
+                                sort: SortOffersOption.travelTimeLow,
+                              );
+                              break;
+                    
+                            case OfferQuickOption.stops0:
+                              // stops فقط + امسح sort
+                              filterState = filterState.copyWith(
+                                stops: <int>{0},
+                                sort: null,
+                                setSortNull: true,
+                              );
+                              break;
+                    
+                            case OfferQuickOption.stops1:
+                              filterState = filterState.copyWith(
+                                stops: <int>{1},
+                                sort: null,
+                                setSortNull: true,
+                              );
+                              break;
+                    
+                            case OfferQuickOption.stops2:
+                              filterState = filterState.copyWith(
+                                stops: <int>{2},
+                                sort: null,
+                                setSortNull: true,
+                              );
+                              break;
+                          }
+                        });
+                    
+                        await _rebuildOffersFromState(scrollTop: true);
+                      },
+                    ),
+                  ),
+                ),
 
 
 
-            SizedBox(width: 12),
+                SizedBox(width: 8),
 
               
               ],
             ),
             actions: [
-              OutlinedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-                icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(
-                  'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
-                  style: TextStyle(fontSize: AppConsts.lg),
-                ),
-                onPressed: () async {
-                  try {
-                    final result = await Get.to<FilterOffersResult>(
-                      () => FilterOffersPage(offers: allOffers, state: filterState),
-                    );
-        
-                    if (result != null) {
-                      filterState = result.state;
-                      await _rebuildOffersFromState(scrollTop: true);
+              SizedBox(
+                height: 40,
+                child: OutlinedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.filter_alt_outlined),
+                  label: Text(
+                    'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
+                    style: TextStyle(fontSize: AppConsts.lg),
+                  ),
+                  onPressed: () async {
+                    try {
+                      final result = await Get.to<FilterOffersResult>(
+                        () => FilterOffersPage(offers: allOffers, state: filterState),
+                      );
+                        
+                      if (result != null) {
+                        filterState = result.state;
+                        await _rebuildOffersFromState(scrollTop: true);
+                      }
+                    } catch (e) {
+                      Get.snackbar('Error'.tr, e.toString());
                     }
-                  } catch (e) {
-                    Get.snackbar('Error'.tr, e.toString());
-                  }
-                },
+                  },
+                ),
               ),
               const SizedBox(width: 12),
             ],
@@ -476,7 +501,7 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
 
                        // ===== Sort dropdown (same value synced with FilterOffersPage) =====
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
@@ -490,15 +515,14 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                   // edit search ______________
                   Expanded(
                     child: Container(
-                      // height: 40,
+                      height: 55,
                       // padding: EdgeInsetsDirectional.only(end: 12),
-                      child: ElevatedButton.icon( 
-                        icon: const Icon(Icons.edit),
+                      child: ElevatedButton( 
                         style: ElevatedButton.styleFrom(
                           padding:  EdgeInsets.symmetric(horizontal: 12),
-                          // shape: const RoundedRectangleBorder(
-                          //   borderRadius: BorderRadius.zero,
-                          // ),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
                           backgroundColor: Colors.blue[800],
                           foregroundColor: Colors.white,
                         ),
@@ -515,6 +539,7 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                           // ✅ حدث نفس الصفحة لتصبح "النتائج الجديدة"
                           AppVars.apiSessionId = result.apiSessionId;
                           // setState(() {
+                            searchInputs = result.params;
                             filterState = const FilterOffersState(); // اختياري: تصفير الفلاتر
                             allOffers = result.outbound.map((e) => FlightOfferModel.fromJson(e)).toList();
                             offers = List<FlightOfferModel>.from(allOffers);
@@ -522,7 +547,57 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                           await _rebuildOffersFromState(scrollTop: true);
                           setState(() {});
                         },
-                        label: Text('Edit Search'.tr),
+                        
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] + " (${searchInputs.from})",
+                                    textAlign: TextAlign.end,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                if(searchInputs.journeyEnum == JourneyType.oneWay)
+                                  Icon(Icons.arrow_forward), 
+                                if(searchInputs.journeyEnum == JourneyType.roundTrip)
+                                  Icon(Icons.sync_alt), 
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    AirportRepo.searchByCode(searchInputs.to).name[AppVars.lang] + " (${searchInputs.to})",
+                                    textAlign: TextAlign.start,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontFamily: AppConsts.font,
+                                  fontSize: 12,
+                                ),
+                                children: [
+                                  TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
+                                  if(searchInputs.chd > 0)
+                                    TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
+                                  if(searchInputs.inf > 0)
+                                    TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
+                                  TextSpan(text: " (${AppFuns.cabinNameFromBookingClass(searchInputs.cabin)})"),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+
                       ),
                     ),
                   ),
@@ -539,7 +614,7 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                       child: CupertinoScrollbar(
                         controller: scrollController,
                         child: ListView.separated(
-                          // padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 4),
+                          padding: EdgeInsets.only(top: 8),
                           controller: scrollController,
                           itemCount: offers.length,
                           separatorBuilder: (_, __) => const SizedBox.shrink(),
@@ -809,39 +884,58 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                 ),
               ],
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              const Divider(),
+              const SizedBox(height: 6),
 
               Row(
                 children: [
                   if (widget.showSeatLeft)
-                    Row(
-                      children: [
-                        const Icon(Icons.event_seat, size: 20,),
-                        const SizedBox(width: 0),
-                        Text(
-                          '${offer.seatsRemaining} ${'Seats left'.tr}', style: theme.textTheme.bodySmall!.copyWith(
-                            fontSize: 14, color: Colors.red[800], fontWeight: FontWeight.w600)),
-                      ],
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.event_seat, size: 18,),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${offer.seatsRemaining} ${'Seats left'.tr}', style: theme.textTheme.bodySmall!.copyWith(
+                              fontSize: 12, color: Colors.red[800], fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
-                  const Spacer(),
+                  // const Spacer(),
                   if (widget.showBaggage)
-                    Row(
-                      children: [
-                        Icon(Icons.luggage, size: 20, color: (offer.baggageInfo != null) ? Colors.blue[900]!.withOpacity(0.8) : Colors.red),
-                        const SizedBox(width: 0),
-                        Text((offer.baggageInfo ?? 'There is no weight'.tr).split(',').first, style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
-                      ],
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.luggage, size: 18, color: (offer.baggageInfo != null) ? Colors.blue[900]!.withOpacity(0.8) : Colors.red),
+                          const SizedBox(width: 2),
+                          Text(
+                            (offer.baggageInfo ?? 'N/A'.tr).split(',').first, 
+                            style: theme.textTheme.bodySmall!.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: (offer.baggageInfo == null) ? Colors.red : cs.primaryFixed,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  if (widget.showSeatLeft && widget.showBaggage) const Spacer(),
-                  Text(
-                    (offer.cabinClassText.replaceAll("Standard", "").trim()).tr, 
-                    style: theme.textTheme.bodySmall!.copyWith(
-                      fontSize: 14, fontWeight: FontWeight.w600),
+                  if (widget.showSeatLeft && widget.showBaggage) 
+                    // const Spacer(),
+                  Expanded(
+                    child: Text(
+                      (offer.cabinClassText.replaceAll("Standard", "").trim()).tr, 
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodySmall!.copyWith(
+                        fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
               if (widget.onBook != null || widget.onOtherPrices != null)
                 Row(

@@ -210,19 +210,20 @@ void initState() {
 
 
                     return CustomButton(
-onPressed: (ctrl.isRequesting) ? null : () async {
-  // validate form كما عندك...
-  final result = await ctrl.requestServer(context);
-  if (result == null) return;
+                      onPressed: (ctrl.isRequesting) ? null : () async {
+                        // validate form كما عندك...
+                        final FlightSearchResult? result = await ctrl.requestServer(context);
+                        if (result == null) return;
 
-  if (widget.isEditor) {
-    // ✅ أغلق صفحة Edit ورجّع البيانات للـ FlightOffersList
-    Get.back(result: result);
-  } else {
-    // ✅ بحث عادي: افتح صفحة النتائج
-    Get.to(() => FlightOffersList(flightOffers: result.outbound));
-  }
-},
+                        if (widget.isEditor) {
+                          // ✅ أغلق صفحة Edit ورجّع البيانات للـ FlightOffersList
+                          Get.back(result: result);
+                        } else {
+                          // ✅ بحث عادي: افتح صفحة النتائج
+                          Get.to(() => FlightOffersList(flightOffers: result.outbound, searchInputs: result.params));
+                        }
+                      },
+
                       label: ctrl.isRequesting
                           ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
                           : Text("Search Flight".tr),

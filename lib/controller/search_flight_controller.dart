@@ -1,4 +1,5 @@
 // search_flight_controller.dart
+import 'package:alzajeltravel/model/flight/flight_search_params.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -241,20 +242,22 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
         ? null
         : DateFormat('yyyy-MM-dd', 'en').format(returnDate);
 
+    Map<String, dynamic> params = {
+      "from": f0.fromLocation!.code,
+      "to": f0.toLocation!.code,
+      "departure_date": formattedDepartureDate,
+      "return_date": formattedReturnDate,
+      "journey_type": journeyType.apiValue,
+      "adt": travelersController.adultsCounter,
+      "chd": travelersController.childrenCounter,
+      "inf": travelersController.infantsInLapCounter,
+      "cabin": classTypeController.selectedClassType?.code ?? "",
+      "nonstop": "0",
+    };
+
     final response = await AppVars.api.post(
       AppApis.searchFlight,
-      params: {
-        "from": f0.fromLocation!.code,
-        "to": f0.toLocation!.code,
-        "departure_date": formattedDepartureDate,
-        "return_date": formattedReturnDate,
-        "journey_type": journeyType.apiValue,
-        "adt": travelersController.adultsCounter,
-        "chd": travelersController.childrenCounter,
-        "inf": travelersController.infantsInLapCounter,
-        "cabin": classTypeController.selectedClassType?.code ?? "",
-        "nonstop": "0",
-      },
+      params: params,
     );
 
     if (response == null) {
@@ -268,6 +271,7 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
     return FlightSearchResult(
       apiSessionId: AppVars.apiSessionId,
       outbound: outbound,
+      params: FlightSearchParams.fromJson(params),
     );
   } finally {
     isRequesting = false;
@@ -300,9 +304,11 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
 class FlightSearchResult {
   final String? apiSessionId;
   final List<dynamic> outbound;
+  final FlightSearchParams params;
 
   const FlightSearchResult({
     required this.outbound,
     required this.apiSessionId,
+    required this.params,
   });
 }

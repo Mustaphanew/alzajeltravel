@@ -1,16 +1,17 @@
 // lib/controller/flight/flight_detail_controller.dart
+import 'package:alzajeltravel/controller/travelers_controller.dart';
+import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
-
-
 import 'package:alzajeltravel/model/flight/revalidated_flight_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
-import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
 
 class FlightDetailApiController extends GetxController {
   final Rxn<RevalidatedFlightModel> revalidatedDetails = Rxn<RevalidatedFlightModel>();
   final RxBool isLoading = false.obs;
+
+  final TravelersController travelersController = Get.find();
 
   Future<void> revalidateAndOpen({required FlightOfferModel offer}) async {
     
@@ -38,7 +39,17 @@ class FlightDetailApiController extends GetxController {
       revalidatedDetails.value = detail;
 
       // فتح صفحة تفاصيل الرحلة
-      Get.to(() => FlightDetailPage(detail: detail, showContinueButton: true));
+      // Get.to(() => FlightDetailPage(detail: detail, showContinueButton: true));
+  
+      final adults = travelersController.adultsCounter;
+      final children = travelersController.childrenCounter;
+      final infantsInLap = travelersController.infantsInLapCounter;
+
+      Get.to(() => PassportsFormsPage(
+        adultsCounter: adults, childrenCounter: children, infantsInLapCounter: infantsInLap,
+      ));
+
+    
     } catch (e) {
       Get.snackbar("Error".tr, "Could not load flight details".tr);
     } finally {

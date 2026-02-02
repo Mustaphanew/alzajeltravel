@@ -10,7 +10,7 @@ class Themes {
       onPrimary: Colors.white, // نص أبيض فوق الكحلي
       secondary: AppConsts.secondaryColor, // ذهبي لإبراز الحالات
       onSecondary: const Color(0xFF1A1300), // نص داكن فوق الذهبي
-      tertiary: AppConsts.tertiaryColor.shade500,
+      tertiary: AppConsts.tertiaryColor.shade700,
       onTertiary: Colors.white,
       primaryContainer: AppConsts.primaryColor,
       secondaryContainer: AppConsts.secondaryColor,

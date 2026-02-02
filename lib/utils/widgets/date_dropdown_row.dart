@@ -334,7 +334,14 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                         .map(
                           (y) => DropdownMenuItem<String>(
                             value: y,
-                            child: Text(y, style: TextStyle(color: cs.onSurface)),
+                            child: Text(
+                              y, 
+                              style: TextStyle(
+                                color: cs.onSurface,
+                                fontFamily: AppConsts.font,
+                                fontSize: AppConsts.normal,
+                              ),
+                            ),
                           ),
                         )
                         .toList(),
@@ -350,7 +357,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
 
                 // الشهر
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: _buildDropdownContainer(
                     context: context,
                     value: selectedMonth,
@@ -361,8 +368,12 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                           (m) => DropdownMenuItem<String>(
                             value: m['value'],
                             child: Text(
-                              '${m['value']} - ${m['name']!.tr}',
-                              style: TextStyle(color: cs.onSurface),
+                              '${int.parse(m['value'].toString())}-${m['name']!.tr}',
+                              style: TextStyle(
+                                fontFamily: AppConsts.font,
+                                color: cs.onSurface,
+                                fontSize: AppConsts.normal,
+                              ),
                             ),
                           ),
                         )
@@ -379,7 +390,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
 
                 // اليوم
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: _buildDropdownContainer(
                     context: context,
                     value: selectedDay,
@@ -389,7 +400,14 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                         .map(
                           (d) => DropdownMenuItem<String>(
                             value: d,
-                            child: Text(d, style: TextStyle(color: cs.onSurface)),
+                            child: Text(
+                              '${int.parse(d.toString())}', 
+                              style: TextStyle(
+                                fontFamily: AppConsts.font,
+                                color: cs.onSurface,
+                                fontSize: AppConsts.normal,
+                              ),
+                            ),
                           ),
                         )
                         .toList(),
@@ -441,7 +459,9 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
 
     return DropdownButtonFormField<String>(
       value: value,
+      iconSize: 0,
       validator: (_) => null, // الفاليديشن الحقيقي في FormField الخارجي
+      padding: EdgeInsets.only(top: 0),
       decoration: InputDecoration(
         contentPadding: const EdgeInsetsDirectional.only(start: 8),
         labelText: label,
@@ -465,7 +485,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       ),
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down),
-      style: const TextStyle(fontSize: 16),
+      style: const TextStyle(fontSize: 14),
       onChanged: disabled ? null : onChanged,
       items: items,
     );

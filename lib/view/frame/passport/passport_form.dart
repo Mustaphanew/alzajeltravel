@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -10,6 +11,7 @@ import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/widgets/country_picker.dart';
 import 'package:alzajeltravel/utils/widgets/date_dropdown_row.dart';
+import 'package:jiffy/jiffy.dart';
 
 /// ===================================================================
 /// PassportFormTile
@@ -83,6 +85,7 @@ class _PassportFormTileState extends State<PassportFormTile> {
     final buttonColor = cs.primaryContainer;
 
     PassportsFormsController passportsFormsController = Get.find();
+    final lastDateInSearch = passportsFormsController.lastDateInSearch;
 
     return GetBuilder<PassportController>(
       // لكل Passenger tile ننشئ PassportController خاص به
@@ -106,222 +109,384 @@ class _PassportFormTileState extends State<PassportFormTile> {
           existData = true;
         }
 
-        return ExpansionTile(
-          leading: Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12),
-            child: Icon(Icons.person, color: textColor),
+        return ListTileTheme(
+          data: const ListTileThemeData(
+            contentPadding: EdgeInsets.zero,
+            minLeadingWidth: 0,
+            horizontalTitleGap: 0,
           ),
-          key: ValueKey('traveler-${widget.travelerIndex}-${widget.isExpanded}'),
-
-          iconColor: (Get.isDarkMode) ? cs.secondary : cs.primary,
-          // controller: expansionController,
-          controlAffinity: ListTileControlAffinity.leading,
-          tilePadding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          initiallyExpanded: widget.isExpanded,
-          enabled: !existData,
-          onExpansionChanged: widget.onExpansionChanged,
-          title: Padding(
-            padding: const EdgeInsets.only(bottom: 0),
-            child: Row(
-              children: [
-                // عنوان المسافر + اسمه إن وُجد
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: ExpansionTile(
+            showTrailingIcon: false,
+            leading: SizedBox(width: 0),
+            key: ValueKey('traveler-${widget.travelerIndex}-${widget.isExpanded}'),
+            iconColor: (Get.isDarkMode) ? cs.secondary : cs.primary,
+            tilePadding: EdgeInsets.zero,
+            backgroundColor: Colors.transparent,
+            collapsedBackgroundColor: Colors.transparent,
+            initiallyExpanded: widget.isExpanded,
+            enabled: !existData,
+            onExpansionChanged: widget.onExpansionChanged,
+            title: Padding(
+              padding: const EdgeInsets.only(bottom: 0),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg, color: textColor),
-                      ),
-                      if (fullName.isNotEmpty)
-                        Text(
-                          fullName,
-                          style: TextStyle(fontSize: AppConsts.normal, color: textColor),
-                        ),
-                      if (dob.isNotEmpty)
-                        Text(
-                          "Date of birth".tr + ": " + dob,
-                          style: TextStyle(fontSize: AppConsts.normal, color: textColor),
-                        ),
-                      if (nationality != null)
-                        Text(
-                          "NATIONALITY".tr + ": " + nationality.name[widget.lang],
-                          style: TextStyle(fontSize: AppConsts.normal, color: textColor),
-                        ),
-                    ],
-                  ),
-                ),
-
-                // زر مسح بيانات هذا المسافر فقط
-                // InkWell(
-                //   onTap: controller.clearAll,
-                //   child: Container(
-                //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                //     decoration: BoxDecoration(
-                //       borderRadius: BorderRadius.circular(6),
-                //       border: Border.all(color: cs.error, width: 1),
-                //     ),
-                //     child: Row(
-                //       children: [
-                //         Text('Clear data'.tr, style: const TextStyle(fontSize: AppConsts.sm)),
-                //         const SizedBox(width: 4),
-                //         Icon(Icons.clear_all, color: cs.error, size: 20),
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                const SizedBox(width: 8),
-
-                // زر مسح MRZ (يفتح الكاميرا)
-                if (widget.isExpanded)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 12),
-                    child: InkWell(
-                      onTap: () async {
-                        // final PassportModel? result = await Get.to<PassportModel>(() => const CameraScanPassport());
-                        // if (result != null) {
-                        //   controller.applyModel(result);
-                        // }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: buttonColor, width: 1),
-                        ),
-                        child: Row(
+                      // Padding(
+                      //   padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
+                      //   child: Icon(Icons.person, color: textColor),
+                      // ),
+                      const SizedBox(width: 12),
+                      // عنوان المسافر + اسمه إن وُجد
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Scan'.tr,
-                              style: TextStyle(fontSize: AppConsts.normal, color: buttonColor),
+                              '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg, color: textColor),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(Icons.document_scanner_outlined, color: buttonColor, size: 24),
+                            if(widget.isExpanded == false)
+                              ...[
+                                if (fullName.isNotEmpty)
+                                  Text(
+                                    fullName,
+                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
+                                  ),
+                                if (dob.isNotEmpty)
+                                  Text(
+                                    "Date of birth".tr + ": " + dob,
+                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
+                                  ),
+                                if (nationality != null)
+                                  Text(
+                                    "NATIONALITY".tr + ": " + nationality.name[widget.lang],
+                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
+                                  ),
+                              ],
+
                           ],
                         ),
                       ),
-                    ),
+                  
+                      // زر مسح بيانات هذا المسافر فقط
+                      // InkWell(
+                      //   onTap: controller.clearAll,
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //     decoration: BoxDecoration(
+                      //       borderRadius: BorderRadius.circular(6),
+                      //       border: Border.all(color: cs.error, width: 1),
+                      //     ),
+                      //     child: Row(
+                      //       children: [
+                      //         Text('Clear data'.tr, style: const TextStyle(fontSize: AppConsts.sm)),
+                      //         const SizedBox(width: 4),
+                      //         Icon(Icons.clear_all, color: cs.error, size: 20),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
+                      const SizedBox(width: 8),
+                  
+                      // زر مسح MRZ (يفتح الكاميرا)
+                      if (widget.isExpanded)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 12),
+                          child: InkWell(
+                            onTap: () async {
+                              // final PassportModel? result = await Get.to<PassportModel>(() => const CameraScanPassport());
+                              // if (result != null) {
+                              //   controller.applyModel(result);
+                              // }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: buttonColor, width: 1),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Scan'.tr,
+                                    style: TextStyle(fontSize: AppConsts.normal, color: buttonColor),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.document_scanner_outlined, color: buttonColor, size: 24),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                  
+                      if (!widget.isExpanded && existData)
+                        IconButton(
+                          onPressed: () {
+                            passportsFormsController.onTileExpansionChanged(widget.travelerIndex - 1, true);
+                          },
+                          icon: Icon(Icons.edit, color: cs.primaryContainer),
+                        ),
+                    ],
                   ),
 
-                if (!widget.isExpanded && existData)
-                  IconButton(
-                    onPressed: () {
-                      passportsFormsController.onTileExpansionChanged(widget.travelerIndex - 1, true);
-                    },
-                    icon: Icon(Icons.edit, color: cs.primaryContainer),
-                  ),
-              ],
-            ),
-          ),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12),
-          children: [
-            const SizedBox(height: 4),
-            Form(
-              key: controller.formKey,
-              child: Column(
-                children: [
-                  // GIVEN NAMES
-                  _textField(controller: controller.givenNamesCtr, label: 'GIVEN NAMES'.tr),
-
-                  // SURNAMES
-                  _textField(controller: controller.surnamesCtr, label: 'SURNAMES'.tr),
-
-                  // SEX (M/F)
-                  _sexDropdown(controller),
-
-                  // Date of Birth باستخدام DateDropdownRow
-                  DateDropdownRow(
-                    key: ValueKey('dob-${widget.tag}-${model.dateOfBirth?.toIso8601String() ?? 'empty'}'),
-                    title: Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('Date of birth'.tr)),
-                    initialDate: model.dateOfBirth,
-                    minDate: widget.minDob,
-                    maxDate: widget.maxDob,
-                    onDateChanged: controller.setDateOfBirth,
-                    validator: (date) {
-                      if (date == null) {
-                        return 'Please select a valid date'.tr;
-                      }
-                      if (date.isAfter(DateTime.now())) {
-                        return 'Date of birth cannot be in the future'.tr;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Document number
-                  _textField(
-                    controller: controller.documentNumberCtr,
-                    label: 'DOCUMENT NUMBER'.tr,
-                    formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
-                    caps: TextCapitalization.characters,
-                  ),
-
-
-                  // Nationality
-                  _countryPickerField(
-                    context: context,
-                    label: 'NATIONALITY'.tr,
-                    value: _countryDisplayName(model.nationality),
-
-                    onTap: () async {
-                      final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
-                      if (picked != null) {
-                        controller.setNationality(picked);
-                      }
-                    },
-                  ),
-
-
-                  // Issuing country
-                  _countryPickerField(
-                    context: context,
-                    label: 'ISSUING COUNTRY'.tr,
-                    value: _countryDisplayName(model.issuingCountry),
-                    onTap: () async {
-                      final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
-                      if (picked != null) {
-                        controller.setIssuingCountry(picked);
-                      }
-                    },
-                  ),
-
-                  // Date of expiry (تاريخ انتهاء الجواز)
-                  _expiryDateField(
-                    context: context,
-                    label: 'DATE OF EXPIRY'.tr,
-                    value: model.dateOfExpiry,
-                    onTap: () => controller.pickExpiryDate(context),
-                  ),
-
-                  // زر "Next" للانتقال إلى الفورم التالي (إن وجد)
-                  if (widget.onNext != null)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(top: 4),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // تحقق من صحة هذا الفورم فقط
-                          final formState = controller.formKey.currentState;
-                          if (formState == null) return;
-
-                          if (formState.validate()) {
-                            // لو كل شيء صحيح → استدعِ onNext
-                            widget.onNext!();
-                          }
-                        },
-                        icon: Text('Next'.tr),
-                        label: const Icon(Icons.arrow_forward),
-                      ),
-                    ),
-
-                  const SizedBox(height: 8),
-                ],
+                ], 
               ),
             ),
-          ],
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [              Form(
+                key: controller.formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.person_circle, color: textColor),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 4),
+                          child: Text(
+                            "Traveler data".tr,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: AppConsts.normal,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            thickness: 1,
+                            indent: 4,
+                            endIndent: 4,
+                            color: cs.primaryContainer.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    
+                    Row(
+                      children: [
+          
+                        // GIVEN NAMES
+                        Expanded(
+                          flex: 2,
+                          child: _textField(
+                            controller: controller.givenNamesCtr, 
+                            autofocus: true,
+                            label: 'Given names'.tr + ' (${'traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel})',
+                          ),
+                        ),
+          
+                        const SizedBox(width: 4),
+          
+                        // SURNAMES
+                        Expanded(flex: 1, child: _textField(controller: controller.surnamesCtr, label: 'SURNAMES'.tr)),
+          
+          
+                      ], 
+                    ),
+          
+          
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
+                      child: Text("Date of birth".tr, textAlign: TextAlign.start,),
+                    ),
+                    IntrinsicHeight(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                                
+                          // Date of Birth باستخدام DateDropdownRow
+                          Expanded(
+                            child: DateDropdownRow(
+                              key: ValueKey('dob-${widget.tag}-${model.dateOfBirth?.toIso8601String() ?? 'empty'}'),
+                              title: SizedBox.shrink(),
+                              initialDate: model.dateOfBirth,
+                              minDate: widget.minDob,
+                              maxDate: widget.maxDob,
+                              onDateChanged: controller.setDateOfBirth,
+                              validator: (date) {
+                                if (date == null) {
+                                  return 'Please select a valid date'.tr;
+                                }
+                                if (date.isAfter(DateTime.now())) {
+                                  return 'Date of birth cannot be in the future'.tr;
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 3),
+                          VerticalDivider(
+                            endIndent: 12,
+                            color: Colors.grey[400],
+                            thickness: 1,
+                          ),
+                          const SizedBox(width: 3),
+                                
+                          
+                          // SEX (M/F)
+                          Container(width: 90, child: _sexDropdown(controller)),
+                        ],
+                      ),
+                    ),
+          
+                    
+                    const SizedBox(height: 12),
+          
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.doc_circle, color: Colors.blue[700]),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 4),
+                          child: Text(
+                            "Passport data".tr,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: AppConsts.normal,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            thickness: 1,
+                            indent: 4,
+                            endIndent: 4,
+                            color: cs.primaryContainer.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    Row(
+                      children: [
+          
+                        // Document number
+                        Expanded(
+                          flex: 2,
+                          child: _textField(
+                            controller: controller.documentNumberCtr,
+                            label: 'DOCUMENT NUMBER'.tr,
+                            formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                            caps: TextCapitalization.characters,
+                          ),
+                        ),
+          
+                        const SizedBox(width: 4),
+          
+                        // Nationality
+                        Expanded(
+                          child: _countryPickerField(
+                            context: context,
+                            label: 'NATIONALITY'.tr,
+                            value: _countryDisplayName(model.nationality),
+                          
+                            onTap: () async {
+                              final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                              if (picked != null) {
+                                controller.setNationality(picked);
+                              }
+                            },
+                          ),
+                        ),
+          
+                        const SizedBox(width: 4),
+          
+                        // Issuing country
+                        Expanded(
+                          child: _countryPickerField(
+                            context: context,
+                            label: 'ISSUING COUNTRY'.tr,
+                            value: _countryDisplayName(model.issuingCountry),
+                            onTap: () async {
+                              final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                              if (picked != null) {
+                                controller.setIssuingCountry(picked);
+                              }
+                            },
+                          ),
+                        ),
+          
+          
+                      ],
+                    ),
+          
+DateDropdownRow(
+  key: ValueKey(
+    'expiry-${widget.tag}-${model.dateOfExpiry?.toIso8601String() ?? 'empty'}',
+  ),
+  title: Padding(
+    padding: const EdgeInsetsDirectional.only(bottom: 6, start: 4),
+    child: Text('DATE OF EXPIRY'.tr),
+  ), // نفس أسلوب DOB
+  initialDate: model.dateOfExpiry,
+
+  // أقل تاريخ مسموح = اليوم (حتى ما تختار تاريخ منتهي)
+  minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,
+
+  // أقصى تاريخ (عدّلها حسب احتياجك)
+  maxDate: Jiffy.parseFromDateTime(lastDateInSearch).add(years: 12).dateTime,
+
+  onDateChanged: controller.setDateOfExpiry,
+
+  validator: (date) {
+    if (date == null) {
+      return 'Please select a valid date'.tr;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final picked = DateTime(date.year, date.month, date.day);
+
+    if (picked.isBefore(today)) {
+      return 'Passport has already expired'.tr;
+    }
+    return null;
+  },
+),
+
+          
+                    // _expiryDateField(
+                    //   context: context,
+                    //   label: 'DATE OF EXPIRY'.tr,
+                    //   value: model.dateOfExpiry,
+                    //   onTap: () => controller.pickExpiryDate(context),
+                    // ),
+                    
+                    const SizedBox(height: 8),
+                    // زر "Next" للانتقال إلى الفورم التالي (إن وجد)
+                    if (widget.onNext != null)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 4),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            // تحقق من صحة هذا الفورم فقط
+                            final formState = controller.formKey.currentState;
+                            if (formState == null) return;
+          
+                            if (formState.validate()) {
+                              // لو كل شيء صحيح → استدعِ onNext
+                              widget.onNext!();
+                            }
+                          },
+                          icon: Text('Next'.tr),
+                          label: const Icon(Icons.arrow_forward),
+                        ),
+                      ),
+          
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -334,20 +499,24 @@ class _PassportFormTileState extends State<PassportFormTile> {
     String? hint,
     String? help,
     int? maxLen,
+    bool autofocus = false,
     List<TextInputFormatter>? formatters,
     TextCapitalization caps = TextCapitalization.none,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
-        autofocus: (label == 'GIVEN NAMES'.tr),
+        autofocus: autofocus,
         controller: controller,
         maxLength: maxLen,
         inputFormatters: formatters,
         textCapitalization: caps,
+        style: const TextStyle(fontSize: AppConsts.normal),
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: const TextStyle(fontSize: AppConsts.normal),
           hintText: hint,
+          hintStyle: const TextStyle(fontSize: AppConsts.normal),
           counterText: '',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           helperText: help,
@@ -367,12 +536,21 @@ class _PassportFormTileState extends State<PassportFormTile> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<Sex>(
-        value: controller.model.sex,
-        decoration: InputDecoration(
+        initialValue: controller.model.sex,
+        iconSize: 0,
+        decoration: InputDecoration( 
+          contentPadding: EdgeInsetsDirectional.only(start: 8),
           labelText: 'Sex'.tr,
+          labelStyle: const TextStyle(fontSize: 12),
+          hintStyle: const TextStyle(fontSize: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items: Sex.values.map((s) => DropdownMenuItem(value: s, child: Text('${s.label} (${s.key.toUpperCase()})'))).toList(),
+        items: Sex.values.map((s) => DropdownMenuItem(
+          value: s, 
+          child: Text(
+            '${s.label} (${s.key.toUpperCase()})',
+            style: const TextStyle(fontSize: 14),
+          ))).toList(),
         onChanged: controller.setSex,
         validator: (val) {
           if (val == null) {
@@ -423,13 +601,16 @@ class _PassportFormTileState extends State<PassportFormTile> {
         },
         // نفس نمط بقية الحقول
         decoration: InputDecoration(
+          contentPadding: const EdgeInsetsDirectional.only(start: 8),
           labelText: label,
-          hintText: 'Tap to select'.tr,
-          suffixIcon: const Icon(Icons.arrow_drop_down),
+          hintText: 'Select'.tr + " ...",
+          hintStyle: const TextStyle(fontSize: 14),
+          labelStyle: const TextStyle(fontSize: 14),
+          // suffixIcon: const Icon(Icons.arrow_drop_down),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
 
-        style: TextStyle(color: value.isEmpty ? cs.outline : cs.onSurface),
+        style: TextStyle(fontSize: 13, color: value.isEmpty ? cs.outline : cs.onSurface),
       ),
     );
   }
@@ -489,4 +670,6 @@ class _PassportFormTileState extends State<PassportFormTile> {
       ),
     );
   }
+
+
 }

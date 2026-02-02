@@ -180,7 +180,7 @@ Map<String, String> ar = {
   'Capture': 'التقاط',
 
   // حقول جواز السفر
-  'Given names': 'الاسم الأول',
+  'Given names': 'اسم',
   'Surnames': 'اسم العائلة',
   'Sex': 'الجنس',
   'Date of birth': 'تاريخ الميلاد',
@@ -606,7 +606,12 @@ Map<String, String> ar = {
   "Edit Search": "تعديل البحث",
 
   "All stops": "جميع التوقفات",
-  "No selection": "فلترة ذكية",
+  "Smart filtering": "فلترة ذكية",
   "There is no weight": "لا يوجد وزن",
+
+  "Travelers data": "بيانات المسافرين",
+  "traveler": "المسافر",
+  "Traveler data": "بيانات المسافر",
+  "Passport data": "بيانات جواز السفر",
 
 };
