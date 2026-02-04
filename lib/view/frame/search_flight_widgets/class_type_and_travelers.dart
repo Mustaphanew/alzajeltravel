@@ -1,6 +1,7 @@
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/class_type_controller.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
@@ -59,6 +60,7 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return DraggableScrollableSheet(
       expand: false, // حتى لا تملأ الشاشة مباشرة
       initialChildSize: 0.75, // 👈 تبدأ بنصف الشاشة
@@ -116,7 +118,7 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                           builder: (controller) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 12,
                               ),
                               child: ClassTypeDropdown(controller: controller),
                             );
@@ -135,6 +137,11 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                                   body: 'Greater than or equal to 12 years'.tr,
                                   counter: controller.adultsCounter,
                                   changeCounter: controller.changeAdultsCounter,
+                                  icon: Icon(
+                                    FontAwesomeIcons.solidUser,
+                                    size: 24,
+                                    color: Colors.blue[600],
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 TravelerListTile(
@@ -144,6 +151,11 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                                   counter: controller.childrenCounter,
                                   changeCounter:
                                       controller.changeChildrenCounter,
+                                  icon: Icon(
+                                    FontAwesomeIcons.child,
+                                    size: 24,
+                                    color: Colors.green[600],
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
 
@@ -195,6 +207,11 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                                   counter: controller.infantsInLapCounter,
                                   changeCounter:
                                       controller.changeInfantsInLapCounter,
+                                  icon: Icon(
+                                    FontAwesomeIcons.babyCarriage,
+                                    color: Colors.red[600],
+                                    size: 24,
+                                  ),
                                 ),
                                 SizedBox(height: 8),
                               ],
@@ -243,6 +260,7 @@ class TravelerListTile extends StatelessWidget {
   final TravelersController controller;
   final int counter;
   final Function(int counter) changeCounter;
+  final Widget icon;
   const TravelerListTile({
     super.key,
     required this.controller,
@@ -250,6 +268,7 @@ class TravelerListTile extends StatelessWidget {
     required this.body,
     required this.changeCounter,
     required this.counter,
+    required this.icon,
   });
 
   Function()? minusCounter() {
@@ -311,9 +330,11 @@ class TravelerListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsetsDirectional.only(start: 16),
+      padding: EdgeInsetsDirectional.only(start: 12),
       child: Row(
         children: [
+          icon,
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,20 +356,18 @@ class TravelerListTile extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(CupertinoIcons.minus_circle),
-                  onPressed: minusCounter(),
-                ),
-                Text("$counter"),
-                IconButton(
-                  icon: const Icon(CupertinoIcons.plus_circle),
-                  onPressed: plusCounter(),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(CupertinoIcons.minus_circle),
+                onPressed: minusCounter(),
+              ),
+              Text("$counter"),
+              IconButton(
+                icon: const Icon(CupertinoIcons.plus_circle),
+                onPressed: plusCounter(),
+              ),
+            ],
           ),
         ],
       ),
@@ -409,6 +428,11 @@ class _ClassTypeDropdownState extends State<ClassTypeDropdown> {
           // prefix: IconButton(onPressed: () {}, icon: Icon(Icons.search)),
           alignLabelWithHint: true,
           // floatingLabelAlignment: FloatingLabelAlignment.center,
+          prefixIcon: Icon(
+            FontAwesomeIcons.chair,
+            color: Colors.green[600],
+            size: 22,
+          ),
         ),
       ),
 

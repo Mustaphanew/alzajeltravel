@@ -204,7 +204,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
     final disabledColor = Colors.white.withOpacity(.35);
 
     return Container(
-      height: 54,
+      height: 44,
       color: AppConsts.primaryColor,
       child: Row(
         children: [
@@ -220,7 +220,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -351,8 +351,8 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
           ),
         ),
         dowTextFormatter: (date, locale) => DateFormat.EEEE(locale).format(date),
-        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 14),
-        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 14),
+        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 13),
+        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 13),
       ),
 
       enabledDayPredicate: (day) => _dayEnabled(day, minDay, maxDay),
@@ -441,16 +441,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
 
     // ✅ لو ما في Controller مسجل، اعرض صفحة آمنة بدل crash
     if (!_hasController()) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text("Select Dates".tr),
-          leading: IconButton(
-            icon: const Icon(CupertinoIcons.clear),
-            onPressed: () => Get.back(),
-          ),
-        ),
-        body: Center(child: Text("Search controller not ready".tr)),
-      );
+      return Center(child: Text("Search controller not ready".tr));
     }
 
     return GetBuilder<SearchFlightController>(
@@ -459,16 +450,7 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
       builder: (controller) {
         // ✅ حماية من index
         if (i < 0 || i >= controller.forms.length) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text("Select Dates".tr),
-              leading: IconButton(
-                icon: const Icon(CupertinoIcons.clear),
-                onPressed: () => Get.back(),
-              ),
-            ),
-            body: Center(child: Text("Invalid form index".tr)),
-          );
+          return Center(child: Text("Invalid form index".tr));
         }
 
         final form = controller.forms[i];
@@ -517,94 +499,125 @@ class _DatePickerRangeWidget2State extends State<DatePickerRangeWidget2>
         final returnMin = leavingSelected != null ? _dateOnly(leavingSelected) : _minDay;
         final returnMax = _maxDay;
 
-        return SafeArea(
-          top: false,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text("Select Dates".tr),
-              leading: IconButton(
-                icon: const Icon(CupertinoIcons.clear),
-                onPressed: () => Get.back(),
-              ),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(40),
-                child: SizedBox(
-                  height: 40,
-                  child: TabBar(
-                    controller: tabController,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    indicatorColor: AppConsts.secondaryColor,
-                    labelColor: AppConsts.secondaryColor,
-                    indicatorWeight: 5,
-                    padding: EdgeInsets.zero,
-                    tabs: [
-                      Tab(
-                        child: Text(
-                          "Leaving Date".tr,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Tab(
-                        child: Text(
-                          "Going Date".tr,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            body: TabBarView(
-              controller: tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                // ===== Leaving =====
-                Column(
-                  children: [
-                    _buildBlueHeader(isLeaving: true, minDay: leavingMin, maxDay: leavingMax),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: (_leaveMode == _PickerMode.month)
-                            ? _buildMonthPicker(isLeaving: true, minDay: leavingMin, maxDay: leavingMax)
-                            : _buildDayCalendar(
-                                isLeaving: true,
-                                controller: controller,
-                                i: i,
-                                minDay: leavingMin,
-                                maxDay: leavingMax,
+        final cs = Theme.of(context).colorScheme;
+        return SizedBox(
+              height: MediaQuery.of(context).size.height * 0.45,
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: Column(
+                children: [
+              
+                  SizedBox(
+                    height: 40,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 50,
+                          child: TextButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 0),
+                              backgroundColor: cs.secondary,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero,
                               ),
-                      ),
-                    ),
-                  ],
-                ),
+                            ),
+                            onPressed: () {
+                              Get.back();
+                            }, 
+                            child: Icon(
+                              Icons.close,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+              
+                        Expanded(
+                          child: TabBar(
 
-                // ===== Return =====
-                Column(
-                  children: [
-                    _buildBlueHeader(isLeaving: false, minDay: returnMin, maxDay: returnMax),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: (_returnMode == _PickerMode.month)
-                            ? _buildMonthPicker(isLeaving: false, minDay: returnMin, maxDay: returnMax)
-                            : _buildDayCalendar(
-                                isLeaving: false,
-                                controller: controller,
-                                i: i,
-                                minDay: returnMin,
-                                maxDay: returnMax,
+                            controller: tabController,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            dividerColor: Colors.transparent,
+                            indicatorColor: AppConsts.secondaryColor,
+                            labelColor: AppConsts.secondaryColor,
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                            unselectedLabelStyle: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            indicatorWeight: 5, 
+                            padding: EdgeInsets.zero,
+                            tabs: [
+                              Tab(
+                                child: Text(
+                                  "Leaving Date".tr,
+                                ),
                               ),
-                      ),
+                              Tab(
+                                child: Text(
+                                  "Going Date".tr,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
+                  ),
+              
+                  Expanded(
+                    child: TabBarView(
+                      controller: tabController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        // ===== Leaving =====
+                        Column(
+                          children: [
+                            _buildBlueHeader(isLeaving: true, minDay: leavingMin, maxDay: leavingMax),
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: (_leaveMode == _PickerMode.month)
+                                    ? _buildMonthPicker(isLeaving: true, minDay: leavingMin, maxDay: leavingMax)
+                                    : _buildDayCalendar(
+                                        isLeaving: true,
+                                        controller: controller,
+                                        i: i,
+                                        minDay: leavingMin,
+                                        maxDay: leavingMax,
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    
+                        // ===== Return =====
+                        Column(
+                          children: [
+                            _buildBlueHeader(isLeaving: false, minDay: returnMin, maxDay: returnMax),
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: (_returnMode == _PickerMode.month)
+                                    ? _buildMonthPicker(isLeaving: false, minDay: returnMin, maxDay: returnMax)
+                                    : _buildDayCalendar(
+                                        isLeaving: false,
+                                        controller: controller,
+                                        i: i,
+                                        minDay: returnMin,
+                                        maxDay: returnMax,
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
       },
     );
   }

@@ -515,7 +515,7 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                   // edit search ______________
                   Expanded(
                     child: Container(
-                      height: 55,
+                      height: 60,
                       // padding: EdgeInsetsDirectional.only(end: 12),
                       child: ElevatedButton( 
                         style: ElevatedButton.styleFrom(
@@ -548,53 +548,58 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                           setState(() {});
                         },
                         
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] + " (${searchInputs.from})",
-                                    textAlign: TextAlign.end,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                if(searchInputs.journeyEnum == JourneyType.oneWay)
-                                  Icon(Icons.arrow_forward), 
-                                if(searchInputs.journeyEnum == JourneyType.roundTrip)
-                                  Icon(Icons.sync_alt), 
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    AirportRepo.searchByCode(searchInputs.to).name[AppVars.lang] + " (${searchInputs.to})",
-                                    textAlign: TextAlign.start,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontFamily: AppConsts.font,
-                                  fontSize: 12,
-                                ),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
-                                  if(searchInputs.chd > 0)
-                                    TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
-                                  if(searchInputs.inf > 0)
-                                    TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
-                                  TextSpan(text: " (${AppFuns.cabinNameFromBookingClass(searchInputs.cabin)})"),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] + " (${searchInputs.from})",
+                                        textAlign: TextAlign.end,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      if(searchInputs.journeyEnum == JourneyType.oneWay)
+                                        Icon(Icons.arrow_forward), 
+                                      if(searchInputs.journeyEnum == JourneyType.roundTrip)
+                                        Icon(Icons.sync_alt), 
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        AirportRepo.searchByCode(searchInputs.to).name[AppVars.lang] + " (${searchInputs.to})",
+                                        textAlign: TextAlign.start,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        fontFamily: AppConsts.font,
+                                        fontSize: 13,
+                                        color: cs.onPrimary
+                                      ),
+                                      children: [
+                                        TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
+                                        if(searchInputs.chd > 0)
+                                          TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
+                                        if(searchInputs.inf > 0)
+                                          TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
+                                        TextSpan(text: " (${AppFuns.cabinNameFromBookingClass(searchInputs.cabin)})"),
+                                      ],
+                                    ),
+                                  )
                                 ],
                               ),
-                            )
+                            ),
+                            Icon(Icons.edit, size: 26,)
                           ],
                         ),
 

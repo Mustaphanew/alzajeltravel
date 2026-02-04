@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/view/frame/search_flight_widgets/airline.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_range_widget2.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_single_widget2.dart';
+import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -43,6 +44,9 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
       scrollController = searchFlightController.multiCityScrollController;
     }
   }
+
+  bool isDirect = false;
+  bool isIncludeBaggage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -173,11 +177,86 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                     SizedBox(height: 16),
                     Divider(),
                     ExpansionTile(
-                      title: Text("Advanced options".tr),
+                      dense: true,
+                      title: Text(
+                        "Advanced options".tr, 
+                        style: TextStyle(fontFamily: AppConsts.font, fontSize: 16),
+                      ),
+                      tilePadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                        // side: BorderSide(color: cs.outline, width: 2),
+                      ),
+                      childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                       children: [
+                        const SizedBox(height: 8),
                         AirlineIncludeDropDown(), 
                         SizedBox(height: 8),
                         AirlineExcludeDropDown(),
+                        SizedBox(height: 12),
+
+                        StatefulBuilder(
+                          builder: (context, innerSetState) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      innerSetState(() {
+                                        isDirect = !isDirect;
+                                      });
+                                    },
+                                    child: Text(
+                                      "Direct flights only".tr,
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ),
+                                LiteRollingPowerSwitch(
+                                  value: isDirect,
+                                  onChanged: (value) {
+                                    innerSetState(() {
+                                      isDirect = value;
+                                    });
+                                  },
+                                ),
+                              ],
+                            );
+                          }
+                        ),
+
+                        const SizedBox(height: 12),
+                        
+                        StatefulBuilder(
+                          builder: (context, innerSetState) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      innerSetState(() {
+                                        isIncludeBaggage = !isIncludeBaggage;
+                                      });
+                                    },
+                                    child: Text(
+                                      "Flights with baggage included only".tr,
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ),
+                                LiteRollingPowerSwitch(
+                                  value: isIncludeBaggage,
+                                  onChanged: (value) {
+                                    innerSetState(() {
+                                      isIncludeBaggage = value;
+                                    });
+                                  },
+                                ),
+                              ],
+                            );
+                          }
+                        ),
+                        
                         SizedBox(height: 8),
                       ],
                     ),
@@ -401,7 +480,29 @@ class DepartureWidget extends StatelessWidget {
                       child: TextFormField(
                         onTap: () async {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
-                          await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 0), transition: Transition.downToUp);
+                          // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 0), transition: Transition.downToUp);
+
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                contentPadding: const EdgeInsets.all(0),
+                                iconPadding: const EdgeInsets.all(0),
+                                actionsPadding: const EdgeInsets.all(0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                ),
+                                insetPadding: EdgeInsets.only(bottom: 60),
+                                titlePadding: const EdgeInsets.all(0),
+                                buttonPadding: const EdgeInsets.only(),
+                                content: DatePickerRangeWidget2(index: index, initialIndex: 0),
+                              );
+                            }
+                          );
+                         
                           await controller.setTxtDepartureDates(index);
                         },
                         readOnly: true,
@@ -426,7 +527,29 @@ class DepartureWidget extends StatelessWidget {
                       child: TextFormField(
                         onTap: () async {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
-                          await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 1), transition: Transition.downToUp);
+                          // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 1), transition: Transition.downToUp);
+
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                contentPadding: const EdgeInsets.all(0),
+                                iconPadding: const EdgeInsets.all(0),
+                                actionsPadding: const EdgeInsets.all(0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                ),
+                                insetPadding: EdgeInsets.only(bottom: 60),
+                                titlePadding: const EdgeInsets.all(0),
+                                buttonPadding: const EdgeInsets.only(),
+                                content: DatePickerRangeWidget2(index: index, initialIndex: 1),
+                              );
+                            }
+                          );
+                          
                           await controller.setTxtDepartureDates(index);
                         },
                         readOnly: true,
@@ -457,7 +580,29 @@ class DepartureWidget extends StatelessWidget {
               TextFormField(
                 onTap: () async {
                   // await Get.to(() => DatePickerSingleWidget(index: index), transition: Transition.downToUp);
-                  await Get.to(() => DatePickerSingleWidget2(index: index), transition: Transition.downToUp);
+                  // await Get.to(() => DatePickerSingleWidget2(index: index), transition: Transition.downToUp);
+
+                  await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        contentPadding: const EdgeInsets.all(0),
+                        iconPadding: const EdgeInsets.all(0),
+                        actionsPadding: const EdgeInsets.all(0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
+                          ),
+                        ),
+                        insetPadding: EdgeInsets.only(bottom: 60),
+                        titlePadding: const EdgeInsets.all(0),
+                        buttonPadding: const EdgeInsets.only(),
+                        content: DatePickerSingleWidget2(index: index),
+                      );
+                    }
+                  );
+
                   await controller.setTxtDepartureDates(index);
                 },
                 readOnly: true,
@@ -482,3 +627,92 @@ class DepartureWidget extends StatelessWidget {
     );
   }
 }
+
+
+class LiteRollingPowerSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  /// تحكم بالحجم
+  final double height;
+  final double? width;
+
+  const LiteRollingPowerSwitch({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.height = 34,
+    this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    // اعتمدنا على ألوان الثيم (بدون ألوان ثابتة)
+    final inactiveBg = Colors.grey[400];     // عادةً أحمر
+    final activeBg = cs.primary.withOpacity(0.9);     // حسب ثيمك
+    final knobBg = cs.onError;       // غالبًا أبيض (مناسب لدائرة المؤشر)
+    final activeText = cs.onPrimary; // لون النص على primary
+    final inactiveText = cs.onError; // لون النص على error
+
+    final w = width ?? (height * 2.0);
+
+    return SizedBox(
+      width: w,
+      child: AnimatedToggleSwitch<bool>.dual(
+        current: value,
+        first: false,
+        second: true,
+
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+
+        height: height, 
+        spacing: 0,
+        borderWidth: 0,
+
+
+        animationDuration: const Duration(milliseconds: 600),
+        animationCurve: Curves.easeInOut,
+
+        style: ToggleStyle(
+          borderColor: Colors.transparent,
+          indicatorColor: knobBg,
+          borderRadius: BorderRadius.circular(height),
+          indicatorBorderRadius: BorderRadius.circular(height),
+        ),
+
+        styleBuilder: (v) => ToggleStyle(
+          backgroundColor: v ? activeBg : inactiveBg,
+          indicatorColor: Colors.white,
+          indicatorBorderRadius: BorderRadius.circular(200),
+        ),
+
+        indicatorSize: const Size(24, 24),
+
+        onChanged: onChanged,
+
+        // أيقونة الباور داخل الدائرة (اللون يطابق الخلفية)
+        iconBuilder: (v) => Icon(
+          v? FontAwesomeIcons.solidCircleCheck : FontAwesomeIcons.solidCircleXmark,
+          size: 18,
+          color: v ? activeBg : inactiveBg, 
+        ),
+
+        // textDirection: TextDirection.ltr,
+        // النص داخل الكبسولة
+        // textBuilder: (v) => Text(
+        //   (v ? 'aa'.tr : 'ii'.tr),
+        //   style: TextStyle(
+        //     fontFamily: AppConsts.font,
+        //     fontWeight: FontWeight.w600,
+        //     fontSize: 14,
+        //     color: v ? activeText : inactiveText,
+        //   ),
+        // ),
+      ),
+      
+    );
+  }
+}
+

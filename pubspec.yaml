@@ -67,6 +67,7 @@ dependencies:
 
   table_calendar: ^3.2.0
   lottie: ^3.3.2
+  animated_toggle_switch: ^0.8.7
 
 
 dev_dependencies:

@@ -156,7 +156,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
     final disabledColor = Colors.white.withOpacity(.35);
 
     return Container(
-      height: 54,
+      height: 44,
       color: AppConsts.primaryColor,
       child: Row(
         children: [
@@ -172,7 +172,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -285,8 +285,8 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
           ),
         ),
         dowTextFormatter: (date, locale) => DateFormat.EEEE(locale).format(date),
-        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 14),
-        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 14),
+        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 13),
+        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 13),
       ),
 
       enabledDayPredicate: _dayEnabled,
@@ -340,17 +340,8 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
 
     // ✅ لو ما في Controller مسجل، اعرض صفحة آمنة بدل crash
     if (!_hasController()) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text("Select Date".tr),
-          leading: IconButton(
-            icon: const Icon(CupertinoIcons.clear),
-            onPressed: () => Get.back(),
-          ),
-        ),
-        body: Center(
-          child: Text("Search controller not ready".tr),
-        ),
+      return Center(
+        child: Text("Search controller not ready".tr),
       );
     }
 
@@ -360,16 +351,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
       builder: (controller) {
         // ✅ حماية من index
         if (i < 0 || i >= controller.forms.length) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text("Select Date".tr),
-              leading: IconButton(
-                icon: const Icon(CupertinoIcons.clear),
-                onPressed: () => Get.back(),
-              ),
-            ),
-            body: Center(child: Text("Invalid form index".tr)),
-          );
+          return Center(child: Text("Invalid form index".tr));
         }
 
         final form = controller.forms[i];
@@ -388,62 +370,84 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
           _initFromFormDone = true;
         }
 
-        return SafeArea(
-          top: false,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text("Select Date".tr),
-              leading: IconButton(
-                icon: const Icon(CupertinoIcons.clear),
-                onPressed: () => Get.back(),
-              ),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(40),
-                child: SizedBox(
+        final cs = Theme.of(context).colorScheme;
+
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.45,
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Column(
+              children: [
+                SizedBox(
                   height: 40,
-                  child: TabBar(
-                    controller: tabController,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    indicatorColor: AppConsts.secondaryColor,
-                    labelColor: AppConsts.secondaryColor,
-                    indicatorWeight: 5,
-                    padding: EdgeInsets.zero,
-                    tabs: [
-                      Tab(
-                        child: Text(
-                          "Leaving Date".tr,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        child: TextButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                            backgroundColor: cs.secondary,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero,
+                            ),
                           ),
+                          onPressed: () {
+                            Get.back();
+                          }, 
+                          child: Icon(
+                            Icons.close,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: TabBar(
+                          controller: tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          indicatorColor: AppConsts.secondaryColor,
+                          labelColor: AppConsts.secondaryColor,
+                          indicatorWeight: 5,
+                          padding: EdgeInsets.zero,
+                          tabs: [
+                            Tab(
+                              child: Text(
+                                "Leaving Date".tr,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-            body: TabBarView(
-              controller: tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                Column(
-                  children: [
-                    _buildBlueHeader(),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: (_mode == _PickerMode.month)
-                            ? _buildMonthPicker()
-                            : _buildDayCalendar(controller: controller, i: i),
+                Expanded(
+                  child: TabBarView(
+                    controller: tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      Column(
+                        children: [
+                          _buildBlueHeader(),
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: (_mode == _PickerMode.month)
+                                  ? _buildMonthPicker()
+                                  : _buildDayCalendar(controller: controller, i: i),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
         );
       },
     );

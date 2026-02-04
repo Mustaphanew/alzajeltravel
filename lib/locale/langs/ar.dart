@@ -624,4 +624,7 @@ Map<String, String> ar = {
   "pending": "قيد الانتظار",
   "PENDING": "قيد الانتظار",
 
+  "Direct flights only": "رحلات مباشرة فقط",
+  "Flights with baggage included only": "رحلات مشمولة الوزن فقط",
+
 };
