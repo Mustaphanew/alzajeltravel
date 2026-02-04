@@ -230,6 +230,6 @@ class DividerLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return DottedLine(lineThickness: 1.67, dashGapLength: 6, dashLength: 6, dashColor: cs.primaryFixed);
+    return DottedLine(lineThickness: 1.6, dashGapLength: 8, dashLength: 8, dashColor: cs.primaryFixed);
   }
 }

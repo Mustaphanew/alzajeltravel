@@ -107,7 +107,7 @@ class TravelerReviewModel {
 
     return TravelerReviewModel(
       passport: PassportModel.fromJson(json['passport'] as Map<String, dynamic>),
-      ageGroup: _ageGroupFromAny(json['ageGroup'] ?? json['paxType'] ?? json['pax_type']),
+      ageGroup: _ageGroupFromAny(json['ageGroup'] ?? json['paxType'] ?? json['pax_type']?? json['type']),
       baseFare: d(json['baseFare'] ?? json['Base_Amount']),
       taxTotal: d(json['taxTotal'] ?? json['Tax_Total']),
       seat: json['seat'] != null ? Seat.fromJson(json['seat'] as Map<String, dynamic>) : null,
@@ -118,6 +118,7 @@ class TravelerReviewModel {
   // ================= helpers =================
 
   static String _ageGroupToKey(AgeGroup? g) {
+    print('ageGroupToKey: $g');
     if (g == null) return 'adult';
     switch (g) {
       case AgeGroup.infant:
@@ -125,13 +126,13 @@ class TravelerReviewModel {
       case AgeGroup.child:
         return 'child';
       case AgeGroup.adult:
-      default:
         return 'adult';
     }
   }
 
   static AgeGroup _ageGroupFromAny(dynamic v) {
     final s = (v ?? '').toString().trim().toLowerCase();
+    print('ageGroupFromAny: $s');
     if (s == 'inf' || s == 'infant') return AgeGroup.infant;
     if (s == 'cnn' || s == 'chd' || s == 'child') return AgeGroup.child;
     if (s == 'adt' || s == 'adult') return AgeGroup.adult;
@@ -225,6 +226,7 @@ class TravelerFareSummary {
     final List<TravelerReviewModel> infants = [];
 
     for (final t in travelers) {
+      print('ageGroup: ${t.ageGroup}');
       switch (t.ageGroup) {
         case AgeGroup.infant:
           infants.add(t);

@@ -45,7 +45,7 @@ class _FlightDetailPageState extends State<FlightDetailPage> {
                 child: Column(
                   children: [
                     // الكرت الرئيسي: يلخّص الذهاب + العودة (إن وجدت)
-                    FlightMainCard(revalidatedDetails: widget.detail),
+                    FlightMainCard(revalidatedDetails: widget.detail, onBook: widget.onBook, onOtherPrices: widget.onOtherPrices),
                     const SizedBox(height: 8),
 
                     // تفاصيل إضافية
@@ -100,7 +100,10 @@ class _FlightDetailPageState extends State<FlightDetailPage> {
 /// - لو الرحلة Roundtrip وفيها inbound، يعرض اتجاه العودة تحته مع Divider
 /// - السعر وزر Details مرّة واحدة فقط
 class FlightMainCard extends StatelessWidget {
-  const FlightMainCard({super.key, required this.revalidatedDetails});
+  final VoidCallback? onBook;
+  final VoidCallback? onOtherPrices;
+
+  const FlightMainCard({super.key, required this.revalidatedDetails, this.onBook, this.onOtherPrices});
 
   final RevalidatedFlightModel revalidatedDetails;
 
@@ -172,6 +175,8 @@ class FlightMainCard extends StatelessWidget {
                     flightOffer: revalidatedDetails.offer, 
                     revalidatedDetails: revalidatedDetails,
                     fareRules: revalidatedDetails.fareRules,
+                    onBook: onBook,
+                    onOtherPrices: onOtherPrices,
                   ));
                 },
                 icon: const Icon(Icons.info_outline),
@@ -558,7 +563,7 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
         // ====== الأزرار ======
         if (widget.parent != null && (widget.parent!.onBook != null || widget.parent!.onOtherPrices != null))
           Row(
-            children: [
+            children: [ 
               if (widget.parent!.onBook != null)
                 Expanded(
                   child: ElevatedButton.icon(
@@ -583,6 +588,7 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
     );
   }
 }
+
 
 /// نفس الهيلبر المستخدم في flight_offers_list لمسار واحد
 List<String> _uniqueMarketingCodesForLeg(FlightLegModel leg) {

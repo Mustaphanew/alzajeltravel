@@ -2,6 +2,7 @@ import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
@@ -237,6 +238,7 @@ class PassportsFormsController extends GetxController {
   /// دالة الحفظ الكاملة
   /// دالة الحفظ الكاملة
   Future<void> saveAll() async {
+    AppFuns.hideKeyboard();
     // 1) افتح كل الفورمات مؤقتًا عشان تظهر الأخطاء
     expandAll();
     await Future.delayed(const Duration(milliseconds: 500));
@@ -291,6 +293,12 @@ class PassportsFormsController extends GetxController {
       final double baseFare = _parseDouble(passengerJson?['Base_Amount']);
       final double taxTotal = _parseDouble(passengerJson?['Tax_Total']);
 
+      print("ageGroup 1: ${passengerJson?['ageGroup']}");
+      print("ageGroup 2: ${passengerJson?['type']}");
+      print("ageGroup 3: ${passengerJson?['paxType']}");
+      print("ageGroup 4: ${passengerJson?['pax_type']}");
+      print("issue_country: ${passengerJson?['issue_country']}");
+
       final PassportModel travelerPassport = PassportModel.fromJson({
         "documentNumber": passengerJson?['passport_no'],
         "givenNames": passengerJson?['first_name'],
@@ -304,6 +312,16 @@ class PassportsFormsController extends GetxController {
 
       Seat seat = Seat(name: "A12", fare: 12);
 
+      AgeGroup _ageGroupFromAny(dynamic v) {
+        final s = (v ?? '').toString().trim().toLowerCase();
+        print('ageGroupFromAny: $s');
+        if (s == 'inf' || s == 'infant') return AgeGroup.infant;
+        if (s == 'cnn' || s == 'chd' || s == 'child') return AgeGroup.child;
+        if (s == 'adt' || s == 'adult') return AgeGroup.adult;
+        return AgeGroup.adult;
+      }
+
+
       travelersReviewList.add(
         TravelerReviewModel(
           passport: travelerPassport,
@@ -311,7 +329,7 @@ class PassportsFormsController extends GetxController {
           taxTotal: taxTotal,
           // لاحقًا لما تضيف اختيار مقعد فعلي، استبدل بـ المقعد الحقيقي
           seat: null,
-          ageGroup: null,
+          ageGroup: _ageGroupFromAny(passengerJson?['pax_type']),
         ),
       );
     }

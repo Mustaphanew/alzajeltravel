@@ -1,10 +1,13 @@
 import 'package:alzajeltravel/controller/bookings_report/trip_detail/flight_detail.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/routes.dart';
+import 'package:alzajeltravel/view/frame/flights/flight_detail/more_flight_detail_page.dart';
+import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
 import 'package:alzajeltravel/controller/travelers_review/travelers_review_controller.dart';
@@ -93,35 +96,27 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // if(timeLimit != null) ...[
-                          //   const SizedBox(height: 12),
-                          //   Card(
-                          //     margin: EdgeInsets.symmetric(horizontal: 8),
-                          //     child: Container(
-                          //       padding: EdgeInsets.only(top: 12, bottom: 16,),
-                          //       width: double.infinity,
-                          //       child: Column(
-                          //         children: [
-                          //           Text(
-                          //             "Time Left".tr,
-                          //             style: TextStyle(
-                          //               fontSize: AppConsts.lg
-                          //             ),
-                          //           ),
-                          //           SizedBox(height: 8), 
-                          //           TimeRemaining(
-                          //             timeLimit: timeLimit,
-                          //             expiredText: 'Expired'.tr,
-                          //           ),
-                          //         ],
-                          //       ),
-                          //     ), 
-                          //   ),
-                          // ],
+
                           if (offerDetail != null) ...[
                             Padding(
                               padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 
-                              child: FlightMainCard(revalidatedDetails: offerDetail),
+                              child: FlightOfferCard(
+                                offer: offerDetail.offer,
+                                showSeatLeft: false,
+                                showBaggage: false,
+                                onDetails: () {
+                                  // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
+                                  Get.to(
+                                    () => MoreFlightDetailPage(
+                                      flightOffer: offerDetail.offer,
+                                      fareRules: offerDetail.fareRules,
+                                      showContinueButton: false,
+                                      // revalidatedDetails: widget.offerDetail,
+                                    ),
+                                  );
+                                },
+                                showFare: false,
+                              ),
                             ),
                             SizedBox(height: 8),
                           ],
@@ -129,39 +124,133 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                           // ======= قائمة المسافرين كسلايدر =======
                           if (c.travelers.isNotEmpty) ...[
                             const SizedBox(height: 0),
-            
-                            CarouselSlider.builder(
+
+                                  
+                      ...[
+                        SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: FirstTitle(title: "Travelers data".tr), 
+                        ),
+                        SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Container(
+                            
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: cs.outlineVariant),
+                            ),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
                               itemCount: c.travelers.length,
-                              itemBuilder: (context, index, realIndex) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  child: _buildTravelerTile(
-                                    context: context,
-                                    index: index,
-                                    traveler: c.travelers[index],
-                                    travelersCount: c.travelers.length,
+                              padding: EdgeInsets.zero,
+                              itemBuilder: (context, index) {
+                                final traveler = c.travelers[index];
+                                return Ink(
+                                  color: cs.surfaceContainer,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Ink(
+                                        color: cs.surface,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                          child: IntrinsicWidth(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              spacing: 3,
+                                              children: [
+                                                SecondTitle(title: "Full Name".tr),
+                                                const Divider(thickness: 1),
+                                                SecondTitle(title: "Date of Birth".tr),
+                                                const Divider(thickness: 1),
+                                                SecondTitle(title: "Ticket".tr),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            spacing: 3,
+                                            children: [
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
+                                                alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
+                                                child: Text(
+                                                  traveler.passport.fullName,
+                                                  style: TextStyle(
+                                                    fontSize: AppConsts.lg, // الحجم الأقصى
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(
+                                                title: AppFuns.replaceArabicNumbers(
+                                                  intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                                ),
+                                              ),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
-                              options: CarouselOptions(
-                                viewportFraction: 0.98, // الكرت ياخذ 90% من عرض الشاشة
-                                enlargeCenterPage: true, // يكبر الكرت اللي في النص
-                                enableInfiniteScroll: false, // بدون سكول لا نهائي
-                                height: 300, // عدّلها حسب ارتفاع الكرت عندك
-                                onPageChanged: (index, reason) {
-                                  setState(() {
-                                    _currentTravelerIndex = index;
-                                  });
-                                },
-                              ),
+                              separatorBuilder: (context, index) =>
+                                  Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
                             ),
+                          ),
+                        ),
+                      ],
+      
             
+                            // CarouselSlider.builder(
+                            //   itemCount: c.travelers.length,
+                            //   itemBuilder: (context, index, realIndex) {
+                            //     return Padding(
+                            //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            //       child: _buildTravelerTile(
+                            //         context: context,
+                            //         index: index,
+                            //         traveler: c.travelers[index],
+                            //         travelersCount: c.travelers.length,
+                            //       ),
+                            //     );
+                            //   },
+                            //   options: CarouselOptions(
+                            //     viewportFraction: 0.98, // الكرت ياخذ 90% من عرض الشاشة
+                            //     enlargeCenterPage: true, // يكبر الكرت اللي في النص
+                            //     enableInfiniteScroll: false, // بدون سكول لا نهائي
+                            //     height: 300, // عدّلها حسب ارتفاع الكرت عندك
+                            //     onPageChanged: (index, reason) {
+                            //       setState(() {
+                            //         _currentTravelerIndex = index;
+                            //       });
+                            //     },
+                            //   ),
+                            // ),
+            
+
+
                             const SizedBox(height: 0),
             
                           ],
             
                           // ======= بيانات الاتصال =======
-                          Padding(padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8), child: _buildContactTile(context)),
+                          // Padding(padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8), child: _buildContactTile(context)),
                         ],
                       ),
                     ),
@@ -463,6 +552,8 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
 
   Widget _buildSummaryBar(BuildContext context, TravelersReviewController c, ColorScheme cs) {
     final offerDetail = flightDetailApiController.revalidatedDetails.value;
+    final currency = offerDetail?.offer.currency ?? 'USD';
+    print("c.summary.childCount: ${c.travelers.last.ageGroupLabel}");
     return Container(
       
       width: double.infinity,
@@ -500,7 +591,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                       children: [
                         Text('Adult'.tr + ' ${c.summary.adultCount}', style: const TextStyle(fontSize: AppConsts.lg)),
                         Text(
-                          ': ${AppFuns.priceWithCoin(c.summary.adultTotalFare ?? 0.0, '\$')}',
+                          ': ${AppFuns.priceWithCoin(c.summary.adultTotalFare ?? 0.0, currency)}',
                           style: const TextStyle(fontSize: AppConsts.lg),
                         ),
                       ],
@@ -513,7 +604,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         children: [
                           Text('Child'.tr + ' ${c.summary.childCount}', style: const TextStyle(fontSize: AppConsts.lg)),
                           Text(
-                            ': ${AppFuns.priceWithCoin(c.summary.childTotalFare!, '\$')}',
+                            ': ${AppFuns.priceWithCoin(c.summary.childTotalFare ?? 0.0, currency)}',
                             style: const TextStyle(fontSize: AppConsts.lg),
                           ),
                         ],
@@ -526,7 +617,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         children: [
                           Text('Infant'.tr + ' ${c.summary.infantLapCount}', style: const TextStyle(fontSize: AppConsts.lg)),
                           Text(
-                            ': ${AppFuns.priceWithCoin(c.summary.infantLapTotalFare!, '\$')}',
+                            ': ${AppFuns.priceWithCoin(c.summary.infantLapTotalFare ?? 0.0, currency)}',
                             style: const TextStyle(fontSize: AppConsts.lg),
                           ),
                         ],
@@ -545,7 +636,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                           style: TextStyle(color: cs.primaryContainer, fontSize: AppConsts.xxlg, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          ': ${AppFuns.priceWithCoin(c.summary.totalPrice, '\$')}',
+                          ': ${AppFuns.priceWithCoin(c.summary.totalPrice, currency)}',
                           style: TextStyle(fontWeight: FontWeight.bold, color: cs.primaryContainer, fontSize: AppConsts.xxlg),
                         ),
                         Text(" "),
@@ -592,6 +683,35 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+
+class FirstTitle extends StatelessWidget {
+  final String title;
+  final Color? color;
+  const FirstTitle({super.key, required this.title, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: color),
+    );
+  }
+}
+
+class SecondTitle extends StatelessWidget {
+  final String title;
+  const SecondTitle({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
     );
   }
 }

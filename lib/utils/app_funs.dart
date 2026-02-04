@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/view/frame/home_2.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
@@ -366,6 +367,25 @@ class AppFuns {
 
     return result == true;
   }
+
+  static String formatHourMinuteSecond(String? text) {
+    if(text == null) return '';
+    final txt = text.toLowerCase().trim();
+    if(AppVars.lang == "ar") {
+      if(txt.contains(":")){
+        return txt.replaceAll("h", " ساعة ").replaceAll("m", " دقيقة ").replaceAll("s", " ثانية ").replaceAll(":", " و "); 
+      } else {
+        return txt.replaceAll("h", " ساعة ").replaceAll("m", " دقيقة ").replaceAll("s", " ثانية ").replaceAll("  ", " و "); 
+      }
+    }
+    return txt;
+  }
+
+  static Future<void> refreshHomePage() async {
+    LatestBookingsController latestBookingsController = Get.find();
+    latestBookingsController.fetchData();
+  }
+
 
 
 

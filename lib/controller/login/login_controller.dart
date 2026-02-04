@@ -171,6 +171,7 @@ class LoginController extends GetxController {
   }
 
   Future<void> loginWithBiometrics(BuildContext context) async {
+    AppFuns.hideKeyboard();
     if (kIsWeb) {
       if (context.mounted) {
         CustomSnackBar.error(context, 'Biometrics Not Supported On Web'.tr);

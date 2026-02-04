@@ -644,17 +644,40 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                                   }
                                 },
                                 onDetails: () {
+                                  // Get.to(
+                                  //   () => FlightDetailPage(
+                                  //     detail: RevalidatedFlightModel(
+                                  //       offer: offer,
+                                  //       isRefundable: offer.isRefundable,
+                                  //       isPassportMandatory: false,
+                                  //       firstNameCharacterLimit: 0,
+                                  //       lastNameCharacterLimit: 0,
+                                  //       paxNameCharacterLimit: 0,
+                                  //       fareRules: const [],
+                                  //     ),
+                                  //     showContinueButton: false,
+                                  //     onBook: () async {
+                                  //       context.loaderOverlay.show();
+                                  //       await detailCtrl.revalidateAndOpen(offer: offer);
+                                  //       if (context.mounted) context.loaderOverlay.hide();
+                                  //     },
+                                  //     onOtherPrices: () async {
+                                  //       context.loaderOverlay.show();
+                                  //       try {
+                                  //         final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                  //         if (!ok) {
+                                  //           Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                  //         }
+                                  //       } finally {
+                                  //         if (context.mounted) context.loaderOverlay.hide();
+                                  //       }
+                                  //     },
+                                  //   ),
+                                  // );
                                   Get.to(
-                                    () => FlightDetailPage(
-                                      detail: RevalidatedFlightModel(
-                                        offer: offer,
-                                        isRefundable: offer.isRefundable,
-                                        isPassportMandatory: false,
-                                        firstNameCharacterLimit: 0,
-                                        lastNameCharacterLimit: 0,
-                                        paxNameCharacterLimit: 0,
-                                        fareRules: const [],
-                                      ),
+                                    () => MoreFlightDetailPage(
+                                      flightOffer: offer,
+                                      fareRules: const [],
                                       showContinueButton: false,
                                       onBook: () async {
                                         context.loaderOverlay.show();
@@ -672,6 +695,16 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                                           if (context.mounted) context.loaderOverlay.hide();
                                         }
                                       },
+                                      revalidatedDetails: RevalidatedFlightModel(
+                                        offer: offer,
+                                        isRefundable: offer.isRefundable,
+                                        isPassportMandatory: false,
+                                        firstNameCharacterLimit: 0,
+                                        lastNameCharacterLimit: 0,
+                                        paxNameCharacterLimit: 0,
+                                        fareRules: const [],
+                                      ),
+                                      
                                     ),
                                   );
                                 },
@@ -960,7 +993,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric( vertical: 0),
                               backgroundColor: cs.secondary,
-                              foregroundColor: Colors.black,
+                              foregroundColor: cs.shadow,
                             ),
                             onPressed: widget.onOtherPrices!,
                           icon: const Icon(Icons.attach_money),
@@ -1155,17 +1188,23 @@ class _LegRowState extends State<_LegRow> {
             
             // Middle
             Expanded(
+              flex: 2,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    widget.leg.totalDurationText,
-                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 12),
+                    child: Text(
+                      AppFuns.formatHourMinuteSecond(widget.leg.totalDurationText ),
+                      textAlign: TextAlign.start,
+                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
                   ),
 
                   Row(
                     children: [
-                      const SizedBox(width: 12),
+                      // const SizedBox(width: 12),
                       Container(
                         margin: const EdgeInsets.only(top: 6),
                         height: 12,
@@ -1185,34 +1224,21 @@ class _LegRowState extends State<_LegRow> {
                         flipX: !isArabic,
                         child: Image.asset(AppConsts.plane, width: 44,),
                       ),
-                      const SizedBox(width: 12),
+                      // const SizedBox(width: 12),
                     ],
                   ),
                   
-                  // Padding(
-                  //   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  //   child: Stack(
-                  //     alignment: AlignmentDirectional.centerEnd,
-                  //     children: [
-                  //       Padding(
-                  //         padding: const EdgeInsetsDirectional.only(end: 40),
-                  //         child: DividerLine(),
-                  //       ), 
-                  //       // Transform.rotate(angle: planeAngle, child: const Icon(Icons.airplanemode_active, size: 27)),
-                  //       Image.asset(AppConsts.plane, width: 44,),
-                  //     ],
-                  //   ),
-                  // ),
-
-
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFf7efe9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(color: Color(0xFF9c5627), fontWeight: FontWeight.bold, fontSize: 13))),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFf7efe9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(stopsText, style: theme.textTheme.bodySmall?.copyWith(color: Color(0xFF9c5627), fontWeight: FontWeight.bold, fontSize: 13))),
+                  ),
                   const SizedBox(height: 16),
                 ],
               ),

@@ -141,10 +141,13 @@ class _PassportsFormsPageState extends State<PassportsFormsPage> {
                             const Divider(),
             
                             // 👉 فورم بيانات الاتصال في النهاية
-                            // Padding(
-                            //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                            //   child: ContactInformationForm(controller: formsController),
-                            // ), 
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                              height: 20,
+                              child: Opacity(
+                                opacity: 0.5,
+                                child: ContactInformationForm(controller: formsController)),
+                            ), 
                             SizedBox(height: 36),
                           ], 
                         ),

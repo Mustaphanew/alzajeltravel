@@ -614,4 +614,14 @@ Map<String, String> ar = {
   "Traveler data": "بيانات المسافر",
   "Passport data": "بيانات جواز السفر",
 
+  "Aircraft": "طراز الطائرة",
+
+  "layover in": "توقف في",
+
+  "for": "لمدة",
+
+  "Pending": "قيد الانتظار",
+  "pending": "قيد الانتظار",
+  "PENDING": "قيد الانتظار",
+
 };

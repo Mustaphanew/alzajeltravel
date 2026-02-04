@@ -268,8 +268,10 @@ class PassportModel {
     }
 
     CountryModel? parseCountry(dynamic v) {
+      print("country:1 $v");
       if (v == null) return null;
       if(v is String){
+        print("country:2 $v");
         final alpha2 = v.toString().split("_").first;
         return CountryRepo.searchByAlpha(alpha2);
       }
@@ -290,7 +292,7 @@ class PassportModel {
       dateOfExpiry: parseDate(json['dateOfExpiry']),
       optionalData: s(json['optionalData']),
       nationality: parseCountry(json['nationality']),
-      issuingCountry: parseCountry(json['issue_country']),
+      issuingCountry: parseCountry(json['issueCountry']),
       mrzText: s(json['mrzText']) ?? s(json['mrz_text']),
     );
   }

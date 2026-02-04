@@ -22,17 +22,62 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   late final LoginController controller;
   final formKey = GlobalKey<FormState>();
 
   SearchFlightController searchFlightController = Get.put(SearchFlightController());
 
+  ScrollController scrollController = ScrollController();
+
+  double _lastBottomInset = 0;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     controller = Get.put(LoginController(), permanent: false);
     AppVars.getStorage.write("first_run", false);
+
+    // قيمة ابتدائية (لو الصفحة فتحت والكيبورد ظاهر)
+    _lastBottomInset = WidgetsBinding.instance.platformDispatcher.views.first.viewInsets.bottom;
+
+  }
+
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+      final keyboardJustOpened = bottomInset > _lastBottomInset && bottomInset > 0;
+      final keyboardJustClosed = bottomInset == 0 && _lastBottomInset > 0;
+
+      _lastBottomInset = bottomInset;
+
+      print("didChangeMetrics bottomInset: $bottomInset keyboardJustOpened: $keyboardJustOpened");
+
+      if (keyboardJustOpened && scrollController.hasClients) {
+        // نفذ بعد شوي عشان أنيميشن الكيبورد يكمل ويصير maxScrollExtent صحيح
+        Future.delayed(const Duration(milliseconds: 0), () {
+          if (!mounted || !scrollController.hasClients) return;
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
+    });
+  }
+
+
+    @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> login(BuildContext context) async {
@@ -111,8 +156,9 @@ class _LoginPageState extends State<LoginPage> {
               // الكرت (Glass)
               SafeArea(
                 child: SingleChildScrollView(
+                  controller: scrollController,
                   padding: EdgeInsets.only(
-                    top: size.height * 0.06,
+                    top: MediaQuery.of(context).padding.top,
                     left: 22,
                     right: 22,
                     bottom: 34 + kb, // ✅ مساحة إضافية عند ظهور الكيبورد
@@ -174,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                                       print("AppVars.appThemeMode: ${AppVars.appThemeMode}");
                                       context.loaderOverlay.show();
                                       await Future.delayed(const Duration(seconds: 5));
-                                      context.loaderOverlay.hide();
+                                      if(context.mounted) context.loaderOverlay.hide();
                                       // Get.to(() => const MyLottie());
                                       // Get.to(() => const SettingsPage());
                                     }, 
@@ -211,31 +257,35 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                       
                               const SizedBox(height: 24),
-                      
+
                               // Password
-                              TextFormField(
-                                controller: c.passwordController,
-                                focusNode: c.passwordFocus,
-                                obscureText: c.isPasswordHidden,
-                                textInputAction: TextInputAction.next,
-                                validator: c.validatePassword,
-                                cursorColor: cs.secondary,
-                                style: TextStyle(color: cs.onPrimary),
-                                decoration: deco(
-                                  hint: 'Password Hint',
-                                  prefix: const Icon(Icons.lock_outlined),
-                                  suffix: IconButton(
-                                    onPressed: c.togglePasswordVisibility,
-                                    icon: Icon(
-                                      c.isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                              StatefulBuilder(
+                                builder: (context, innerSetState) {
+                                  return TextFormField(
+                                    controller: c.passwordController,
+                                    focusNode: c.passwordFocus,
+                                    obscureText: c.isPasswordHidden,
+                                    textInputAction: TextInputAction.next,
+                                    validator: c.validatePassword,
+                                    cursorColor: cs.secondary,
+                                    style: TextStyle(color: cs.onPrimary),
+                                    decoration: deco(
+                                      hint: 'Password Hint',
+                                      prefix: const Icon(Icons.lock_outlined),
+                                      suffix: suffixIconPassword(context, c),
                                     ),
-                                    tooltip: 'Toggle Password'.tr,
-                                  ),
-                                ),
-                                onFieldSubmitted: (_) {
-                                  FocusScope.of(context).requestFocus(c.agencyFocus);
+                                    onFieldSubmitted: (_) {
+                                      FocusScope.of(context).requestFocus(c.agencyFocus);
+                                    },
+                                    onChanged: (value) {
+                                      innerSetState(() {});
+                                    },
+                                    onEditingComplete: () {
+                                      print("onEditingComplete");
+                                    },
+                                  );
                                 },
-                              ),
+                              ), 
                       
                               const SizedBox(height: 24),
                       
@@ -292,28 +342,28 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                       
                               // بصمة (اختياري) تحت الزر بدون ما تكسر التصميم
-                              if (c.biometricEnabled && !kIsWeb) ...[
-                                const SizedBox(height: 12),
-                                Center(
-                                  child: IconButton(
-                                    iconSize: 34,
-                                    color: cs.onPrimary.withOpacity(0.9),
-                                    onPressed: () async {
-                                      context.loaderOverlay.show(
-                                        widgetBuilder: (_) => Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: cs.primaryContainer,
-                                          ),
-                                        ),
-                                      );
-                                      await c.loginWithBiometrics(context);
-                                      if (context.mounted) context.loaderOverlay.hide();
-                                    },
-                                    icon: const Icon(Icons.fingerprint_outlined),
-                                  ),
-                                ),
-                              ],
+                              // if (c.biometricEnabled && !kIsWeb) ...[
+                              //   const SizedBox(height: 12),
+                              //   Center(
+                              //     child: IconButton(
+                              //       iconSize: 34,
+                              //       color: cs.onPrimary.withOpacity(0.9),
+                              //       onPressed: () async {
+                              //         context.loaderOverlay.show(
+                              //           widgetBuilder: (_) => Center(
+                              //             child: CircularProgressIndicator(
+                              //               strokeWidth: 2,
+                              //               color: cs.primaryContainer,
+                              //             ),
+                              //           ),
+                              //         );
+                              //         await c.loginWithBiometrics(context);
+                              //         if (context.mounted) context.loaderOverlay.hide();
+                              //       },
+                              //       icon: const Icon(Icons.fingerprint_outlined),
+                              //     ),
+                              //   ),
+                              // ],
                       
                               const SizedBox(height: 24),
                             ],
@@ -330,4 +380,36 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
   }
+
+
+  Widget suffixIconPassword(BuildContext context, LoginController c) {
+    final cs = Theme.of(context).colorScheme;
+    if (c.biometricEnabled && !kIsWeb && c.passwordController.text == "") {
+      return IconButton( 
+        color: cs.onPrimary.withOpacity(0.9),
+        iconSize: 28,
+        onPressed: () async {
+          context.loaderOverlay.show(
+            widgetBuilder: (_) => Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: cs.primaryContainer,
+              ),
+            ),
+          );
+          await c.loginWithBiometrics(context);
+          if (context.mounted) context.loaderOverlay.hide();
+        },
+        icon: const Icon(Icons.fingerprint_outlined),
+      );
+    }
+    return IconButton(
+      icon: Icon(
+        c.isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+        color: cs.onPrimary,
+      ),
+      onPressed: c.togglePasswordVisibility,
+    );
+  }
+
 }

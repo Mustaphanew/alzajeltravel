@@ -1,7 +1,10 @@
+import 'package:alzajeltravel/controller/travelers_controller.dart';
+import 'package:alzajeltravel/model/flight/flight_segment_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
+import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -14,15 +17,22 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
 
 class MoreFlightDetailPage extends StatelessWidget {
+  final VoidCallback? onBook;
+  final VoidCallback? onOtherPrices;
+  final bool showContinueButton;
+
   final FlightOfferModel flightOffer;
   final RevalidatedFlightModel? revalidatedDetails;
   final List<FareRule> fareRules;
 
   const MoreFlightDetailPage({
     super.key,
+    this.onBook,
+    this.onOtherPrices,
     required this.flightOffer,
     this.revalidatedDetails,
     required this.fareRules,
+    this.showContinueButton = true,
   });
 
   @override
@@ -31,7 +41,7 @@ class MoreFlightDetailPage extends StatelessWidget {
     final cs = theme.colorScheme;
 
     final timeFormat = DateFormat('hh:mm a', AppVars.lang);
-    final dateFormat = DateFormat('EEE, MMM dd', AppVars.lang); // Wed, Dec 10
+    final dateFormat = DateFormat('EEE, dd MMM', AppVars.lang); // Wed, 10 Dec
 
     // لو فيه revalidated نشتغل عليه، غير كذا نستخدم flightOffer العادي
     final FlightOfferModel offer = revalidatedDetails?.offer ?? flightOffer;
@@ -43,57 +53,68 @@ class MoreFlightDetailPage extends StatelessWidget {
       bottom: true,
       top: false,
       child: Scaffold(
-        appBar: AppBar(title: Text('More Flight details'.tr)),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // ---------- عرض المسارات (ذهاب / عودة) ----------
-              _buildLegSections(
-                context: context,
-                theme: theme,
-                cs: cs,
-                offer: offer,
-                legs: legs,
-                timeFormat: timeFormat,
-                dateFormat: dateFormat,
-              ),
-
-              // ---------- معلومات عامة مشتركة ----------
-              const SizedBox(height: 16),
-              _InfoRow(label: "Cabin".tr, value: offer.cabinClassText.tr),
-              const SizedBox(height: 4),
-              _InfoRow(
-                label: "Baggage".tr,
-                value: (offer.baggageInfo ?? '_').split(',').first,
-              ),
-              const SizedBox(height: 12),
-              _InfoRow(
-                label: "Cancellation fee".tr,
-                value: AppFuns.priceWithCoin(20, "USD"),
-              ),
-              const SizedBox(height: 4),
-              _InfoRow(
-                label: "Change fee".tr,
-                value: AppFuns.priceWithCoin(15, "USD"),
-              ), 
-
-              const SizedBox(height: 30),
+        appBar: AppBar(title: Text('Flight details'.tr)),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
+                child: Column(
+                  children: [
+                    // ---------- عرض المسارات (ذهاب / عودة) ----------
+                    _buildLegSections(
+                      context: context,
+                      theme: theme,
+                      cs: cs,
+                      offer: offer,
+                      legs: legs,
+                      timeFormat: timeFormat,
+                      dateFormat: dateFormat,
+                    ),
               
-              if (fareRules.isNotEmpty)
-                Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ExpansionTile(
-                    title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    children: fareRules!.map((rule) => FareRuleTile(rule: rule)).toList(),
-                  ),
+                    const SizedBox(height: 16),
+                    
+                    if (fareRules.isNotEmpty)
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ExpansionTile(
+                          title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          children: fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
+                        ),
+                      ),
+                    
+                    const SizedBox(height: 30),
+              
+              
+              
+                  ],
                 ),
-              
-              const SizedBox(height: 30),
+              ),
+            ),
+          
+            Container( 
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 32, top: 15),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer,
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.shadow.withOpacity(0.4),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: BottomSection(
+                offer: offer,
+                fareRules: fareRules,
+                showContinueButton: showContinueButton,
+                parent: this,
+              ),
+            ),
 
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -118,12 +139,15 @@ class MoreFlightDetailPage extends StatelessWidget {
           const SizedBox(height: 4),
 
           // عنوان المسار
-          Text(
-            '${"Trip route".tr}: '
-            '${legIndex == 0 ? "Departure".tr : "Return".tr}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: AppConsts.xlg,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              '${"Trip route".tr}: '
+              '${legIndex == 0 ? "Departure".tr : "Return".tr}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: AppConsts.xlg,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -213,7 +237,7 @@ class MoreFlightDetailPage extends StatelessWidget {
             // لو في أكثر من سيجمنت في هذا المسار نعرض رقم السجمنت
             if (segments.length > 1)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
                 child: Text(
                   "Flight".tr + " " + (index + 1).toString() + " " + "of".tr + " " + segments.length.toString(),
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -222,255 +246,18 @@ class MoreFlightDetailPage extends StatelessWidget {
                 ),
               ),
 
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              color: cs.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // السطر العلوي (شعار الشركة + اسم + رقم الرحلة)
-                    Row(
-                      children: [
-                        SizedBox(
-                          height: 28,
-                          width: 28,
-                          child: CacheImg(
-                            AppFuns.airlineImgURL(seg.marketingAirlineCode,),
-                            sizeCircleLoading: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [ 
-                                Text( 
-                                  (AirlineRepo.searchByCode(seg.marketingAirlineCode) != null) ?
-                                  AirlineRepo.searchByCode(seg.marketingAirlineCode)!.name[AppVars.lang] : "",
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${seg.marketingAirlineCode}${seg.marketingAirlineNumber}',
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                            // Aircraft
-                            Text("Aircraft".tr + ": " + seg.equipmentNumber),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // الخط الزمني (من → إلى)
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // الخط العمودي
-                          Column(
-                            children: [
-                              Container(
-                                  width: 2, height: 33, color: cs.primary),
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration( 
-                                  color: cs.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  width: 2,
-                                  color: cs.primary.withOpacity(0.5),
-                                ),
-                              ),
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: cs.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Container(
-                                  width: 2, height: 25, color: cs.primary),
-                            ],
-                          ),
-                          const SizedBox(width: 12),
-
-                          // نصوص المدن / الأوقات
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // ===== من =====
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // اسم المطار (من)
-                                          Text(
-                                            fromName,
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                                          // كود المطار (من)
-                                          Text(
-                                            seg.fromCode,
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                          Text(
-                                            "Terminal".tr + ": " + (seg.fromTerminal?? '_'),
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          depTime,
-                                          style: theme
-                                              .textTheme.titleLarge
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          depDate,
-                                          style: theme.textTheme.bodySmall,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Travel time
-                                Text(
-                                  '${"Travel time".tr}: ${seg.journeyText ?? '_'}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.textTheme.bodyMedium?.color
-                                        ?.withOpacity(0.8),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // ===== إلى =====
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // اسم المطار (إلى)
-                                          Text(
-                                            toName,
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                                          // كود المطار (إلى)
-                                          Text(
-                                            seg.toCode,
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                          Text(
-                                            "Terminal".tr + ": " + (seg.toTerminal?? '_'),
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          arrTime,
-                                          style: theme
-                                              .textTheme.titleLarge
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          arrDate,
-                                          style: theme.textTheme.bodySmall,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-
-
-                                
-                              ],
-                            ),
-                          ),
-
-
-                        
-                        ],
-                      ),
-                    ),
-
-
-                    // لو حاب تضيف عرض للأمتعة الخاصة بهذه السجمنت
-                    if (segmentBaggage != null &&
-                        segmentBaggage.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        label: "Baggage".tr,
-                        value: segmentBaggage,
-                      ),
-                    ],
-
-
-                  ],
-                ),
-              ),
+            SegCard(
+              seg: seg,
+              fromCode: seg.fromCode,
+              fromName: fromName, 
+              depTime: depTime, 
+              depDate: depDate,
+              toCode: seg.toCode,
+              toName: toName, 
+              arrTime: arrTime, 
+              arrDate: arrDate, 
+              segmentBaggage: segmentBaggage,
+              cabin: (seg.cabinClassText.replaceAll("Standard", "")).tr,
             ),
 
             const SizedBox(height: 0),
@@ -483,36 +270,47 @@ class MoreFlightDetailPage extends StatelessWidget {
         final seg = segments[index];
         final nextSeg = segments[index + 1];
 
-        final layText = seg.layoverText;
+        final layText = AppFuns.formatHourMinuteSecond(seg.layoverText);
         if (layText == null || layText.isEmpty) {
           return const SizedBox(height: 16);
         }
 
-        final cityName = nextSeg.fromName.split(',').first;
+        final cityName = AirportRepo.searchByCode(nextSeg.fromCode).name[AppVars.lang];
 
-        return Padding(
+        return Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Divider(),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.access_time, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '$layText ${"layover in".tr} $cityName',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  // borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 20,
+                      color: cs.surfaceContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${"layover in".tr} $cityName ${"for".tr} $layText',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: cs.surfaceContainer,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               
-              const SizedBox(height: 4),
+
               const Divider(),
               
             ],
@@ -522,6 +320,7 @@ class MoreFlightDetailPage extends StatelessWidget {
     );
   }
 }
+
 
 class _InfoRow extends StatelessWidget {
   final String label;
@@ -544,3 +343,536 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
+
+
+class SegCard extends StatelessWidget {
+  const SegCard({
+    super.key,
+    required this.seg,
+    required this.fromName,
+    required this.fromCode,
+    required this.depTime,
+    required this.depDate,
+    required this.toName,
+    required this.toCode,
+    required this.arrTime,
+    required this.arrDate,
+    required this.segmentBaggage,
+    required this.cabin,
+  });
+
+  final FlightSegmentModel seg;
+  final String fromName;
+  final String fromCode;
+  final String depTime;
+  final String depDate;
+  final String toName;
+  final String toCode;
+  final String arrTime;
+  final String arrDate;
+  final String? segmentBaggage;
+  final String cabin;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+      ),
+      color: cs.surfaceContainerHighest,
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        child: Column(
+          children: [
+            // السطر العلوي (شعار الشركة + اسم + رقم الرحلة)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: CacheImg(
+                    AppFuns.airlineImgURL(seg.marketingAirlineCode,),
+                    sizeCircleLoading: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [ 
+                          Expanded(
+                            child: Text( 
+                              (AirlineRepo.searchByCode(seg.marketingAirlineCode) != null) ?
+                              AirlineRepo.searchByCode(seg.marketingAirlineCode)!.name[AppVars.lang] : "",
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+
+                        ], 
+                      ),
+                      const SizedBox(height: 2),
+                      // Aircraft
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text( 
+                            "Aircraft".tr + ": " + seg.equipmentNumber,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '${seg.marketingAirlineCode}-${seg.marketingAirlineNumber}',
+                            ),
+                          ),
+                        
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        
+            const SizedBox(height: 6),
+            const Divider(),
+            const SizedBox(height: 12),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Container(
+                    child: Column(
+                      children: [
+                        Text(depDate),
+                        const SizedBox(height: 2),
+                        Text(
+                          depTime,
+                          style: TextStyle(
+                            fontSize: AppConsts.xlg,
+                            fontWeight: FontWeight.w600,
+                            height: 0
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          fromName,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: AppConsts.normal,
+                            fontWeight: FontWeight.w600,
+                            height: 0
+                          ),
+                        ),
+                        const SizedBox(height: 4), 
+                        Text(fromCode),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      Text(
+                        AppFuns.formatHourMinuteSecond(seg.journeyText ?? '_'),
+                        style: TextStyle(
+                          fontFamily: AppConsts.font,
+                          fontSize: AppConsts.sm,
+                          fontWeight: FontWeight.w600,
+                          height: 0
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Expanded(
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                DividerLine(),
+                                RotatedBox(
+                                  quarterTurns: (AppVars.lang == 'en')? 1: -1,
+                                  child: Icon(
+                                    Icons.flight,
+                                    color: cs.primary,
+                                    size: 28,
+                                  ),
+                                ),
+                              ],
+                            ), 
+                          ),
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      if (segmentBaggage != null && segmentBaggage!.isNotEmpty) 
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: cs.secondaryFixed.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            "Baggage".tr + ": " + segmentBaggage!,
+                            style: TextStyle(
+                              fontFamily: AppConsts.font,
+                              fontSize: AppConsts.sm,
+                              fontWeight: FontWeight.w600,
+                              height: 0
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ),
+
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(arrDate),
+                      const SizedBox(height: 2),
+                      Text(
+                        arrTime,
+                        style: TextStyle(
+                          fontSize: AppConsts.xlg,
+                          fontWeight: FontWeight.w600,
+                          height: 0
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        toName,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: AppConsts.normal,
+                          fontWeight: FontWeight.w600,
+                          height: 0
+                        ),
+                      ),
+                      const SizedBox(height: 4), 
+                      Text(toCode),
+                    ],
+                  ),
+                ),
+
+              ],
+            ),
+
+            // الخط الزمني (من → إلى)
+            // IntrinsicHeight(
+            //   child: Row(
+            //     crossAxisAlignment: CrossAxisAlignment.stretch,
+            //     children: [
+            //       // نصوص المدن / الأوقات
+            //       Expanded(
+            //         child: Column(
+            //           crossAxisAlignment: CrossAxisAlignment.start,
+            //           children: [
+            //             // ===== من =====
+            //             Row(
+            //               crossAxisAlignment: CrossAxisAlignment.start,
+            //               children: [
+            //                 Expanded(
+            //                   child: Column(
+            //                     crossAxisAlignment:
+            //                         CrossAxisAlignment.start,
+            //                     children: [
+            //                       // اسم المطار (من)
+            //                       Text(
+            //                         fromName,
+            //                         style: theme.textTheme.titleMedium
+            //                             ?.copyWith(
+            //                           fontWeight: FontWeight.w600,
+            //                         ),
+            //                         maxLines: 2,
+            //                         overflow: TextOverflow.ellipsis,
+            //                       ),
+            //                       const SizedBox(height: 4),
+            //                       // كود المطار (من)
+            //                       Text(
+            //                         seg.fromCode,
+            //                         style: theme.textTheme.bodyMedium,
+            //                       ),
+            //                       Text(
+            //                         "Terminal".tr + ": " + (seg.fromTerminal?? '_'),
+            //                         style: theme.textTheme.bodyMedium,
+            //                       ),
+            //                     ],
+            //                   ),
+            //                 ),
+            //                 const SizedBox(width: 8),
+            //                 Column(
+            //                   crossAxisAlignment:
+            //                       CrossAxisAlignment.end,
+            //                   children: [
+            //                     Text(
+            //                       depTime,
+            //                       style: theme
+            //                           .textTheme.titleLarge
+            //                           ?.copyWith(
+            //                         fontWeight: FontWeight.w600,
+            //                       ),
+            //                     ),
+            //                     const SizedBox(height: 4),
+            //                     Text(
+            //                       depDate,
+            //                       style: theme.textTheme.bodySmall,
+            //                       maxLines: 2,
+            //                       overflow: TextOverflow.ellipsis,
+            //                     ),
+            //                   ],
+            //                 ),
+            //               ],
+            //             ),
+            //             const SizedBox(height: 16),
+            //             // Travel time
+            //             Text(
+            //               '${"Travel time".tr}: ${seg.journeyText ?? '_'}',
+            //               style: theme.textTheme.bodyMedium?.copyWith( 
+            //                 color: theme.textTheme.bodyMedium?.color
+            //                     ?.withOpacity(0.8),
+            //               ),
+            //             ),
+            //             const SizedBox(height: 16),
+            //             // ===== إلى =====
+            //             Row(
+            //               crossAxisAlignment: CrossAxisAlignment.start,          
+            //               children: [
+            //                 Expanded(
+            //                   child: Column(
+            //                     crossAxisAlignment:
+            //                         CrossAxisAlignment.start,
+            //                     children: [
+            //                       // اسم المطار (إلى)
+            //                       Text(
+            //                         toName,
+            //                         style: theme.textTheme.titleMedium
+            //                             ?.copyWith(
+            //                           fontWeight: FontWeight.w600,
+            //                         ),
+            //                         maxLines: 2,
+            //                         overflow: TextOverflow.ellipsis,
+            //                       ),
+            //                       const SizedBox(height: 4),
+            //                       // كود المطار (إلى)
+            //                       Text(
+            //                         seg.toCode,
+            //                         style: theme.textTheme.bodyMedium,
+            //                       ),
+            //                       Text(
+            //                         "Terminal".tr + ": " + (seg.toTerminal?? '_'),
+            //                         style: theme.textTheme.bodyMedium,
+            //                       ),
+            //                     ],
+            //                   ),
+            //                 ),
+            //                 const SizedBox(width: 8),
+            //                 Column(
+            //                   crossAxisAlignment:
+            //                       CrossAxisAlignment.end,
+            //                   children: [
+            //                     Text(
+            //                       arrTime,
+            //                       style: theme
+            //                           .textTheme.titleLarge
+            //                           ?.copyWith(
+            //                         fontWeight: FontWeight.w600,
+            //                       ),
+            //                     ),
+            //                     const SizedBox(height: 4),
+            //                     Text(
+            //                       arrDate,
+            //                       style: theme.textTheme.bodySmall,
+            //                       maxLines: 1,
+            //                       overflow: TextOverflow.ellipsis,
+            //                     ),
+            //                   ],
+            //                 ),
+            //               ],
+            //             ),           
+            //           ],
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            
+            
+            // لو حاب تضيف عرض للأمتعة الخاصة بهذه السجمنت
+            // if (segmentBaggage != null && segmentBaggage!.isNotEmpty) ...[
+            //   const SizedBox(height: 12),
+            //   _InfoRow(
+            //     label: "Baggage".tr,
+            //     value: segmentBaggage!,
+            //   ),
+            // ],
+            
+            
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+class BottomSection extends StatefulWidget {
+  const BottomSection({
+    super.key, 
+    required this.offer,
+    required this.fareRules,
+    required this.showContinueButton,
+    this.parent,
+  });
+
+  final FlightOfferModel offer;
+  final List<FareRule> fareRules;
+  final bool showContinueButton;
+  final MoreFlightDetailPage? parent;
+
+  @override
+  State<BottomSection> createState() => _BottomSectionState();
+}
+
+class _BottomSectionState extends State<BottomSection> {
+  final TravelersController travelersController = Get.find();
+
+  String _formatTotal(num value) {
+    final formatter = NumberFormat('#,##0.00', 'en');
+    return formatter.format(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // اليسار: السعر + ملخص
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Trip total".tr, style: textTheme.bodyMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppFuns.priceWithCoin(widget.offer.totalAmount, widget.offer.currency),
+                    style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () {
+                      // BottomSheet لملخص السعر لاحقاً
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text("View price summary".tr),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // اليمين: زر Check out
+            if (widget.showContinueButton)
+              SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final adults = travelersController.adultsCounter;
+                    final children = travelersController.childrenCounter;
+                    final infantsInLap = travelersController.infantsInLapCounter;
+
+                    Get.to(() => PassportsFormsPage(
+                      adultsCounter: adults, childrenCounter: children, infantsInLapCounter: infantsInLap,
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 28)),
+                  label: const Icon(Icons.arrow_forward),
+                  icon: Text("Continue".tr),
+                ),
+              ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+        // ====== الأزرار ======
+        if (widget.parent != null && (widget.parent!.onBook != null || widget.parent!.onOtherPrices != null))
+          Row(
+            children: [ 
+              if (widget.parent!.onBook != null)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: widget.parent!.onBook!,
+                    icon: const Icon(Icons.flight_takeoff),
+                    label: Text("Book now".tr),
+                  ),
+                ),
+              if (widget.parent!.onBook != null && widget.parent!.onOtherPrices != null) ...[const SizedBox(width: 8)],
+              if (widget.parent!.onOtherPrices != null) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cs.secondary,
+                      foregroundColor: cs.shadow,
+                    ),
+                    onPressed: widget.parent!.onOtherPrices,
+                    icon: const Icon(Icons.attach_money),
+                    label: Text("Other Prices".tr),
+                  ),
+                ),
+              ],
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+

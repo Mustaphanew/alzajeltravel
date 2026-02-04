@@ -96,7 +96,8 @@ enum BookingStatus {
   voided('voided'),
   voide('void'),
   refund('refund'),
-  notFound('not_found');
+  pending('PENDING'),
+  notFound('not_found');  
 
   final String apiValue;
   const BookingStatus(this.apiValue);

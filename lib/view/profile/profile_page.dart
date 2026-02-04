@@ -219,7 +219,10 @@ class _BalanceCardState extends State<BalanceCard> {
       elevation: 0,
       color: cs.primary,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadiusDirectional.only(
+          topStart: Radius.circular(16),
+          topEnd: Radius.circular(16),
+        ),
         side: BorderSide(color: cs.outlineVariant),
       ), 
       child: Padding(

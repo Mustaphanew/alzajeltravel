@@ -316,17 +316,19 @@ class _ReportCardState extends State<_ReportCard> {
     final issueOnDetail = item.issueOn != null ? _formatDateTimeDetail(item.issueOn!) : null;
 
 
-    Color bgStatus = Colors.green[800]!.withOpacity(0.2);
+    Color bgStatus = cs.primaryFixed.withOpacity(0.2);
     if(item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry){
-      bgStatus = Colors.pink[800]!.withOpacity(0.2); 
+      bgStatus = Colors.red[800]!.withOpacity(0.2); 
     } else if(item.flightStatus == BookingStatus.confirmed){
       bgStatus = Colors.green[800]!.withOpacity(0.2);
     } else if(item.flightStatus == BookingStatus.preBooking){
       bgStatus = Colors.yellow[800]!.withOpacity(0.2);
     }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
-      bgStatus = Colors.red.withOpacity(0.6);
+      bgStatus = Colors.red[800]!.withOpacity(0.4);
+    }else if(item.flightStatus == BookingStatus.pending){
+      bgStatus = Colors.yellow[600]!.withOpacity(0.6);
     }else if(item.flightStatus == BookingStatus.notFound){
-      bgStatus = Colors.black.withOpacity(0.2); 
+      bgStatus = cs.primaryFixed.withOpacity(0.2);
     }
 
     return ElevatedButton(

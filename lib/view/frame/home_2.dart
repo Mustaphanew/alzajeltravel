@@ -31,7 +31,7 @@ class Home2 extends StatefulWidget {
 
 class _Home2State extends State<Home2> {
   ProfileModel? profileModel;
-  BookingsReportData? latestBookings;
+  BookingsReportData? latestBookings; 
   LatestBookingsController latestBookingsController = Get.put(LatestBookingsController());
 
   @override
@@ -57,6 +57,7 @@ class _Home2State extends State<Home2> {
 
   List<Map> services = [];
 
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -77,7 +78,7 @@ class _Home2State extends State<Home2> {
               onPressed: () async {
                 context.loaderOverlay.show();
                 await Future.delayed(const Duration(seconds: 10));
-                context.loaderOverlay.hide();
+                if(context.mounted) context.loaderOverlay.hide();
               }, 
               icon: SvgPicture.asset(
                 (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,
@@ -87,229 +88,240 @@ class _Home2State extends State<Home2> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 22),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: BalanceCard(data: profileModel!, context: context),
-            ),
-
-            // ✅ Carousel Slider
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.only(top: 0, bottom: 12),
-              child: CarouselSlider(
-                options: CarouselOptions(
-                  height: 80,
-                  // enlargeCenterPage: true,
-                  // enableInfiniteScroll: true,
-                  autoPlay: true,
-                  // autoPlayInterval: const Duration(seconds: 3),
-                  // viewportFraction: 0.6,
-                  // enlargeFactor: 0.4,
-                  viewportFraction: 1,
-                ),
-                items: List.generate(6, (index) {
-                  return Builder(
-                    builder: (BuildContext context) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Card(
-                          elevation: 0,
-                          margin: EdgeInsets.zero,
-                          color: Colors.transparent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-                          child: Center(
-                            // child: CacheImg(AppConsts.imageSliderUrl + "${index + 1}.png"),
-                            child: Image.asset(
-                              "assets/tmp/1.jpg", 
-                              fit: BoxFit.fill,
-                              width: MediaQuery.of(context).size.width,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-            ),
-
-            const SizedBox(height: 6),
-            Divider(),
-            const SizedBox(height: 12),
-            GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1, // مربع
-              ),
-              itemBuilder: (context, index) {
-                final service = services[index];
-                return ServiceCard(icon: service['icon'], title: service['title'], onTap: service['onTap']);
-              },
-            ),
-            const SizedBox(height: 16),
-            ...[
+      body: RefreshIndicator(
+        onRefresh: AppFuns.refreshHomePage,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 22),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      "Latest operations".tr,
-                      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      onPressed: () { 
-                        widget.persistentTabController.jumpToTab(2);
-                      }, 
-                      icon: Icon(Icons.arrow_forward_ios, size: 20),
-                    )
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: BalanceCard(data: profileModel!, context: context),
               ),
-              const SizedBox(height: 8),
+        
+              // ✅ Carousel Slider
+              const SizedBox(height: 12),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0),
-                child: GetBuilder<LatestBookingsController>(
-                  builder: (controller) {
-                    if (controller.loading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (controller.error != null) {
-                      return Center(child: Text("${controller.error}"));
-                    }
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.latestBookings!.items.length,
-                      separatorBuilder: (context, index) {
-                        return const Divider();
-                      },
-                      itemBuilder: (context, index) {
-                        final item = controller.latestBookings!.items[index];
-                        Color bgStatus = Colors.green[800]!.withOpacity(0.2);
-                        if(item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry){
-                          bgStatus = Colors.red[800]!.withOpacity(0.2); 
-                        } else if(item.flightStatus == BookingStatus.confirmed){
-                          bgStatus = Colors.green[800]!.withOpacity(0.2);
-                        } else if(item.flightStatus == BookingStatus.preBooking){
-                          bgStatus = Colors.yellow[800]!.withOpacity(0.2);
-                        }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
-                          bgStatus = Colors.red[800]!.withOpacity(0.4);
-                        }else if(item.flightStatus == BookingStatus.notFound){
-                          bgStatus = cs.primaryFixed.withOpacity(0.2); 
-                        }
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 0),
-                          child: Column(
-                            children: [
-                              TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor: cs.surfaceContainer, 
-                                  foregroundColor: cs.primaryFixed,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-                                ),
-                                onPressed: () async {
-                                  context.loaderOverlay.show();
-                                  try {
-                                    final insertId = item.tripApi.split("/").last;
-                                    final response = await AppVars.api.get(AppApis.tripDetail + insertId);
-
-                                    final pnr = response['flight']['UniqueID'];
-                                    final booking = BookingDetail.bookingDetail(response['booking']);
-                                    final flight = FlightDetail.flightDetail(response['flight']);
-                                    final travelers = TravelersDetail.travelersDetail(response['flight'], response['passengers']);
-
-                                    final contact = ContactModel.fromApiJson({
-                                      'title': "MR",
-                                      'first_name': booking.customerId.split("@").first,
-                                      'last_name': "_",
-                                      'email': booking.customerId,
-                                      'phone': booking.mobileNo,
-                                      'country_code': booking.countryCode,
-                                      'nationality': "ye",
-                                    });
-
-                                    Get.to(() => IssuingPage(offerDetail: flight, travelers: travelers, contact: contact, pnr: pnr, booking: booking));
-                                  } catch (e) {
-                                    // ممكن تعرض Dialog بدل print
-                                    print("error: $e");
-                                  }
-                                  if (context.mounted) context.loaderOverlay.hide();
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Wrap( 
-                                              children: [
-                                                Text("${item.origin.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                                Icon(Icons.navigate_next, size: 24),
-                                                Text("${item.destination.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text("${item.createdAt}", style: TextStyle(fontSize: 14)),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: bgStatus,
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Text(
-                                        AppFuns.priceWithCoin(item.totalAmount, item.currency),
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                                      ),
-                                    ],
-                                  ),
-                                
-                                
-                                ),
+                padding: const EdgeInsets.only(top: 0, bottom: 12),
+                child: CarouselSlider(
+                  options: CarouselOptions(
+                    height: 80,
+                    // enlargeCenterPage: true,
+                    // enableInfiniteScroll: true,
+                    autoPlay: true,
+                    // autoPlayInterval: const Duration(seconds: 3),
+                    // viewportFraction: 0.6,
+                    // enlargeFactor: 0.4,
+                    viewportFraction: 1,
+                  ),
+                  items: List.generate(6, (index) {
+                    return Builder(
+                      builder: (BuildContext context) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Card(
+                            elevation: 0,
+                            margin: EdgeInsets.zero,
+                            color: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+                            child: Center(
+                              // child: CacheImg(AppConsts.imageSliderUrl + "${index + 1}.png"),
+                              child: Image.asset(
+                                "assets/tmp/1.jpg", 
+                                fit: BoxFit.fill,
+                                width: MediaQuery.of(context).size.width,
                               ),
-                            ],
+                            ),
                           ),
                         );
                       },
                     );
-                  }
+                  }),
                 ),
               ),
-              Container(
-                // alignment: Alignment.center,
-                width: MediaQuery.of(context).size.width,
-                child: TextButton.icon(
-                  onPressed: () {
-                    widget.persistentTabController.jumpToTab(2);
-                  }, 
-                  icon: Text("Show more".tr,
-                    style: TextStyle(fontSize: AppConsts.xlg),
+        
+              const SizedBox(height: 6),
+              Divider(),
+              const SizedBox(height: 12),
+              GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 6,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1, // مربع
+                ),
+                itemBuilder: (context, index) {
+                  final service = services[index];
+                  return ServiceCard(icon: service['icon'], title: service['title'], onTap: service['onTap']);
+                },
+              ),
+              const SizedBox(height: 16),
+              ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Latest operations".tr,
+                        style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
+                      ),
+                      Spacer(),
+                      IconButton(
+                        onPressed: () { 
+                          widget.persistentTabController.jumpToTab(2);
+                        }, 
+                        icon: Icon(Icons.arrow_forward_ios, size: 20),
+                      )
+                    ],
                   ),
-                  label: Icon(Icons.arrow_forward_ios, size: 20),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: GetBuilder<LatestBookingsController>(
+                    builder: (controller) {
+                      if (controller.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (controller.error != null) {
+                        return Center(child: Text("${controller.error}"));
+                      }
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: controller.latestBookings!.items.length,
+                        separatorBuilder: (context, index) {
+                          return const Divider();
+                        },
+                        itemBuilder: (context, index) {
+                          final item = controller.latestBookings!.items[index];
+                          Color bgStatus = cs.primaryFixed.withOpacity(0.2);
+                          if(item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry){
+                            bgStatus = Colors.red[800]!.withOpacity(0.2); 
+                          } else if(item.flightStatus == BookingStatus.confirmed){
+                            bgStatus = Colors.green[800]!.withOpacity(0.2);
+                          } else if(item.flightStatus == BookingStatus.preBooking){
+                            bgStatus = Colors.yellow[800]!.withOpacity(0.2);
+                          }else if(item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided){
+                            bgStatus = Colors.red[800]!.withOpacity(0.4);
+                          }else if(item.flightStatus == BookingStatus.pending){
+                            bgStatus = Colors.yellow[600]!.withOpacity(0.4); 
+                          }else if(item.flightStatus == BookingStatus.notFound){
+                            bgStatus = cs.primaryFixed.withOpacity(0.2);
+                          }
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 0),
+                            child: Column(
+                              children: [
+                                TextButton(
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    backgroundColor: cs.surfaceContainer, 
+                                    foregroundColor: cs.primaryFixed,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+                                  ),
+                                  onPressed: () async {
+                                    context.loaderOverlay.show();
+                                    try {
+                                      final insertId = item.tripApi.split("/").last;
+                                      final response = await AppVars.api.get(AppApis.tripDetail + insertId);
+        
+                                      final pnr = response['flight']['UniqueID']?? "N/A".tr;
+                                      final booking = BookingDetail.bookingDetail(response['booking']);
+                                      final flight = FlightDetail.flightDetail(response['flight']);
+                                      final travelers = TravelersDetail.travelersDetail(response['flight'], response['passengers']);
+        
+                                      final contact = ContactModel.fromApiJson({
+                                        'title': "MR",
+                                        'first_name': booking.customerId.split("@").first,
+                                        'last_name': "_",
+                                        'email': booking.customerId,
+                                        'phone': booking.mobileNo,
+                                        'country_code': booking.countryCode,
+                                        'nationality': "ye",
+                                      });
+        
+                                      Get.to(() => IssuingPage(
+                                        offerDetail: flight, 
+                                        travelers: travelers, 
+                                        contact: contact, 
+                                        pnr: pnr, 
+                                        booking: booking,
+                                      ));
+                                    } catch (e) {
+                                      // ممكن تعرض Dialog بدل print
+                                      print("error: $e");
+                                    }
+                                    if (context.mounted) context.loaderOverlay.hide();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Wrap( 
+                                                children: [
+                                                  Text("${item.origin.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                                  Icon(Icons.navigate_next, size: 24),
+                                                  Text("${item.destination.name[AppVars.lang]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text("${item.createdAt}", style: TextStyle(fontSize: 14)),
+                                              const SizedBox(height: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: bgStatus,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Text(
+                                          AppFuns.priceWithCoin(item.totalAmount, item.currency),
+                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                                        ),
+                                      ],
+                                    ),
+                                  
+                                  
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  ),
+                ),
+                Container(
+                  // alignment: Alignment.center,
+                  width: MediaQuery.of(context).size.width,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      widget.persistentTabController.jumpToTab(2);
+                    }, 
+                    icon: Text("Show more".tr,
+                      style: TextStyle(fontSize: AppConsts.xlg),
+                    ),
+                    label: Icon(Icons.arrow_forward_ios, size: 20),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 22),
             ],
-            const SizedBox(height: 22),
-          ],
+          ),
         ),
       ),
     );
@@ -371,6 +383,8 @@ class LatestBookingsController extends GetxController {
       loading = true;
       latestBookings = null;
       error = null;
+
+      update();
 
       print("Fetching latest bookings...");
       final response = await AppVars.api.post(
