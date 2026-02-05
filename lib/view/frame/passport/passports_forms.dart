@@ -24,32 +24,53 @@ class _PassportsFormsPageState extends State<PassportsFormsPage> {
 
 
   // مفتاح لكل عنصر (مسافر) في القائمة
-  final List<GlobalKey> _tileKeys = [];
+final Map<String, GlobalKey> _tileKeysByTag = {};
+String? _lastAutoScrolledTag;
 
   /// نتأكد أن عدد الـ keys مساوي لعدد المسافرين
-  void _ensureTileKeysLength(int length) {
-    if (_tileKeys.length != length) {
-      _tileKeys
-        ..clear()
-        ..addAll(List.generate(length, (_) => GlobalKey()));
-    }
+  // void _ensureTileKeysLength(int length) {
+  //   if (_tileKeys.length != length) {
+  //     _tileKeys
+  //       ..clear()
+  //       ..addAll(List.generate(length, (_) => GlobalKey()));
+  //   }
+  // }
+
+void _ensureTileKeysForAll(List travelers) {
+  for (final t in travelers) {
+    _tileKeysByTag.putIfAbsent(t.tag, () => GlobalKey());
   }
+}
+
+void _scrollToTravelerTag(String tag) {
+  final key = _tileKeysByTag[tag];
+  final ctx = key?.currentContext;
+  if (ctx == null) return;
+
+  Scrollable.ensureVisible(
+    ctx,
+    alignment: 0.0,
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeInOut,
+  );
+}
+
 
   /// التمرير حتى يظهر المسافر المحدد في أعلى الشاشة تقريبًا
-  void _scrollToTraveler(int index) {
-    if (index < 0 || index >= _tileKeys.length) return;
+  // void _scrollToTraveler(int index) {
+  //   if (index < 0 || index >= _tileKeys.length) return;
 
-    final key = _tileKeys[index];
-    final context = key.currentContext;
-    if (context == null) return;
+  //   final key = _tileKeys[index];
+  //   final context = key.currentContext;
+  //   if (context == null) return;
 
-    Scrollable.ensureVisible(
-      context,
-      alignment: 0.0, // 0.0 يعني أعلى الشاشة
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
+  //   Scrollable.ensureVisible(
+  //     context,
+  //     alignment: 0.0, // 0.0 يعني أعلى الشاشة
+  //     duration: const Duration(milliseconds: 300),
+  //     curve: Curves.easeInOut,
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -67,10 +88,12 @@ class _PassportsFormsPageState extends State<PassportsFormsPage> {
       ),
       builder: (formsController) {
         final cs = Theme.of(context).colorScheme;
-        final travelers = formsController.travelers;
+        final travelers = formsController.sortedTravelers;
+
+        
 
         // نضبط عدد الـ keys بحسب عدد المسافرين
-        _ensureTileKeysLength(travelers.length);
+        _ensureTileKeysForAll(formsController.travelers); // لضمان وجود keys لكل tags
 
         return PopScope(
 
@@ -104,41 +127,50 @@ class _PassportsFormsPageState extends State<PassportsFormsPage> {
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(horizontal: 0),
                         child: Column(
+                          spacing: 0,
                           children: [
                             // المسافرين + الـ Divider بينهم
-                            for (int index = 0; index < travelers.length; index++) ...[
-                              if (index > 0) const Divider(),
-                              Container(
-                                key: _tileKeys[index],
-                                child: PassportFormTile(
-                                  tag: travelers[index].tag,
-                                  travelerIndex: travelers[index].index,
-                                  ageGroupLabel: formsController.ageGroupLabel(travelers[index].ageGroup),
-                                  lang: formsController.lang,
-                                  isExpanded: formsController.expandedFlags[index],
-                                  minDob: formsController.minDob(travelers[index].ageGroup),
-                                  maxDob: formsController.maxDob(travelers[index].ageGroup),
-                                  onExpansionChanged: (expanded) {
-                                    formsController.onTileExpansionChanged(index, expanded);
-                                    if (expanded) {
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        _scrollToTraveler(index);
-                                      });
-                                    }
-                                  },
-                                  onNext: (index < travelers.length - 1)
-                                      ? () {
-                                          formsController.goToNextTraveler(index);
-                                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                                            _scrollToTraveler(index + 1);
-                                          });
-                                        }
-                                      : null,
-                                ),
-                              ),
-                            ],
+for (int index = 0; index < travelers.length; index++) ...[
+  // final t = travelers[index];
+
+  Container(
+    key: _tileKeysByTag[travelers[index].tag],
+    child: PassportFormTile(
+      tag: travelers[index].tag,
+      travelerIndex: travelers[index].index,
+      ageGroupLabel: formsController.ageGroupLabel(travelers[index].ageGroup),
+      lang: formsController.lang,
+
+      // مهم: نجيب isExpanded حسب tag وليس حسب index المعروض
+      isExpanded: formsController.isExpandedByTag(travelers[index].tag),
+
+      minDob: formsController.minDob(travelers[index].ageGroup),
+      maxDob: formsController.maxDob(travelers[index].ageGroup),
+
+      onExpansionChanged: (expanded) {
+        formsController.onTileExpansionChangedByTag(travelers[index].tag, expanded);
+        if (expanded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToTravelerTag(travelers[index].tag);
+          });
+        }
+      },
+
+      onNext: (index < travelers.length - 1)
+          ? () {
+              final nextTag = formsController.openNextByTag(travelers[index].tag);
+              if (nextTag != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _scrollToTravelerTag(nextTag);
+                });
+              }
+            }
+          : null,
+    ),
+  ),
+],
             
-                            const Divider(),
+                            // const Divider(),
             
                             // 👉 فورم بيانات الاتصال في النهاية
                             Container(

@@ -41,9 +41,9 @@ class AirlineIncludeDropDown extends StatelessWidget {
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
               labelText: 'Included Airlines'.tr,
-              labelStyle: TextStyle(fontSize: 14),
+              // labelStyle: TextStyle(fontSize: 16),
               hintText: 'Select Airlines'.tr,
-              hintStyle: TextStyle(fontSize: 14),
+              // hintStyle: TextStyle(fontSize: 16),
               border: OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
@@ -96,7 +96,7 @@ class AirlineIncludeDropDown extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Airlines Included'.tr,
+                        'Included Airlines'.tr,
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onPrimary),
                       ),
                     ),
@@ -246,8 +246,8 @@ class AirlineExcludeDropDown extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
               labelText: 'Excluded Airlines'.tr,
               hintText: 'Select Airlines'.tr,
-              labelStyle: TextStyle(fontSize: 14),
-              hintStyle: TextStyle(fontSize: 14),
+              // labelStyle: TextStyle(fontSize: 14),
+              // hintStyle: TextStyle(fontSize: 14),
               border: OutlineInputBorder(),
               alignLabelWithHint: true,
             ),

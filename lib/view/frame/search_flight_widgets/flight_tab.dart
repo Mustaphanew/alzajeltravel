@@ -256,7 +256,6 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                             );
                           }
                         ),
-                        
                         SizedBox(height: 8),
                       ],
                     ),

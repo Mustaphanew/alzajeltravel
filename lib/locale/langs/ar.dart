@@ -188,7 +188,7 @@ Map<String, String> ar = {
   'Document number': 'رقم الجواز',
   'Issuing country': 'بلد الإصدار',
   'Date of expiry': 'تاريخ انتهاء الجواز',
-  'Phone number': 'رقم الهاتف',
+  'Phone number': 'رقم الهاتف', 
 
   // رسائل التحقق للحقل
   'Please select a valid date': 'يرجى اختيار تاريخ صالح',
@@ -626,5 +626,7 @@ Map<String, String> ar = {
 
   "Direct flights only": "رحلات مباشرة فقط",
   "Flights with baggage included only": "رحلات مشمولة الوزن فقط",
+
+  "Edit": "تعديل",
 
 };

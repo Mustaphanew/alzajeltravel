@@ -585,4 +585,115 @@ class PassportsFormsController extends GetxController {
 
     return true;
   }
+
+
+  List<TravelerConfig> get sortedTravelers {
+    final list = [...travelers];
+
+    list.sort((a, b) {
+      final aDone = Get.find<PassportController>(tag: a.tag).isFullData;
+      final bDone = Get.find<PassportController>(tag: b.tag).isFullData;
+
+      if (aDone == bDone) {
+        // حافظ على نفس ترتيبهم الأصلي داخل كل مجموعة
+        return a.index.compareTo(b.index);
+      }
+
+      // false (غير مكتمل) أولاً، true (مكتمل) أخيراً
+      return aDone ? 1 : -1;
+    });
+
+    return list;
+  }
+
+  /// نستخدمها فقط لعمل rebuild للصفحة كي ينعكس الفرز
+  void refreshOrder() => update();
+
+  /// Helpers حتى لا تتلخبط expandedFlags بعد الفرز
+  int indexByTag(String tag) => travelers.indexWhere((t) => t.tag == tag);
+
+  bool isExpandedByTag(String tag) {
+    final i = indexByTag(tag);
+    return i >= 0 ? expandedFlags[i] : false;
+  }
+
+  void onTileExpansionChangedByTag(String tag, bool isExpanded) {
+    final i = indexByTag(tag);
+    if (i == -1) return;
+    onTileExpansionChanged(i, isExpanded);
+  }
+
+  /// فتح التالي حسب ترتيب العرض الحالي (بعد الفرز)
+  String? openNextByTag(String currentTag) {
+    final ordered = sortedTravelers;
+    final pos = ordered.indexWhere((t) => t.tag == currentTag);
+    if (pos == -1 || pos == ordered.length - 1) return null;
+
+    final nextTag = ordered[pos + 1].tag;
+    final nextIndex = indexByTag(nextTag);
+
+    for (int i = 0; i < expandedFlags.length; i++) {
+      expandedFlags[i] = (i == nextIndex);
+    }
+    update();
+    return nextTag;
+  }
+
+
+
+//dlksgjflksdgfdmkgmlkfdfmhlfkgmhlkgtfmhlkf
+
+// تتبع آخر حالة isFullData لكل مسافر
+final Map<String, bool> _fullCache = {};
+
+/// ترجع:
+///  0 = لا تغيير / أو أول مرة نشوف هذا التاج
+///  1 = صار مكتمل الآن (false -> true)
+/// -1 = صار غير مكتمل الآن (true -> false)
+int recordFullState(String tag, bool isFull) {
+  final prev = _fullCache[tag];
+  if (prev == null) {
+    _fullCache[tag] = isFull;
+    return 0;
+  }
+  if (prev == isFull) return 0;
+
+  _fullCache[tag] = isFull;
+  return isFull ? 1 : -1;
+}
+
+/// افتح أول مسافر غير مكتمل (ويغلق الباقي)
+void openFirstIncomplete() {
+  TravelerConfig? target;
+
+  // بما أن sortedTravelers يضع الناقص أولاً، أول ناقص هو المطلوب
+  for (final t in sortedTravelers) {
+    final done = Get.find<PassportController>(tag: t.tag).isFullData;
+    if (!done) {
+      target = t;
+      break;
+    }
+  }
+
+  if (target == null) {
+    // كلهم مكتملين: اقفل الكل (اختياري)
+    for (int i = 0; i < expandedFlags.length; i++) {
+      expandedFlags[i] = false;
+    }
+    update();
+    return;
+  }
+
+  final idx = indexByTag(target.tag);
+
+  for (int i = 0; i < expandedFlags.length; i++) {
+    expandedFlags[i] = (i == idx); // واحد فقط مفتوح
+  }
+
+  update();
+}
+
+
+
+
 }

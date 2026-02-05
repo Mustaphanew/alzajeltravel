@@ -625,7 +625,7 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                           separatorBuilder: (_, __) => const SizedBox.shrink(),
                           itemBuilder: (context, index) {
                             final offer = offers[index];
-                              
+                            
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               child: FlightOfferCard(
@@ -810,6 +810,8 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
     final theme = Theme.of(context);
     final offer = widget.offer;
 
+    final isUpsellEnabled = AppFuns.isUpsellEnabledAirline(offer.airlineCode);
+
     final timeFormat = DateFormat('hh:mm a', AppVars.lang);
     final dateFormat = DateFormat('EEE, dd MMM', AppVars.lang);
 
@@ -835,7 +837,9 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
     final String airlineNamesText = secondaryName == null ? primaryName : '$primaryName, $secondaryName';
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
-      onTap: widget.onDetails,
+      onTap: () {
+        // if (widget.onDetails != null) widget.onDetails!();
+      }, 
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
@@ -1000,7 +1004,7 @@ class _FlightOfferCardState extends State<FlightOfferCard> {
                               backgroundColor: cs.secondary,
                               foregroundColor: cs.shadow,
                             ),
-                            onPressed: widget.onOtherPrices!,
+                            onPressed: (isUpsellEnabled)? widget.onOtherPrices! : null,
                           icon: const Icon(Icons.attach_money),
                           label: Text('Other Prices'.tr),
                         ),

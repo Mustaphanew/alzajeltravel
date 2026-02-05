@@ -1,6 +1,8 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
 import 'package:alzajeltravel/controller/passport/passport_controller.dart';
@@ -96,38 +98,84 @@ class _PassportFormTileState extends State<PassportFormTile> {
         final model = controller.model;
         final passportNo = model.documentNumber;
         final fullName = model.fullName;
+        final documentNumber = model.documentNumber;
         final dob = AppFuns.formatDobPretty(model.dateOfBirth);
+        final expiryDate = AppFuns.formatDobPretty(model.dateOfExpiry);
         final nationality = model.nationality;
-        bool existData = false;
+        final issuingCountry = model.issuingCountry;
+        final sex = model.sex;
 
-        if (fullName.isNotEmpty &&
-            dob.isNotEmpty &&
-            nationality != null &&
-            passportNo != null &&
-            model.sex != null &&
-            model.dateOfExpiry != null) {
-          existData = true;
-        }
+        // bool? lastFullData;
+        // final isDone = controller.isFullData;
+        // // إذا تغيرت الحالة (من ناقص -> مكتمل أو العكس) نطلب من فورمز كنترولر يعيد build
+        // if (lastFullData != isDone) {
+        //   lastFullData = isDone;
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     passportsFormsController.refreshOrder();
+        //   });
+        // }
+
+
+final isDone = controller.isFullData;
+final change = passportsFormsController.recordFullState(widget.tag, isDone);
+if (change != 0) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (change == 1) {
+      // صار مكتمل الآن -> افتح أول ناقص
+      passportsFormsController.openFirstIncomplete();
+    } else {
+      // صار غير مكتمل الآن (في حالة تعديل بيانات مكتملة) -> فقط إعادة ترتيب
+      passportsFormsController.refreshOrder();
+    }
+  });
+}
+
 
         return ListTileTheme(
-          data: const ListTileThemeData(
+          data: ListTileThemeData(
             contentPadding: EdgeInsets.zero,
             minLeadingWidth: 0,
             horizontalTitleGap: 0,
+            minTileHeight: 0,
+            visualDensity: VisualDensity.compact,
+            dense: true,
+            isThreeLine: true,
+            minVerticalPadding: 0,
           ),
           child: ExpansionTile(
-            showTrailingIcon: false,
+            showTrailingIcon: false, 
             leading: SizedBox(width: 0),
             key: ValueKey('traveler-${widget.travelerIndex}-${widget.isExpanded}'),
             iconColor: (Get.isDarkMode) ? cs.secondary : cs.primary,
-            tilePadding: EdgeInsets.zero,
+            tilePadding: EdgeInsets.only(bottom: 0, top: 0),
             backgroundColor: Colors.transparent,
             collapsedBackgroundColor: Colors.transparent,
             initiallyExpanded: widget.isExpanded,
-            enabled: !existData,
+            shape: const Border(),
+            splashColor: Colors.transparent,
+            collapsedShape: const Border(),
+            visualDensity: VisualDensity.compact,
+            // enabled: !controller.isFullData,
             onExpansionChanged: widget.onExpansionChanged,
-            title: Padding(
-              padding: const EdgeInsets.only(bottom: 0),
+            title: Container(
+              margin: EdgeInsets.only(bottom: 12, top: 6, left: 8, right: 8),
+              padding: EdgeInsets.only(top: 6, bottom: 12),
+              decoration: (widget.isExpanded == false)? BoxDecoration(
+              color: cs.onInverseSurface,
+            
+                borderRadius: BorderRadius.circular(12),
+                
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.outlineVariant.withOpacity(0.9),
+                    blurRadius: 4,
+                    offset: const Offset(0, 4), 
+                  ),
+                ],
+        
+        
+        
+              ) : null,
               child: Column(
                 children: [
                   Row(
@@ -136,35 +184,297 @@ class _PassportFormTileState extends State<PassportFormTile> {
                       //   padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
                       //   child: Icon(Icons.person, color: textColor),
                       // ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       // عنوان المسافر + اسمه إن وُجد
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg, color: textColor),
-                            ),
-                            if(widget.isExpanded == false)
-                              ...[
-                                if (fullName.isNotEmpty)
-                                  Text(
-                                    fullName,
-                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg, color: textColor),
                                   ),
-                                if (dob.isNotEmpty)
-                                  Text(
-                                    "Date of birth".tr + ": " + dob,
-                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
-                                  ),
-                                if (nationality != null)
-                                  Text(
-                                    "NATIONALITY".tr + ": " + nationality.name[widget.lang],
-                                    style: TextStyle(fontSize: AppConsts.normal, color: textColor),
+                                ),
+                                if (!widget.isExpanded && controller.isFullData)
+                                  IconButton(
+                                    tooltip: 'Edit'.tr,
+                                    onPressed: () {
+                                      // passportsFormsController.onTileExpansionChanged(widget.travelerIndex - 1, true);
+                                      passportsFormsController.onTileExpansionChangedByTag(widget.tag, true);
+                                    },
+                                    icon: Icon(
+                                      Icons.edit, 
+                                      color: Colors.blue[800],
+                                    ),
                                   ),
                               ],
-
+                            ),
+                      
+                      
+                            if(widget.isExpanded == false)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                
+                                  if (fullName.isNotEmpty)
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Icon(
+                                            FontAwesomeIcons.solidUser, 
+                                            color: Color(0xFF438559), 
+                                            size: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4,),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Full name".tr,
+                                              style: TextStyle(
+                                                fontSize: AppConsts.normal,
+                                                color: textColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              fullName,
+                                              style: TextStyle(
+                                                fontSize: AppConsts.normal,
+                                                color: textColor,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6,),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  if (documentNumber != null && documentNumber.isNotEmpty)
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 3),
+                                          child: Icon(
+                                            FontAwesomeIcons.solidIdCard, 
+                                            color: Color(0xffc74649), 
+                                            size: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4,),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Document number".tr,
+                                              style: TextStyle(
+                                                fontSize: AppConsts.normal,
+                                                color: textColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              documentNumber,
+                                              style: TextStyle(
+                                                fontSize: AppConsts.normal,
+                                                color: textColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                      
+                                  if(dob.isNotEmpty) ...[
+                                    const SizedBox(height: 6,),
+                                    Divider(),
+                                    const SizedBox(height: 0,),   
+                                  ],
+                      
+                                  if(dob.isNotEmpty) IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Left column: DOB + Nationality
+                                        Expanded(
+                                          flex: 3,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 6,),
+                                              if (dob.isNotEmpty)
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(Icons.calendar_month, color: Color(0xffd5632a), size: 20),
+                                                    const SizedBox(width: 4),
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Date of birth'.tr,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          dob,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                    
+                                              if (dob.isNotEmpty && nationality != null) const SizedBox(height: 6),
+                                    
+                                              if (nationality != null)
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.language, 
+                                                      color: Color(0xff436df4), 
+                                                      size: 20,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Nationality'.tr,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          children: [
+                                                            Text(
+                                                              nationality.name[widget.lang],
+                                                              style: TextStyle(
+                                                                fontSize: AppConsts.normal,
+                                                                color: textColor,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 8),
+                                                            CountryFlag.fromCountryCode(
+                                                              nationality.alpha2,
+                                                              theme: EmojiTheme(size: 16),
+                                                            )
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                    
+                                        Expanded(child: const VerticalDivider()),
+                                    
+                                        // Right column: Expiry + Issuing country
+                                        Expanded(
+                                          flex: 3,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 6,),
+                                              if (expiryDate.isNotEmpty)
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(Icons.calendar_month, color: Color(0xffd5632a), size: 20),
+                                                    const SizedBox(width: 4),
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Date of expiry'.tr,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          expiryDate,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                    
+                                              if (expiryDate.isNotEmpty && issuingCountry != null) const SizedBox(height: 6),
+                                    
+                                              if (issuingCountry != null)
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(Icons.language, color: Color(0xff436df4), size: 20),
+                                                    const SizedBox(width: 4),
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Issuing country'.tr,
+                                                          style: TextStyle(
+                                                            fontSize: AppConsts.normal,
+                                                            color: textColor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          children: [
+                                                            Text(
+                                                              issuingCountry.name[widget.lang],
+                                                              style: TextStyle(
+                                                                fontSize: AppConsts.normal,
+                                                                color: textColor,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 8),
+                                                            CountryFlag.fromCountryCode(
+                                                              issuingCountry.alpha2,
+                                                              theme: EmojiTheme(size: 16),
+                                                            )
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                      
+                                ],
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -187,7 +497,7 @@ class _PassportFormTileState extends State<PassportFormTile> {
                       //     ),
                       //   ),
                       // ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 0),
                   
                       // زر مسح MRZ (يفتح الكاميرا)
                       if (widget.isExpanded)
@@ -220,28 +530,22 @@ class _PassportFormTileState extends State<PassportFormTile> {
                           ),
                         ),
                   
-                      if (!widget.isExpanded && existData)
-                        IconButton(
-                          onPressed: () {
-                            passportsFormsController.onTileExpansionChanged(widget.travelerIndex - 1, true);
-                          },
-                          icon: Icon(Icons.edit, color: cs.primaryContainer),
-                        ),
                     ],
                   ),
-
+              
                 ], 
               ),
             ),
             childrenPadding: const EdgeInsets.symmetric(horizontal: 8),
-            children: [              Form(
+            children: [      
+              Form(
                 key: controller.formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     
                     const SizedBox(height: 4),
-
+        
                     Row(
                       children: [
                         Icon(CupertinoIcons.person_circle, color: textColor),
@@ -363,7 +667,7 @@ class _PassportFormTileState extends State<PassportFormTile> {
                       ],
                     ),
                     const SizedBox(height: 6),
-
+        
                     Row(
                       children: [
           
@@ -417,40 +721,40 @@ class _PassportFormTileState extends State<PassportFormTile> {
                       ],
                     ),
           
-DateDropdownRow(
-  key: ValueKey(
-    'expiry-${widget.tag}-${model.dateOfExpiry?.toIso8601String() ?? 'empty'}',
-  ),
-  title: Padding(
-    padding: const EdgeInsetsDirectional.only(bottom: 6, start: 4),
-    child: Text('DATE OF EXPIRY'.tr),
-  ), // نفس أسلوب DOB
-  initialDate: model.dateOfExpiry,
-
-  // أقل تاريخ مسموح = اليوم (حتى ما تختار تاريخ منتهي)
-  minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,
-
-  // أقصى تاريخ (عدّلها حسب احتياجك)
-  maxDate: Jiffy.parseFromDateTime(lastDateInSearch).add(years: 12).dateTime,
-
-  onDateChanged: controller.setDateOfExpiry,
-
-  validator: (date) {
-    if (date == null) {
-      return 'Please select a valid date'.tr;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final picked = DateTime(date.year, date.month, date.day);
-
-    if (picked.isBefore(today)) {
-      return 'Passport has already expired'.tr;
-    }
-    return null;
-  },
-),
-
+        DateDropdownRow(
+          key: ValueKey(
+            'expiry-${widget.tag}-${model.dateOfExpiry?.toIso8601String() ?? 'empty'}',
+          ),
+          title: Padding(
+            padding: const EdgeInsetsDirectional.only(bottom: 6, start: 4),
+            child: Text('DATE OF EXPIRY'.tr),
+          ), // نفس أسلوب DOB
+          initialDate: model.dateOfExpiry,
+        
+          // أقل تاريخ مسموح = اليوم (حتى ما تختار تاريخ منتهي)
+          minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,
+        
+          // أقصى تاريخ (عدّلها حسب احتياجك)
+          maxDate: Jiffy.parseFromDateTime(lastDateInSearch).add(years: 12).dateTime,
+        
+          onDateChanged: controller.setDateOfExpiry,
+        
+          validator: (date) {
+            if (date == null) {
+              return 'Please select a valid date'.tr;
+            }
+        
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            final picked = DateTime(date.year, date.month, date.day);
+        
+            if (picked.isBefore(today)) {
+              return 'Passport has already expired'.tr;
+            }
+            return null;
+          },
+        ),
+        
           
                     // _expiryDateField(
                     //   context: context,

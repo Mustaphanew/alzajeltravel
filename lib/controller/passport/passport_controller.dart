@@ -35,6 +35,21 @@ class PassportController extends GetxController {
   late final TextEditingController documentNumberCtr; // DOCUMENT NUMBER
   late final TextEditingController optionalDataCtr;   // OPTIONAL DATA (لو احتجته)
 
+  bool get isFullData {
+    final m = model;
+    final hasName = m.fullName.trim().isNotEmpty;
+    final hasDoc  = (m.documentNumber?.trim().isNotEmpty ?? false);
+
+    return hasName &&
+        m.dateOfBirth != null &&
+        m.nationality != null &&
+        hasDoc &&
+        m.sex != null &&
+        m.dateOfExpiry != null;
+  }
+
+
+
   @override
   void onInit() {
     super.onInit();

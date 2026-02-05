@@ -387,6 +387,27 @@ class AppFuns {
   }
 
 
+  /// Airline codes that support upsell
+  static List<String> upsellEnabledAirlines = [
+    '4C','4M','5N','5U','7H','7R','8P','A3','A5','AA','AC','AD','AF','AI','AM','AR','AS','AT','AV','AY',
+    'AZ','B0','B2','B6','BA','BE','BF','BJ','BM','BT','BW','CA','CX','CY','D8','DL','DV','DY','E9','EK',
+    'EN','EY','FB','FC','FI','FJ','G3','GF','GQ','H2','H8','HA','HB','HG','IB','IG','J2','JA','JJ',
+    'JP','JU','JZ','KC','KE','KL','KM','LA','LG','LH','LO','LP','LX','LY','MF','MH','MJ','N4','NF','NH',
+    'NZ','O6','OD','OK','OS','OU','PC','PD','PR','PS','QF','QR','QS','RJ','S4','S7','SK','SN','SQ','SS',
+    'SU','SV','SX','TA','TF','TG','TK','TM','TP','TS','TU','TX','U6','UA','UK','UT','UU','UX','V7','VA',
+    'VB','VF','VR','VS','WF','WJ','WN','WS','WY','WZ','XL','Y7','ZI','ZL'
+  ];
+  /// Faster lookup (recommended)
+  static Set<String> get _upsellEnabledAirlinesSet => upsellEnabledAirlines.map((e) => e.toUpperCase()).toSet();
+  /// Returns true if [code] exists in upsellEnabledAirlines
+  static bool isUpsellEnabledAirline(String? code) {
+    if (code == null) return false;
+    final c = code.trim().toUpperCase();
+    if (c.isEmpty) return false;
+    return _upsellEnabledAirlinesSet.contains(c);
+  }
+
+
 
 
 
