@@ -589,7 +589,19 @@ if (change != 0) {
                           child: _textField(
                             controller: controller.givenNamesCtr, 
                             autofocus: true,
-                            formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                            formatters: [
+  FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z0-9 ]")),
+  TextInputFormatter.withFunction((oldValue, newValue) {
+    // منع المسافة في البداية + دمج المسافات المتكررة
+    final text = newValue.text
+        .replaceAll(RegExp(r"\s+"), " ")
+        .replaceFirst(RegExp(r"^ "), "");
+    return newValue.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }),
+],
                             label: 'Given names'.tr + ' (${'traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel})',
                           ),
                         ),
@@ -600,7 +612,21 @@ if (change != 0) {
                         Expanded(flex: 1, child: _textField(
                           controller: controller.surnamesCtr, 
                           label: 'SURNAMES'.tr,
-                          formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],)),
+                          formatters: [
+  FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z0-9 ]")),
+  TextInputFormatter.withFunction((oldValue, newValue) {
+    // منع المسافة في البداية + دمج المسافات المتكررة
+    final text = newValue.text
+        .replaceAll(RegExp(r"\s+"), " ")
+        .replaceFirst(RegExp(r"^ "), "");
+    return newValue.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }),
+],
+                          ),
+                        ),
                       ], 
                     ),
           
