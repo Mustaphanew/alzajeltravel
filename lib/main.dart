@@ -8,6 +8,7 @@ import 'package:alzajeltravel/view/tmp/my_lottie.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -33,6 +34,7 @@ import 'package:pwa_install/pwa_install.dart';
 Future<void> main() async {
   // 1) أساسيات التمهيد
   WidgetsFlutterBinding.ensureInitialized();
+  SemanticsBinding.instance.ensureSemantics();
   setupHttpOverrides();
   
   // 2) تهيئاتك المتزامنة/المسبقة

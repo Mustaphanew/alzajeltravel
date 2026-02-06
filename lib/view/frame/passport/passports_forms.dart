@@ -190,7 +190,20 @@ for (int index = 0; index < travelers.length; index++) ...[
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       width: double.infinity,
                       height: 80,
-                      decoration: BoxDecoration(color: cs.surfaceContainer),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainer,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue[800]!,
+                            offset: const Offset(0, 6),
+                            blurRadius: 12,
+                          ),
+                        ],
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
                       child: Row(
                         children: [
                           Expanded(

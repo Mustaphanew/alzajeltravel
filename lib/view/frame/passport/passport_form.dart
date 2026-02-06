@@ -130,6 +130,15 @@ if (change != 0) {
   });
 }
 
+        final hasGivenNames = model.givenNames?.trim().isNotEmpty ?? false;
+        final hasSurnames = model.surnames?.trim().isNotEmpty ?? false;
+        final hasDocumentNumber = model.documentNumber?.trim().isNotEmpty ?? false;
+
+        final hasStrData = 
+          hasGivenNames && 
+          hasSurnames &&
+          hasDocumentNumber; 
+
 
         return ListTileTheme(
           data: ListTileThemeData(
@@ -580,6 +589,7 @@ if (change != 0) {
                           child: _textField(
                             controller: controller.givenNamesCtr, 
                             autofocus: true,
+                            formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
                             label: 'Given names'.tr + ' (${'traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel})',
                           ),
                         ),
@@ -587,9 +597,10 @@ if (change != 0) {
                         const SizedBox(width: 4),
           
                         // SURNAMES
-                        Expanded(flex: 1, child: _textField(controller: controller.surnamesCtr, label: 'SURNAMES'.tr)),
-          
-          
+                        Expanded(flex: 1, child: _textField(
+                          controller: controller.surnamesCtr, 
+                          label: 'SURNAMES'.tr,
+                          formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],)),
                       ], 
                     ),
           
@@ -730,6 +741,8 @@ if (change != 0) {
             child: Text('DATE OF EXPIRY'.tr),
           ), // نفس أسلوب DOB
           initialDate: model.dateOfExpiry,
+
+          enabled: hasStrData,
         
           // أقل تاريخ مسموح = اليوم (حتى ما تختار تاريخ منتهي)
           minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,

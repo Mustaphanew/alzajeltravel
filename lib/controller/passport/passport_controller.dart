@@ -37,7 +37,9 @@ class PassportController extends GetxController {
 
   bool get isFullData {
     final m = model;
-    final hasName = m.fullName.trim().isNotEmpty;
+    final hasGivenNames = m.givenNames?.trim().isNotEmpty ?? false;
+    final hasSurnames = m.surnames?.trim().isNotEmpty ?? false;
+    final hasName = hasGivenNames && hasSurnames;
     final hasDoc  = (m.documentNumber?.trim().isNotEmpty ?? false);
 
     return hasName &&

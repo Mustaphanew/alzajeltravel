@@ -26,6 +26,8 @@ class DateDropdownRow extends StatefulWidget {
   /// كول باك يرجع التاريخ كل ما تغيّر
   final ValueChanged<DateTime?>? onDateChanged;
 
+  final bool enabled;
+
   const DateDropdownRow({
     super.key,
     required this.title,
@@ -35,6 +37,7 @@ class DateDropdownRow extends StatefulWidget {
     this.validator,
     this.defaultValidationMessage = 'Please select a valid date of birth',
     this.onDateChanged,
+    this.enabled = true,
   });
 
   @override
@@ -455,7 +458,11 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
 
     final borderColor = (error != null)
         ? cs.error
-        : (disabled ? cs.outline.withOpacity(0.4) : cs.outline);
+        : (disabled || !widget.enabled ? cs.outline.withOpacity(0.4) : cs.outline);
+
+    final labelColor = (error != null)
+        ? cs.error
+        : (disabled || !widget.enabled ? cs.onSurface.withOpacity(0.4) : cs.onSurface);
 
     return DropdownButtonFormField<String>(
       value: value,
@@ -465,7 +472,9 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       decoration: InputDecoration(
         contentPadding: const EdgeInsetsDirectional.only(start: 8),
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 14),
+        labelStyle: TextStyle(
+          color: labelColor,
+          fontSize: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(width: 1, color: borderColor),
@@ -485,8 +494,9 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       ),
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down),
-      style: const TextStyle(fontSize: 14),
-      onChanged: disabled ? null : onChanged,
+      style: TextStyle(
+        fontSize: 14),
+      onChanged: (widget.enabled)? (disabled ? null : onChanged) : null,
       items: items,
     );
   }
