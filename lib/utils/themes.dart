@@ -108,7 +108,24 @@ class Themes {
         fillColor: fieldFill,
         hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.65)),
         labelStyle: TextStyle(color: cs.onSurfaceVariant),
-        floatingLabelStyle: TextStyle(color: cs.secondary), // إبراز بالذهبي
+
+
+    floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+      if (states.contains(WidgetState.error)) {
+        return TextStyle(color: cs.error);
+      }
+      else if (states.contains(WidgetState.focused)) {
+        return const TextStyle(color: Color(0xffd5632a));
+      }
+      else if (states.contains(WidgetState.disabled)) {
+        return TextStyle(color: cs.onSurface.withOpacity(0.38));
+      } 
+      else {
+        return TextStyle(color: Color(0xffd5632a));
+      } 
+      
+    }),
+
         helperStyle: TextStyle(color: cs.onSurfaceVariant),
         errorStyle: TextStyle(color: cs.error),
         // contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -117,23 +134,23 @@ class Themes {
         border: _outline(cs.outline),
         enabledBorder: _outline(cs.outline),
         disabledBorder: _outline(cs.outlineVariant),
-        focusedBorder: _outline(cs.secondary, width: 1.4),
+        focusedBorder: _outline(Color(0xffd5632a), width: 1.4),
         errorBorder: _outline(cs.error),
         focusedErrorBorder: _outline(cs.error, width: 1.4),
 
         // ألوان الأيقونات حسب الحالة
-        prefixIconColor: MaterialStateColor.resolveWith((states) {
-          if (states.contains(MaterialState.error)) return cs.error;
-          if (states.contains(MaterialState.focused)) return cs.secondary;
-          if (states.contains(MaterialState.disabled)) {
-            return cs.onSurface.withOpacity(0.38);
-          }
-          return cs.onSurfaceVariant;
-        }),
-        suffixIconColor: MaterialStateColor.resolveWith((states) {
-          if (states.contains(MaterialState.error)) return cs.error;
-          if (states.contains(MaterialState.focused)) return cs.secondary;
-          if (states.contains(MaterialState.disabled)) {
+        prefixIconColor: WidgetStateColor.resolveWith((states) {
+            if (states.contains(WidgetState.error)) return cs.error;
+            if (states.contains(WidgetState.focused)) return const Color(0xffd5632a);
+            if (states.contains(WidgetState.disabled)) {
+              return cs.onSurface.withOpacity(0.38);
+            }
+            return cs.onSurfaceVariant;
+          }),
+        suffixIconColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.error)) return cs.error;
+          if (states.contains(WidgetState.focused)) return Color(0xffd5632a);
+          if (states.contains(WidgetState.disabled)) {
             return cs.onSurface.withOpacity(0.38);
           }
           return cs.onSurfaceVariant;

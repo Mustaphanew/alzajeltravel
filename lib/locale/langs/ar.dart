@@ -629,4 +629,8 @@ Map<String, String> ar = {
 
   "Edit": "تعديل",
 
+  "Other info": "معلومات أخرى",
+
+  "Exchange": "تعديل"
+
 };

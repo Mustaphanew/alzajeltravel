@@ -1,5 +1,6 @@
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -384,7 +385,7 @@ if (change != 0) {
                                                             const SizedBox(width: 8),
                                                             CountryFlag.fromCountryCode(
                                                               nationality.alpha2,
-                                                              theme: EmojiTheme(size: 16),
+                                                              theme: (!kIsWeb)? EmojiTheme(size: 16): ImageTheme(height: 16, width: 22),
                                                             )
                                                           ],
                                                         ),
@@ -466,7 +467,7 @@ if (change != 0) {
                                                             const SizedBox(width: 8),
                                                             CountryFlag.fromCountryCode(
                                                               issuingCountry.alpha2,
-                                                              theme: EmojiTheme(size: 16),
+                                                              theme: (!kIsWeb)? EmojiTheme(size: 16): ImageTheme(height: 16, width: 22),
                                                             )
                                                           ],
                                                         ),
@@ -557,7 +558,7 @@ if (change != 0) {
         
                     Row(
                       children: [
-                        Icon(CupertinoIcons.person_circle, color: textColor),
+                        Icon(CupertinoIcons.person_circle, color: Colors.blue[800]),
                         Padding(
                           padding: const EdgeInsetsDirectional.only(start: 4),
                           child: Text(
@@ -682,7 +683,7 @@ if (change != 0) {
           
                     Row(
                       children: [
-                        Icon(CupertinoIcons.doc_circle, color: Colors.blue[700]),
+                        Icon(CupertinoIcons.doc_circle, color: Color(0xffd5632a)),
                         Padding(
                           padding: const EdgeInsetsDirectional.only(start: 4),
                           child: Text(

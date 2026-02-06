@@ -68,15 +68,15 @@ class _IssuingPageState extends State<IssuingPage> {
     summary = travelersReviewController.summary;
 
     if (summary.adultCount > 0) {
-      faringsData.add({"type": "Adult X ".tr + " ${summary.adultCount}", "Total fare": "${summary.adultTotalFare}"});
+      faringsData.add({"type": "Adult X ".tr + " ${summary.adultCount}", "Total fare": AppFuns.priceWithCoin(summary.adultTotalFare, "")});
       baggagesData.add({"type": "Adult".tr, "Weight": AppFuns.formatBaggageWeight(tmpBaggage)});
     }
     if (summary.childCount > 0) {
-      faringsData.add({"type": "Child X ".tr + " ${summary.childCount}", "Total fare": "${summary.childTotalFare}"});
+      faringsData.add({"type": "Child X ".tr + " ${summary.childCount}", "Total fare": AppFuns.priceWithCoin(summary.childTotalFare, "")});
       baggagesData.add({"type": "Child".tr, "Weight": "10kg"});
-    }
+    }  
     if (summary.infantLapCount > 0) {
-      faringsData.add({"type": "Infant X ".tr + " ${summary.infantLapCount}", "Total fare": "${summary.infantLapTotalFare}"});
+      faringsData.add({"type": "Infant X ".tr + " ${summary.infantLapCount}", "Total fare": AppFuns.priceWithCoin(summary.infantLapTotalFare, "")});
       baggagesData.add({"type": "Infant".tr, "Weight": "5kg"});
     }
     bookingStatus = booking.status.name;
@@ -131,45 +131,48 @@ class _IssuingPageState extends State<IssuingPage> {
             //   },
             // ),
             actions: [
-              TextButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                  minimumSize: const Size(100, 30),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: cs.primaryContainer, width: 1),
+              if(widget.booking.status == BookingStatus.confirmed)
+                Padding(
+                padding: const EdgeInsetsDirectional.only(end: 12),
+                child: TextButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                    minimumSize: const Size(100, 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: cs.primaryContainer, width: 1),
+                    ),
                   ),
+                  onPressed: () {
+                    if(AppVars.lang == "ar") {
+                      Get.to(
+                        PrintIssuingAr(
+                          pnr: widget.pnr,
+                          bookingData: booking,
+                          offerDetail: widget.offerDetail,
+                          travelersReviewController: travelersReviewController,
+                          contact: widget.contact,
+                          baggagesData: baggagesData,
+                        ),
+                      );
+                    } else {
+                      Get.to(
+                        PrintIssuing(
+                          pnr: widget.pnr,
+                          bookingData: booking,
+                          offerDetail: widget.offerDetail,
+                          travelersReviewController: travelersReviewController,
+                          contact: widget.contact,
+                          baggagesData: baggagesData,
+                        ),
+                      );
+                    }
+                  },
+                      
+                  icon: const Icon(Icons.print),
+                  label: Text("Print".tr),
                 ),
-                onPressed: () {
-                  if(AppVars.lang == "ar") {
-                    Get.to(
-                      PrintIssuingAr(
-                        pnr: widget.pnr,
-                        bookingData: booking,
-                        offerDetail: widget.offerDetail,
-                        travelersReviewController: travelersReviewController,
-                        contact: widget.contact,
-                        baggagesData: baggagesData,
-                      ),
-                    );
-                  } else {
-                    Get.to(
-                      PrintIssuing(
-                        pnr: widget.pnr,
-                        bookingData: booking,
-                        offerDetail: widget.offerDetail,
-                        travelersReviewController: travelersReviewController,
-                        contact: widget.contact,
-                        baggagesData: baggagesData,
-                      ),
-                    );
-                  }
-                },
-      
-                icon: const Icon(Icons.print),
-                label: Text("Print".tr),
               ),
-              const SizedBox(width: 12),
             ],
           ),
           body: Column(
@@ -219,8 +222,31 @@ class _IssuingPageState extends State<IssuingPage> {
                           ),
                         ),
                       ],
-      
                       const SizedBox(height: 12),
+                      ...[
+                        FirstTitle(title: "Flight".tr),
+                        const SizedBox(height: 4),
+                        FlightOfferCard(
+                          offer: widget.offerDetail.offer,
+                          showSeatLeft: false,
+                          showBaggage: false,
+                          onDetails: () {
+                            // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
+                            Get.to(
+                              () => MoreFlightDetailPage(
+                                flightOffer: widget.offerDetail.offer,
+                                fareRules: widget.offerDetail.fareRules,
+                                // revalidatedDetails: widget.offerDetail,
+                              ),
+                            );
+                          },
+                          showFare: false,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Divider(),
+                      const SizedBox(height: 16),
+
                       ...[
                         FirstTitle(title: "Booking".tr),
                         const SizedBox(height: 4),
@@ -289,6 +315,7 @@ class _IssuingPageState extends State<IssuingPage> {
                       ],
                       const SizedBox(height: 16),
                       Divider(),
+                      const SizedBox(height: 16),
       
                       ...[
                         FirstTitle(title: "Travelers".tr),
@@ -373,31 +400,11 @@ class _IssuingPageState extends State<IssuingPage> {
       
                       const SizedBox(height: 16),
                       const Divider(),
-                      ...[
-                        FirstTitle(title: "Flight".tr),
-                        const SizedBox(height: 4),
-                        FlightOfferCard(
-                          offer: widget.offerDetail.offer,
-                          showSeatLeft: false,
-                          showBaggage: false,
-                          onDetails: () {
-                            // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
-                            Get.to(
-                              () => MoreFlightDetailPage(
-                                flightOffer: widget.offerDetail.offer,
-                                fareRules: widget.offerDetail.fareRules,
-                                // revalidatedDetails: widget.offerDetail,
-                              ),
-                            );
-                          },
-                          showFare: false,
-                        ),
-                      ],
                       const SizedBox(height: 16),
-                      Divider(),
                       ...[FirstTitle(title: "Baggage".tr), buildTable(context, baggagesData)],
                       const SizedBox(height: 16),
                       Divider(),
+                      const SizedBox(height: 16),
                       ...[
                         FirstTitle(title: "Pricing".tr),
                         buildTable(context, faringsData),

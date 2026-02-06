@@ -76,17 +76,49 @@ class MoreFlightDetailPage extends StatelessWidget {
                     ),
               
                     const SizedBox(height: 16),
-                    
-                    if (fareRules.isNotEmpty)
-                      Card(
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Card(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: ExpansionTile(
-                          title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                          children: fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
+                          initiallyExpanded: true,
+                          title: Text("Other info".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          children: [
+                            _InfoRow(
+                              label: "Exchange".tr,
+                              value: AppFuns.priceWithCoin(20, "USD"),
+                            ),
+                            const SizedBox(height: 8),
+                            _InfoRow(
+                              label: "Cancel".tr,
+                              value: AppFuns.priceWithCoin(10, "USD"),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
                     
+                    const SizedBox(height: 16),  
+                    
+                    if (fareRules.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ExpansionTile(
+                            title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            children: fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
+                          ),
+                        ),
+                      ),
+
                     const SizedBox(height: 30),
               
               
