@@ -77,7 +77,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
 
   late final List<_StatusOption> statusOptions = <_StatusOption>[
     _StatusOption(BookingStatus.all, 'All'), // ✅ first
-    _StatusOption(_pickStatus(['PENDING']), 'Pending'),
+    // _StatusOption(_pickStatus(['PENDING']), 'Pending'),
     _StatusOption(_pickStatus(['pre-book']), 'Pre-book'),
     _StatusOption(_pickStatus(['confirmed']), 'Confirmed'),
     _StatusOption(_pickStatus(['cancelled', 'canceled']), 'Cancelled'),

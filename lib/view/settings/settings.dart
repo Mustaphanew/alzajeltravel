@@ -64,26 +64,29 @@ class _SettingsPageState extends State<SettingsPage> {
                       );
                     },
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.payments),
-                    title: Text('Currency'.tr),
-                    subtitle: Text(c.currentCurrency),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () async {
-                      await showPickerBottomSheet<String>(
-                        context: context,
-                        title: 'Choose Currency'.tr,
-                        selected: c.currency,
-                        options: c.currencies.map((e) {
-                          final code = e['key'] as String;
-                          final label = (e['value'] as String).tr;
-                          return SettingOption<String>(value: code, label: label);
-                        }).toList(),
-                        onSelected: c.setCurrency,
-                      );
-                    },
-                  ),
+                  
+                  // const Divider(height: 1),
+                  // ListTile(
+                  //   leading: const Icon(Icons.payments),
+                  //   title: Text('Currency'.tr),
+                  //   subtitle: Text(c.currentCurrency),
+                  //   trailing: const Icon(Icons.chevron_right),
+                  //   onTap: () async {
+                  //     await showPickerBottomSheet<String>(
+                  //       context: context,
+                  //       title: 'Choose Currency'.tr,
+                  //       selected: c.currency,
+                  //       options: c.currencies.map((e) {
+                  //         final code = e['key'] as String;
+                  //         final label = (e['value'] as String).tr;
+                  //         return SettingOption<String>(value: code, label: label);
+                  //       }).toList(),
+                  //       onSelected: c.setCurrency,
+                  //     );
+                  //   },
+                  // ),
+                  
+                  
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.brightness_6),

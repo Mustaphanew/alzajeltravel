@@ -3,6 +3,7 @@ import 'package:alzajeltravel/model/flight/flight_segment_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/widgets/gradient_bg_container.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
 import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:flutter/material.dart';
@@ -61,9 +62,10 @@ class MoreFlightDetailPage extends StatelessWidget {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   children: [
+                    const SizedBox(height: 12),
                     // ---------- عرض المسارات (ذهاب / عودة) ----------
                     _buildLegSections(
                       context: context,
@@ -86,16 +88,27 @@ class MoreFlightDetailPage extends StatelessWidget {
                           title: Text("Other info".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          backgroundColor: Color(0xffe4e4e4),
+                          // childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           children: [
-                            _InfoRow(
-                              label: "Exchange".tr,
-                              value: AppFuns.priceWithCoin(20, "USD"),
-                            ),
-                            const SizedBox(height: 8),
-                            _InfoRow(
-                              label: "Cancel".tr,
-                              value: AppFuns.priceWithCoin(10, "USD"),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              color: Theme.of(context).cardTheme.color,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  _InfoRow(
+                                    label: "Exchange".tr,
+                                    value: AppFuns.priceWithCoin(20, "USD"),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _InfoRow(
+                                    label: "Cancel".tr,
+                                    value: AppFuns.priceWithCoin(10, "USD"),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -174,18 +187,21 @@ class MoreFlightDetailPage extends StatelessWidget {
           const SizedBox(height: 4),
 
           // عنوان المسار
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              '${"Trip route".tr}: '
-              '${legIndex == 0 ? "Departure".tr : "Return".tr}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: AppConsts.xlg,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 0),
+          //   child: GradientBgContainer(
+          //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          //     width: double.infinity,
+          //     child: Text( 
+          //       '${"Trip route".tr}: ' '${legIndex == 0 ? "Departure".tr : "Return".tr}', 
+          //       style: theme.textTheme.titleMedium?.copyWith(
+          //         fontWeight: FontWeight.w700,
+          //         fontSize: AppConsts.xlg,
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 8),
 
           // نحدد startOffset لهذا الـ leg ثم نحدّث offset للـ leg اللي بعده
           Builder(
@@ -193,6 +209,7 @@ class MoreFlightDetailPage extends StatelessWidget {
               final leg = legs[legIndex];
               final startOffsetForLeg = globalSegmentOffset;
               globalSegmentOffset += leg.segments.length;
+              final String pathTitle = '${"Trip route".tr}: ' '${legIndex == 0 ? "Departure".tr : "Return".tr}';
 
               return _buildSingleLegList(
                 context: context,
@@ -204,6 +221,7 @@ class MoreFlightDetailPage extends StatelessWidget {
                 startOffset: startOffsetForLeg,
                 timeFormat: timeFormat,
                 dateFormat: dateFormat,
+                pathTitle: pathTitle,
               );
             },
           ),
@@ -225,6 +243,7 @@ class MoreFlightDetailPage extends StatelessWidget {
     required int startOffset, // من هنا نبدأ نقرأ baggagePerSegment
     required DateFormat timeFormat,
     required DateFormat dateFormat,
+    required String pathTitle,
   }) {
     final segments = leg.segments;
 
@@ -232,125 +251,151 @@ class MoreFlightDetailPage extends StatelessWidget {
       // color: cs.error,
       elevation: 3,
       margin: EdgeInsets.symmetric(horizontal: 8),
-      child: ListView.separated(
-        itemCount: segments.length,
-        padding: EdgeInsets.symmetric(horizontal: 0),
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          final seg = segments[index];
-          final depTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.departureDateTime));
-          final arrTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.arrivalDateTime));
-          final depDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.departureDateTime));
-          final arrDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.arrivalDateTime));
-      
-          String fromName = "";
-          String toName = "";
-      
-          if (AirportRepo.searchByCode(seg.fromCode) != null) {
-            fromName = AirportRepo.searchByCode(seg.fromCode)!.name[AppVars.lang];
-          } else {
-            fromName = seg.fromName;
-          }
-          if (AirportRepo.searchByCode(seg.toCode) != null) {
-            toName = AirportRepo.searchByCode(seg.toCode)!.name[AppVars.lang];
-          } else {
-            toName = seg.toName;
-          }
-      
-          // index العالمي في مصفوفة الأمتعة
-          final int globalIndex = startOffset + index;
-      
-          // الأمتعة لهذه السجمنت
-          String? segmentBaggage;
-          if (offer.baggagePerSegment.length > globalIndex &&
-              offer.baggagePerSegment[globalIndex].isNotEmpty) {
-            final raw = offer.baggagePerSegment[globalIndex];
-            segmentBaggage = raw
-                .replaceAll('Piece', 'Piece'.tr)
-                .replaceAll('KG', 'KG'.tr);
-          }
-      
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // لو في أكثر من سيجمنت في هذا المسار نعرض رقم السجمنت
-              // if (segments.length > 1)
-              //   Padding(
-              //     padding: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
-              //     child: Text(
-              //       "Flight".tr + " " + (index + 1).toString() + " " + "of".tr + " " + segments.length.toString(),
-              //       style: theme.textTheme.bodyMedium?.copyWith(
-              //         fontWeight: FontWeight.w600,
-              //       ),
-              //     ),
-              //   ),
-      
-              SegCard(
-                seg: seg,
-                fromCode: seg.fromCode,
-                fromName: fromName, 
-                depTime: depTime, 
-                depDate: depDate,
-                toCode: seg.toCode,
-                toName: toName, 
-                arrTime: arrTime, 
-                arrDate: arrDate, 
-                segmentBaggage: segmentBaggage,
-                cabin: (seg.cabinClassText.replaceAll("Standard", "")).tr,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+
+              GradientBgContainer(
+                padding: const EdgeInsets.all(8.0),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                width: double.infinity,
+                height: 40,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  pathTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: AppConsts.lg,
+                  ),
+                ),
               ),
-      
-              const SizedBox(height: 0),
-              
-            ],
-          );
-        },
-        separatorBuilder: (context, index) {
-          // index هنا بين 0 و segments.length - 2 داخل هذا الـ leg
-          final seg = segments[index];
-          final nextSeg = segments[index + 1];
-      
-          final layText = AppFuns.formatHourMinuteSecond(seg.layoverText);
-          if (layText == null || layText.isEmpty) {
-            return const SizedBox(height: 16);
-          }
-      
-          final cityName = AirportRepo.searchByCode(nextSeg.fromCode).name[AppVars.lang];
-      
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(999),
+
+          ListView.separated(
+            itemCount: segments.length,
+            padding: EdgeInsets.symmetric(horizontal: 0),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              final seg = segments[index];
+              final depTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.departureDateTime));
+              final arrTime = AppFuns.replaceArabicNumbers(timeFormat.format(seg.arrivalDateTime));
+              final depDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.departureDateTime));
+              final arrDate = AppFuns.replaceArabicNumbers(dateFormat.format(seg.arrivalDateTime));
+          
+              String fromName = "";
+              String toName = "";
+          
+              if (AirportRepo.searchByCode(seg.fromCode) != null) {
+                fromName = AirportRepo.searchByCode(seg.fromCode)!.name[AppVars.lang];
+              } else {
+                fromName = seg.fromName;
+              }
+              if (AirportRepo.searchByCode(seg.toCode) != null) {
+                toName = AirportRepo.searchByCode(seg.toCode)!.name[AppVars.lang];
+              } else {
+                toName = seg.toName;
+              }
+          
+              // index العالمي في مصفوفة الأمتعة
+              final int globalIndex = startOffset + index;
+          
+              // الأمتعة لهذه السجمنت
+              String? segmentBaggage;
+              if (offer.baggagePerSegment.length > globalIndex &&
+                  offer.baggagePerSegment[globalIndex].isNotEmpty) {
+                final raw = offer.baggagePerSegment[globalIndex];
+                segmentBaggage = raw
+                    .replaceAll('Piece', 'Piece'.tr)
+                    .replaceAll('KG', 'KG'.tr);
+              }
+          
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // لو في أكثر من سيجمنت في هذا المسار نعرض رقم السجمنت
+                  // if (segments.length > 1)
+                  //   Padding(
+                  //     padding: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
+                  //     child: Text(
+                  //       "Flight".tr + " " + (index + 1).toString() + " " + "of".tr + " " + segments.length.toString(),
+                  //       style: theme.textTheme.bodyMedium?.copyWith(
+                  //         fontWeight: FontWeight.w600,
+                  //       ),
+                  //     ),
+                  //   ),
+          
+          
+          
+                  SegCard(
+                    seg: seg,
+                    fromCode: seg.fromCode,
+                    fromName: fromName, 
+                    depTime: depTime, 
+                    depDate: depDate,
+                    toCode: seg.toCode,
+                    toName: toName, 
+                    arrTime: arrTime, 
+                    arrDate: arrDate, 
+                    segmentBaggage: segmentBaggage,
+                    cabin: (seg.cabinClassText.replaceAll("Standard", "")).tr,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 20,
-                        color: cs.surfaceContainer,
+          
+                  const SizedBox(height: 0),
+                  
+                ],
+              );
+            },
+            separatorBuilder: (context, index) {
+              // index هنا بين 0 و segments.length - 2 داخل هذا الـ leg
+              final seg = segments[index];
+              final nextSeg = segments[index + 1];
+          
+              final layText = AppFuns.formatHourMinuteSecond(seg.layoverText);
+              if (layText == null || layText.isEmpty) {
+                return const SizedBox(height: 16);
+              }
+          
+              final cityName = AirportRepo.searchByCode(nextSeg.fromCode).name[AppVars.lang];
+          
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${"layover in".tr} $cityName ${"for".tr} $layText',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: cs.surfaceContainer,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 20,
+                            color: cs.surfaceContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${"layover in".tr} $cityName ${"for".tr} $layText',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: cs.surfaceContainer,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),              
-              ],
-            ),
-          );
-        },
+                    ),              
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

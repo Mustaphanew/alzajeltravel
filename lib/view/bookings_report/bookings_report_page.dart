@@ -236,6 +236,9 @@ class _BookingsReportListState extends State<_BookingsReportList> with Automatic
             itemBuilder: (context, index) {
               if (index < controller.items.length) {
                 final BookingReportItem item = controller.items[index];
+                if(item.flightStatus == BookingStatus.pending){
+                  return SizedBox.shrink();
+                }
                 return _ReportCard(item: item); // ✅ كما هو عندك
               }
 

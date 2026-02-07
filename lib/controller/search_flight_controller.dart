@@ -66,6 +66,30 @@ class SearchFlightController extends GetxController {
   final int maxFlightsForms = 5;
   final List<SearchFlightForm> forms = <SearchFlightForm>[];
 
+  bool nonStop = false;
+  void changeNonStop() {
+    nonStop = !nonStop;
+    safeUpdate();
+  }
+
+  bool isIncludeBaggage = false;
+  void changeIsIncludeBaggage() {
+    isIncludeBaggage = !isIncludeBaggage;
+    safeUpdate();
+  }
+
+  TextEditingController txtFlightNoOutbound = TextEditingController();
+  void changeFlightNoOutbound(String value) {
+    txtFlightNoOutbound.text = value;
+    safeUpdate();
+  }
+
+  TextEditingController txtFlightNoReturn = TextEditingController();
+  void changeFlightNoReturn(String value) {
+    txtFlightNoReturn.text = value;
+    safeUpdate();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -252,7 +276,7 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
       "chd": travelersController.childrenCounter,
       "inf": travelersController.infantsInLapCounter,
       "cabin": classTypeController.selectedClassType?.code ?? "",
-      "nonstop": "0",
+      "nonstop": nonStop ? "1" : "0",
     };
 
     final response = await AppVars.api.post(

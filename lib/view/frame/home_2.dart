@@ -213,6 +213,9 @@ class _Home2State extends State<Home2> {
                           }else if(item.flightStatus == BookingStatus.notFound){
                             bgStatus = cs.primaryFixed.withOpacity(0.2);
                           }
+                          if(item.flightStatus == BookingStatus.pending) {
+                            return SizedBox.shrink();
+                          }
                           return Container(
                             margin: const EdgeInsets.only(bottom: 0),
                             child: Column(

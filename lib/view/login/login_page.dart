@@ -2,12 +2,8 @@ import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
-import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
-import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_picker_single_widget2.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
 import 'package:alzajeltravel/utils/glassmorphism/glassmorphism.dart';
-import 'package:alzajeltravel/view/tmp/my_lottie.dart';
-import 'package:country_flags/country_flags.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -74,7 +70,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
 
-    @override
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     scrollController.dispose();
@@ -162,7 +158,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                     top: MediaQuery.of(context).padding.top,
                     left: 22,
                     right: 22,
-                    bottom: 34 + kb, // ✅ مساحة إضافية عند ظهور الكيبورد
+                    bottom: 44 + kb, // ✅ مساحة إضافية عند ظهور الكيبورد
                   ),
                   child: Form(
                     key: formKey,
@@ -202,7 +198,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                   Text(
                                     "Agent Login".tr,
                                     style: TextStyle(
-                                      fontSize: 24,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                       color: cs.onPrimary,
                                     ),
@@ -218,12 +214,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                       ),
                                     ),
                                     onPressed: () async {
-                                      print("AppVars.appThemeMode: ${AppVars.appThemeMode}");
-                                      context.loaderOverlay.show();
-                                      await Future.delayed(const Duration(seconds: 5));
-                                      if(context.mounted) context.loaderOverlay.hide();
-                                      // Get.to(() => const MyLottie());
-                                      // Get.to(() => const SettingsPage());
+                                      Get.to(() => const SettingsPage());
                                     }, 
                                     child: Text("Settings".tr),
                                   ),
@@ -232,7 +223,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                               Text(
                                 "Get competitive global airfares via New Horizon.".tr,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   color: cs.onPrimary,
                                 ),
                               ),

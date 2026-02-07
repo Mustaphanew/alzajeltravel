@@ -4,6 +4,7 @@ import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/date_
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
@@ -194,68 +195,95 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                         SizedBox(height: 8),
                         AirlineExcludeDropDown(),
                         SizedBox(height: 12),
-
-                        StatefulBuilder(
-                          builder: (context, innerSetState) {
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      innerSetState(() {
-                                        isDirect = !isDirect;
-                                      });
-                                    },
-                                    child: Text(
-                                      "Direct flights only".tr,
-                                      style: TextStyle(fontSize: 16),
-                                    ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: controller.txtFlightNoOutbound,
+                                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                                textCapitalization: TextCapitalization.characters,
+                                decoration: InputDecoration(
+                                  labelText: "Flight No Outbound".tr,
+                                  hintText: "Enter Flight No Outbound".tr,
+                                  hintStyle: TextStyle(fontSize: AppConsts.normal),
+                                  labelStyle: TextStyle(fontSize: AppConsts.normal),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                LiteRollingPowerSwitch(
-                                  value: isDirect,
-                                  onChanged: (value) {
-                                    innerSetState(() {
-                                      isDirect = value;
-                                    });
-                                  },
+                              ),
+                            ),
+                            if(widget.tmpJourneyType == JourneyType.roundTrip) ...[
+                              SizedBox(width: 6),
+                              Expanded(
+                              child: TextFormField(
+                                controller: controller.txtFlightNoReturn,
+                                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                                textCapitalization: TextCapitalization.characters,
+                                decoration: InputDecoration(
+                                  labelText: "Flight No Return".tr,
+                                  hintText: "Enter Flight No Return".tr,
+                                  hintStyle: TextStyle(fontSize: AppConsts.normal),
+                                  labelStyle: TextStyle(fontSize: AppConsts.normal),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
-                              ],
-                            );
-                          }
+                              ),
+                            ),
+                            ]
+                          ],
+                        ),
+                        SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  controller.changeNonStop();
+                                },
+                                child: Text(
+                                  "Direct flights only".tr,
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                            LiteRollingPowerSwitch(
+                              value: controller.nonStop,
+                              onChanged: (value) {
+                                controller.changeNonStop();
+                              },
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 12),
                         
-                        StatefulBuilder(
-                          builder: (context, innerSetState) {
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      innerSetState(() {
-                                        isIncludeBaggage = !isIncludeBaggage;
-                                      });
-                                    },
-                                    child: Text(
-                                      "Flights with baggage included only".tr,
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  controller.changeIsIncludeBaggage();
+                                },
+                                child: Text(
+                                  "Flights with baggage included only".tr,
+                                  style: TextStyle(fontSize: 16),
                                 ),
-                                LiteRollingPowerSwitch(
-                                  value: isIncludeBaggage,
-                                  onChanged: (value) {
-                                    innerSetState(() {
-                                      isIncludeBaggage = value;
-                                    });
-                                  },
-                                ),
-                              ],
-                            );
-                          }
+                              ),
+                            ),
+                            LiteRollingPowerSwitch(
+                              value: controller.isIncludeBaggage,
+                              onChanged: (value) {
+                                controller.changeIsIncludeBaggage();
+                              },
+                            ),
+                          ],
                         ),
+
+
+
                         SizedBox(height: 8),
                       ],
                     ),
@@ -481,7 +509,7 @@ class DepartureWidget extends StatelessWidget {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
                           // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 0), transition: Transition.downToUp);
 
-                          showDialog(
+                          await showDialog(
                             context: context,
                             builder: (context) {
                               return AlertDialog(
@@ -528,7 +556,7 @@ class DepartureWidget extends StatelessWidget {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
                           // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 1), transition: Transition.downToUp);
 
-                          showDialog(
+                          await showDialog(
                             context: context,
                             builder: (context) {
                               return AlertDialog(

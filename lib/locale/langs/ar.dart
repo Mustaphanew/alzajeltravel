@@ -631,6 +631,11 @@ Map<String, String> ar = {
 
   "Other info": "معلومات أخرى",
 
-  "Exchange": "تعديل"
+  "Exchange": "تعديل",
+
+  "Flight No Outbound": "رقم الرحلة (الذهاب)",
+  "Flight No Return": "رقم الرحلة (العودة)",
+  "Enter Flight No Outbound": "أدخل رقم الرحلة (الذهاب)",
+  "Enter Flight No Return": "أدخل رقم الرحلة (العودة)",
 
 };
