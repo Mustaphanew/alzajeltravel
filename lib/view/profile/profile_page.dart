@@ -4,11 +4,11 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/profile/change_password.dart';
+import 'package:alzajeltravel/view/profile/permissions_page.dart';
 import 'package:alzajeltravel/view/profile/profile_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-
 import 'package:alzajeltravel/controller/profile/profile_controller.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -172,6 +172,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 20),
 
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12), 
+                    child: PermissionsPage(),
+                  ),
+
+                  const SizedBox(height: 16),
                   Container(padding: const EdgeInsets.symmetric(horizontal: 12), child: ChangePassword()),
                 
                   const SizedBox(height: 30),

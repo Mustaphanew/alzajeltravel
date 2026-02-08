@@ -299,6 +299,9 @@ class PassportsFormsController extends GetxController {
       print("ageGroup 4: ${passengerJson?['pax_type']}");
       print("issue_country: ${passengerJson?['issue_country']}");
 
+      print("passengerJson?['gender']: ${passengerJson?['gender']}");
+      print("passengerJson?['issuingCountry']: ${passengerJson?['issue_country']}");
+
       final PassportModel travelerPassport = PassportModel.fromJson({
         "documentNumber": passengerJson?['passport_no'],
         "givenNames": passengerJson?['first_name'],

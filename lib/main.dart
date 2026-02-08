@@ -71,7 +71,9 @@ Future<void> main() async {
       overlayWidgetBuilder: (progress) {
         print("brightness: ${Get.context?.theme.brightness}");
         // return Container(height: 300, width: 300, child: FlightLoader());
-        return MyLottie();
+        return MyLottie(
+          title: (progress?? "Loading".tr).toString() + " ...",
+        );
       },
       child: const MyApp(),
     ),

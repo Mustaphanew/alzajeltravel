@@ -638,4 +638,26 @@ Map<String, String> ar = {
   "Enter Flight No Outbound": "أدخل رقم الرحلة (الذهاب)",
   "Enter Flight No Return": "أدخل رقم الرحلة (العودة)",
 
+  "access denied": "تم رفض الوصول",
+  "Access denied. You don't have the required permission. Please contact the administrator if you need to be granted this permission.": 
+  "تم رفض الوصول. ليس لديك الصلاحية المطلوبة. تواصل مع المسؤول إذا كنت بحاجة إلى منح هذه الصلاحية.",
+
+  "Permissions": "الصلاحيات",
+
+  "flight.logout": "تسجيل الخروج",
+  "flight.search": "البحث عن الرحلات",
+  "flight.revalidate": "إعادة التحقق من الحجز",
+  "flight.other_prices": "عرض أسعار أخرى",
+  "flight.booking.create": "إنشاء حجز",
+  "flight.booking.prebook": "حجز مبدئي",
+  "flight.booking.issue": "إصدار التذكرة",
+  "flight.booking.cancel": "إلغاء الحجز",
+  "flight.booking.void": "إلغاء/إبطال الحجز",
+  "flight.booking.void_ticket": "إلغاء/إبطال التذكرة",
+  "flight.reports": "التقارير",
+  "flight.trip.read": "عرض الرحلات",
+  "Loading": "جاري التحميل",
+  "Switching to passenger data": "جاري الانتقال لبيانات المسافرين",
+  "Passenger data is being saved": "جاري حفظ بيانات المسافرين",
+  "Your reservation is being confirmed": "جاري تأكيد الحجز", 
 };

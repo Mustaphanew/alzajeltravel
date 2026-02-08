@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/controller/bookings_report/trip_detail/flight_detail.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/more_flight_detail_page.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
@@ -167,9 +168,19 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                               children: [
                                                 SecondTitle(title: "Full Name".tr),
                                                 const Divider(thickness: 1),
+                                                SecondTitle(title: "Document number".tr),
+                                                const Divider(thickness: 1),
                                                 SecondTitle(title: "Date of Birth".tr),
                                                 const Divider(thickness: 1),
+                                                SecondTitle(title: "Date of expiry".tr),
+                                                const Divider(thickness: 1),
+                                                SecondTitle(title: "Sex".tr),
+                                                const Divider(thickness: 1),
                                                 SecondTitle(title: "Ticket".tr),
+                                                const Divider(thickness: 1),
+                                                SecondTitle(title: "Nationality".tr),
+                                                const Divider(thickness: 1),
+                                                SecondTitle(title: "ISSUING COUNTRY".tr),
                                               ],
                                             ),
                                           ),
@@ -195,12 +206,28 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                               ),
                                               const Divider(thickness: 1),
                                               SecondTitle(
+                                                title: traveler.passport.documentNumber??'N/A',
+                                              ),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(
                                                 title: AppFuns.replaceArabicNumbers(
                                                   intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
                                                 ),
                                               ),
                                               const Divider(thickness: 1),
-                                              SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
+                                              SecondTitle(
+                                                title: AppFuns.replaceArabicNumbers(
+                                                  intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfExpiry!),
+                                                ),
+                                              ),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(
+                                                title: traveler.passport.sex?.label??'N/A',
+                                              ),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(title: traveler.passport.nationality?.name[AppVars.lang] ?? 'N/A'),
+                                              const Divider(thickness: 1),
+                                              SecondTitle(title: traveler.passport.issuingCountry?.name[AppVars.lang] ?? 'N/A'),
                                             ],
                                           ),
                                         ),
@@ -653,7 +680,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
           // ======= زر تأكيد الحجز =======
           ElevatedButton.icon(
             onPressed: () async {
-              context.loaderOverlay.show();
+              context.loaderOverlay.show(
+                progress: "Your reservation is being confirmed".tr,
+              );
               final preRes = await c.preBooking(widget.insertId.toString()); 
               if(preRes != null && preRes is Map<String, dynamic>) {
                 final booking = BookingDataModel.fromJson(preRes['booking']);

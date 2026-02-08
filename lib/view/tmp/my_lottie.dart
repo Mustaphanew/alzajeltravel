@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 import 'dart:math' as math;
 
 class MyLottie extends StatelessWidget {
-  const MyLottie({super.key});
+  final String title;
+  const MyLottie({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +66,7 @@ class MyLottie extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  "Search for flights".tr,
+                  title,
                   style: TextStyle(
                     fontFamily: AppConsts.font,
                     color: txtColor,

@@ -157,4 +157,19 @@ Map<String, String> en = {
   'Total per traveler': 'Total per traveler',
   'Select seat': 'Select seat',
   'Total': 'Total',
+
+
+  "Permissions": "Permissions",
+  "flight.logout": "Logout",
+  "flight.search": "Search flights",
+  "flight.revalidate": "Revalidate booking",
+  "flight.other_prices": "View other prices",
+  "flight.booking.create": "Create booking",
+  "flight.booking.prebook": "Pre-book",
+  "flight.booking.issue": "Issue ticket",
+  "flight.booking.cancel": "Cancel booking",
+  "flight.booking.void": "Void booking",
+  "flight.booking.void_ticket": "Void ticket",
+  "flight.reports": "Reports",
+  "flight.trip.read": "View trips"
 };

@@ -100,6 +100,7 @@ class ProfileController extends GetxController {
       website: websiteController.text.trim(),
       branchCode: branchCodeController.text.trim(),
       status: initialData.status, // readOnly (لا يتغير من المستخدم)
+      permissions: initialData.permissions,
     );
   }
 

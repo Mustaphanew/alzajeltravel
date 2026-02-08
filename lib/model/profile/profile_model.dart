@@ -13,6 +13,7 @@ class ProfileModel {
   final String website;
   final String? branchCode;
   final String status;
+  final List<String> permissions;
 
   // Balances (read-only)
   final double? remainingBalance;
@@ -29,6 +30,7 @@ class ProfileModel {
     required this.website,
     this.branchCode,
     required this.status,
+    required this.permissions,
     this.remainingBalance,
   });
 
@@ -38,6 +40,14 @@ class ProfileModel {
       if (v != null) return v.toString();
     }
     return '';
+  }
+
+  static List<String> _readPermissions(Map<String, dynamic> map, List<String> keys) {
+    for (final k in keys) {
+      final v = map[k];
+      if (v != null) return v;
+    }
+    return [];
   }
 
   static double _readMoney(Map<String, dynamic> map, List<String> keys) {
@@ -71,7 +81,7 @@ class ProfileModel {
       address: _readString(map, ['address', 'Address', 'العنوان', 'العنوان:']),
       website: _readString(map, ['website', 'Website', 'الموقع الالكتروني', 'الموقع الالكتروني:']),
       status: _readString(map, ['status', 'Status', 'الحالة', 'الحالة:']),
-
+      permissions: _readPermissions(map, ['permissions', 'Permissions', 'الصلاحيات', 'الصلاحيات:']),
       remainingBalance: _readMoney(map, ['remainingBalance', 'Remaining Balance', 'الرصيد المتبقي', 'الرصيد المتبقي:']),
       branchCode: _readString(map, ['branchCode', 'Branch Code', 'رقم الفرع', 'رقم الفرع:']),
     );

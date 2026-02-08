@@ -76,9 +76,10 @@ class _Home2State extends State<Home2> {
             padding: const EdgeInsetsDirectional.only(end: 8),
             child: IconButton(
               onPressed: () async {
-                context.loaderOverlay.show();
-                await Future.delayed(const Duration(seconds: 10));
-                if(context.mounted) context.loaderOverlay.hide();
+                print("object: ${AppVars.profile?.permissions}");
+                // context.loaderOverlay.show();
+                // await Future.delayed(const Duration(seconds: 10));
+                // if(context.mounted) context.loaderOverlay.hide();
               }, 
               icon: SvgPicture.asset(
                 (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,

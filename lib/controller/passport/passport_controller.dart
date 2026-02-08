@@ -111,6 +111,7 @@ class PassportController extends GetxController {
   /// تغيير الجنس (Sex.male / Sex.female)
   void setSex(Sex? sex) {
     model.sex = sex;
+    print("object: ${sex?.key}");
     update();
   }
 

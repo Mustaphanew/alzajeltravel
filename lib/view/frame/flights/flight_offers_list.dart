@@ -16,6 +16,7 @@ import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:loader_overlay/loader_overlay.dart';
@@ -43,6 +44,7 @@ class FlightOffersList extends StatefulWidget {
 
 class _FlightOffersListState extends State<FlightOffersList> {
   final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController2 = ScrollController();
 
   late final FlightDetailApiController detailCtrl;
   late final OtherPricesController otherPricesCtrl;
@@ -499,6 +501,8 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
               ? Column(
                   children: [
 
+                    
+
                        // ===== Sort dropdown (same value synced with FilterOffersPage) =====
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -515,11 +519,16 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                   // edit search ______________
                   Expanded(
                     child: Container(
-                      height: 60,
+                      // height: 60,
                       // padding: EdgeInsetsDirectional.only(end: 12),
                       child: ElevatedButton( 
                         style: ElevatedButton.styleFrom(
-                          padding:  EdgeInsets.symmetric(horizontal: 12),
+                          padding:  EdgeInsets.only(
+                            left: 4,
+                            right: 4,
+                            top: 8,
+                            bottom: 10,
+                          ),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.zero,
                           ),
@@ -549,14 +558,24 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                         },
                         
                         child: Row(
+                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
+                              flex: 1,
+                              child: const SizedBox.shrink(),
+                            ),
+                            Expanded(
+                              flex: 4,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
+                                  Wrap(
+                                    // mainAxisAlignment: MainAxisAlignment.center,
+                                    direction: Axis.horizontal,
+                                    alignment: WrapAlignment.center,
+                                    runAlignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       Text(
                                         AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] + " (${searchInputs.from})",
@@ -599,7 +618,26 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                                 ],
                               ),
                             ),
-                            Icon(Icons.edit, size: 26,)
+                            
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: cs.onPrimary),
+                                ),
+                                child: Text( 
+                                  "Edit".tr,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontSize: 13,
+                                    color: cs.onPrimary,
+                                  ),
+                                ),
+                              ),
+                            )
                           ],
                         ),
 
@@ -618,74 +656,117 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                     Expanded(
                       child: CupertinoScrollbar(
                         controller: scrollController,
-                        child: ListView.separated(
-                          padding: EdgeInsets.only(top: 8),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
                           controller: scrollController,
-                          itemCount: offers.length,
-                          separatorBuilder: (_, __) => const SizedBox.shrink(),
-                          itemBuilder: (context, index) {
-                            final offer = offers[index];
-                            
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              child: FlightOfferCard(
-                                offer: offer,
-                                onBook: () async {
-                                  context.loaderOverlay.show();
-                                  await detailCtrl.revalidateAndOpen(offer: offer);
-                                  if (context.mounted) context.loaderOverlay.hide();
-                                },
-                                onOtherPrices: () async {
-                                  context.loaderOverlay.show();
-                                  try {
-                                    final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                    if (!ok) {
-                                      Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                    } else {
-                                      Get.to(() => OtherPricesPage());
-                                    }
-                                  } finally {
-                                    if (context.mounted) context.loaderOverlay.hide();
-                                  }
-                                },
-                                onDetails: () {
-                                  // Get.to(
-                                  //   () => FlightDetailPage(
-                                  //     detail: RevalidatedFlightModel(
-                                  //       offer: offer,
-                                  //       isRefundable: offer.isRefundable,
-                                  //       isPassportMandatory: false,
-                                  //       firstNameCharacterLimit: 0,
-                                  //       lastNameCharacterLimit: 0,
-                                  //       paxNameCharacterLimit: 0,
-                                  //       fareRules: const [],
-                                  //     ),
-                                  //     showContinueButton: false,
-                                  //     onBook: () async {
-                                  //       context.loaderOverlay.show();
-                                  //       await detailCtrl.revalidateAndOpen(offer: offer);
-                                  //       if (context.mounted) context.loaderOverlay.hide();
-                                  //     },
-                                  //     onOtherPrices: () async {
-                                  //       context.loaderOverlay.show();
-                                  //       try {
-                                  //         final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
-                                  //         if (!ok) {
-                                  //           Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
-                                  //         }
-                                  //       } finally {
-                                  //         if (context.mounted) context.loaderOverlay.hide();
-                                  //       }
-                                  //     },
-                                  //   ),
-                                  // );
-                                  Get.to(
-                                    () => MoreFlightDetailPage(
-                                      flightOffer: offer,
-                                      fareRules: const [],
-                                      showContinueButton: false,
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 120,
+                                child: CupertinoScrollbar(
+                                  controller: scrollController2,
+                                  thumbVisibility: true,
+                                  child: ListView.separated(
+                                    controller: scrollController2,
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.only(
+                                      left: 12,
+                                      right: 12,
+                                      top: 12,
+                                      bottom: 0,
+                                    ),
+                                    itemCount: 7,
+                                    shrinkWrap: true,
+                                    itemBuilder: (context, index) {
+                                      return Container(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: ElevatedButton(
+                                          // width: 200,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: (index == 1)? cs.secondary: cs.onPrimary,
+                                            foregroundColor: cs.primary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              side: BorderSide(
+                                                color: (index == 1)? cs.primary: cs.onPrimary,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            elevation: 3
+                                          ),
+                                          onPressed: () {},
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    "Saturday",
+                                                    style: TextStyle(
+                                                      fontFamily: AppConsts.font,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 4,),
+                                                  Icon(FontAwesomeIcons.solidDotCircle, size: 14,),
+                                                  SizedBox(width: 4,),
+                                                  Text(
+                                                    "12 Fabruary",
+                                                    style: TextStyle(
+                                                      fontFamily: AppConsts.font,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                                          
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4,),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    "117",
+                                                    style: TextStyle(
+                                                      fontFamily: AppConsts.font,
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.green[800]
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 4,),
+                                                  Text("USD"),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    separatorBuilder: (_, __) => const SizedBox(width: 12,),
+                                  ),
+                                ),
+                              ),
+                              ListView.separated(
+                                padding: EdgeInsets.only(top: 0),
+                                // controller: scrollController,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: offers.length,
+                                separatorBuilder: (_, __) => const SizedBox.shrink(),
+                                itemBuilder: (context, index) {
+                                  final offer = offers[index];
+                                  
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    child: FlightOfferCard(
+                                      offer: offer,
                                       onBook: () async {
-                                        context.loaderOverlay.show();
+                                        context.loaderOverlay.show(
+                                          progress: "Switching to passenger data".tr
+                                        );
                                         await detailCtrl.revalidateAndOpen(offer: offer);
                                         if (context.mounted) context.loaderOverlay.hide();
                                       },
@@ -695,33 +776,90 @@ static List<int> _extractStops(List<FlightOfferModel> offers) {
                                           final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
                                           if (!ok) {
                                             Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                          } else {
+                                            Get.to(() => OtherPricesPage());
                                           }
                                         } finally {
                                           if (context.mounted) context.loaderOverlay.hide();
                                         }
                                       },
-                                      revalidatedDetails: RevalidatedFlightModel(
-                                        offer: offer,
-                                        isRefundable: offer.isRefundable,
-                                        isPassportMandatory: false,
-                                        firstNameCharacterLimit: 0,
-                                        lastNameCharacterLimit: 0,
-                                        paxNameCharacterLimit: 0,
-                                        fareRules: const [],
-                                      ),
-                                      
+                                      onDetails: () {
+                                        // Get.to(
+                                        //   () => FlightDetailPage(
+                                        //     detail: RevalidatedFlightModel(
+                                        //       offer: offer,
+                                        //       isRefundable: offer.isRefundable,
+                                        //       isPassportMandatory: false,
+                                        //       firstNameCharacterLimit: 0,
+                                        //       lastNameCharacterLimit: 0,
+                                        //       paxNameCharacterLimit: 0,
+                                        //       fareRules: const [],
+                                        //     ),
+                                        //     showContinueButton: false,
+                                        //     onBook: () async {
+                                        //       context.loaderOverlay.show();
+                                        //       await detailCtrl.revalidateAndOpen(offer: offer);
+                                        //       if (context.mounted) context.loaderOverlay.hide();
+                                        //     },
+                                        //     onOtherPrices: () async {
+                                        //       context.loaderOverlay.show();
+                                        //       try {
+                                        //         final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                        //         if (!ok) {
+                                        //           Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                        //         }
+                                        //       } finally {
+                                        //         if (context.mounted) context.loaderOverlay.hide();
+                                        //       }
+                                        //     },
+                                        //   ),
+                                        // );
+                                        Get.to(
+                                          () => MoreFlightDetailPage(
+                                            flightOffer: offer,
+                                            fareRules: const [],
+                                            showContinueButton: false,
+                                            onBook: () async {
+                                              context.loaderOverlay.show();
+                                              await detailCtrl.revalidateAndOpen(offer: offer);
+                                              if (context.mounted) context.loaderOverlay.hide();
+                                            },
+                                            onOtherPrices: () async {
+                                              context.loaderOverlay.show();
+                                              try {
+                                                final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
+                                                if (!ok) {
+                                                  Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                                }
+                                              } finally {
+                                                if (context.mounted) context.loaderOverlay.hide();
+                                              }
+                                            },
+                                            revalidatedDetails: RevalidatedFlightModel(
+                                              offer: offer,
+                                              isRefundable: offer.isRefundable,
+                                              isPassportMandatory: false,
+                                              firstNameCharacterLimit: 0,
+                                              lastNameCharacterLimit: 0,
+                                              paxNameCharacterLimit: 0,
+                                              fareRules: const [],
+                                            ),
+                                            
+                                          ),
+                                        );
+                                      },
+                                      onMoreDetails: () {
+                                        Get.to(() => MoreFlightDetailPage(
+                                          flightOffer: offer,
+                                          fareRules: [],
+                                        ));
+                                      },
                                     ),
                                   );
                                 },
-                                onMoreDetails: () {
-                                  Get.to(() => MoreFlightDetailPage(
-                                    flightOffer: offer,
-                                    fareRules: [],
-                                  ));
-                                },
                               ),
-                            );
-                          },
+                            ],
+                          ),
                         ),
                       ),
                     ),

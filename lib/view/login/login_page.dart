@@ -78,7 +78,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   Future<void> login(BuildContext context) async {
-    context.loaderOverlay.show();
+    context.loaderOverlay.show(
+      progress: "Login".tr,
+    );
     await controller.login(
       context,
       validateForm: (formKey.currentState?.validate() ?? false),

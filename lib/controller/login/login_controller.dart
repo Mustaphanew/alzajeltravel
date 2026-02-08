@@ -136,6 +136,11 @@ class LoginController extends GetxController {
       }
 
       final agent = (response['agent'] is Map<String, dynamic>) ? (response['agent'] as Map<String, dynamic>) : <String, dynamic>{};
+      print("scopes: 1 ${response['scopes']}");
+      final List<String> permissions = (response['scopes'] as List? ?? const [])
+          .map((e) => e.toString()) 
+          .toList();
+      print("scopes: 2 $permissions");
 
       if ((agent['email']?.toString() ?? '').isEmpty) {
         if (context.mounted) {
@@ -159,7 +164,11 @@ class LoginController extends GetxController {
 
       Get.snackbar('Success'.tr, 'Login Successful'.tr);
 
-      goToProfile(agent, agencyNumber: agencyNumber);
+      goToProfile(
+        agent, 
+        agencyNumber: agencyNumber,
+        permissions: permissions,
+      );
     } catch (_) {
       if (context.mounted) {
         CustomSnackBar.error(context, 'Login Failed'.tr);
@@ -223,7 +232,12 @@ class LoginController extends GetxController {
   //   return res != null;
   // }
 
-  void goToProfile(Map<String, dynamic> agent, {required String agencyNumber}) {
+  void goToProfile(
+    Map<String, dynamic> agent, {
+      required String agencyNumber,
+      required List<String> permissions,
+    }) {
+      print("permissions: $permissions");
     final Map<String, dynamic> profileMap = {
       "id": agent['id'],
       "companyRegistrationNumber": "3343432282",
@@ -239,6 +253,7 @@ class LoginController extends GetxController {
       "remainingBalance": agent['balance'],
       "usedBalance": 0,
       "totalBalance": 0,
+      "permissions": permissions,
     };
 
     AppVars.getStorage.write('profile', profileMap);

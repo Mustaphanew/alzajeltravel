@@ -137,6 +137,7 @@ for (int index = 0; index < travelers.length; index++) ...[
     key: _tileKeysByTag[travelers[index].tag],
     child: PassportFormTile(
       tag: travelers[index].tag,
+      index: index,
       travelerIndex: travelers[index].index,
       ageGroupLabel: formsController.ageGroupLabel(travelers[index].ageGroup),
       lang: formsController.lang,
@@ -166,6 +167,9 @@ for (int index = 0; index < travelers.length; index++) ...[
               }
             }
           : null,
+      onSave: () {
+        formsController.collapseAll();
+      },
     ),
   ),
 ],
@@ -218,7 +222,9 @@ for (int index = 0; index < travelers.length; index++) ...[
                           ),
                           ElevatedButton(
                             onPressed: () async { 
-                              context.loaderOverlay.show();
+                              context.loaderOverlay.show(
+                                progress: "Passenger data is being saved".tr
+                              );
                               await formsController.saveAll();
                               if(context.mounted) context.loaderOverlay.hide();
                             },

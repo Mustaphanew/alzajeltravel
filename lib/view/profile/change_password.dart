@@ -1,3 +1,4 @@
+
 import 'package:alzajeltravel/controller/profile/change_password_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -31,10 +32,14 @@ class ChangePassword extends StatelessWidget {
           key: c.formKey,
           child: ExpansionTile(
             controller: c.expandableController,
-            leading: const Icon(Icons.lock),
+            leading: const Icon(
+              Icons.lock,
+              color: Color(0xFFe7b244),
+            ),
             title: Text('Change Password'.tr, style: TextStyle(fontWeight: FontWeight.bold)),
             // backgroundColor: cs.surfaceContainerHighest,
             collapsedBackgroundColor: cs.surfaceContainerHighest,
+            backgroundColor: Color(0xFFe4e4e4),
             shape:  RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
               // border top
@@ -47,7 +52,8 @@ class ChangePassword extends StatelessWidget {
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             children: [
-              Padding(
+              Container(
+                color: cs.surface,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), 
                 child: Column(
                   children: [

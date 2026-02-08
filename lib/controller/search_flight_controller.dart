@@ -254,7 +254,7 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
 
   AppVars.apiSessionId = null;
 
-  context.loaderOverlay.show();
+  if(context.mounted) context.loaderOverlay.show(progress: "Search for flights".tr);
   isRequesting = true;
   safeUpdate();
 
