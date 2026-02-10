@@ -17,10 +17,13 @@ class SearchFlight extends StatefulWidget {
   /// ✅ لو تريد فتحها على نفس تبويب آخر بحث
   final int? initialTabIndex;
 
+  final ValueChanged<FlightSearchResult>? onResult;
+
   const SearchFlight({
     super.key,
     this.isEditor = false,
     this.initialTabIndex,
+    this.onResult,
   });
 
   @override
@@ -104,141 +107,127 @@ void initState() {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return SafeArea(
-      top: false,
-      child: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: Text(widget.isEditor ? "Edit Search".tr : "Search Flight".tr),
-          centerTitle: true,
-          leading: widget.isEditor
-              ? IconButton(
-                  tooltip: "Close".tr,
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Get.back(),
-                )
-              : null,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-      
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Material(
-                  color: AppConsts.primaryColor.withValues(alpha: 0.4),
-                  child: SizedBox(
-                    height: 50,
-                    child: TabBar(
-                      controller: _tabController,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerHeight: 0,
-                      dividerColor: Colors.transparent,
-                      padding: EdgeInsets.zero,
-                      indicator: BoxDecoration(color: AppConsts.primaryColor),
-                      labelColor: cs.secondary,
-                      unselectedLabelColor: cs.onPrimary,
-                      unselectedLabelStyle: TextStyle(
-                        fontSize: AppConsts.normal,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: AppConsts.font,
-                      ),
-                      labelStyle: TextStyle(
-                        fontSize: AppConsts.normal,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: AppConsts.font,
-                      ),
-                      tabs: [
-                        Tab(text: "One Way".tr),
-                        Tab(text: "Round Trip".tr),
-                        Tab(text: "Multi City".tr),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-      
-              const SizedBox(height: 16),
-      
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    ),
-                  ),
-                  child: TabBarView(
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 20),
+    
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Material(
+                color: AppConsts.primaryColor.withValues(alpha: 0.4),
+                child: SizedBox(
+                  height: 50,
+                  child: TabBar(
                     controller: _tabController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: FlightTab(
-                          tmpJourneyType: JourneyType.oneWay,
-                          formKey: _oneWayKey,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: FlightTab(
-                          tmpJourneyType: JourneyType.roundTrip,
-                          formKey: _roundTripKey,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Center(child: Text("Not currently available".tr)),
-                        // لو فعلتها لاحقًا:
-                        // child: FlightTab(tmpJourneyType: JourneyType.multiCity, formKey: _multiCityKey),
-                      ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerHeight: 0,
+                    dividerColor: Colors.transparent,
+                    padding: EdgeInsets.zero,
+                    indicator: BoxDecoration(color: AppConsts.primaryColor),
+                    labelColor: cs.secondary,
+                    unselectedLabelColor: cs.onPrimary,
+                    unselectedLabelStyle: TextStyle(
+                      fontSize: AppConsts.normal,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: AppConsts.font,
+                    ),
+                    labelStyle: TextStyle(
+                      fontSize: AppConsts.normal,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppConsts.font,
+                    ),
+                    tabs: [
+                      Tab(text: "One Way".tr),
+                      Tab(text: "Round Trip".tr),
+                      Tab(text: "Multi City".tr),
                     ],
                   ),
                 ),
               ),
-      
-              const SizedBox(height: 16),
-      
-              SizedBox(
-                width: AppConsts.sizeContext(context).width * 0.9,
-                height: 50,
-                child: GetBuilder<SearchFlightController>(
-                  builder: (ctrl) {
-
-
-                    return CustomButton(
-                      onPressed: (ctrl.isRequesting) ? null : () async {
-                        // validate form كما عندك...
-                        final FlightSearchResult? result = await ctrl.requestServer(context);
-                        if (result == null) return;
-
-                        if (widget.isEditor) {
-                          // ✅ أغلق صفحة Edit ورجّع البيانات للـ FlightOffersList
-                          Get.back(result: result);
-                        } else {
-                          // ✅ بحث عادي: افتح صفحة النتائج
-                          Get.to(() => FlightOffersList(flightOffers: result.outbound, searchInputs: result.params));
-                        }
-                      },
-
-                      label: ctrl.isRequesting
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
-                          : Text("Search Flight".tr),
-                    );
-
-
-                  },
+            ),
+    
+            const SizedBox(height: 16),
+    
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: TabBarView(
+                  controller: _tabController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: FlightTab(
+                        tmpJourneyType: JourneyType.oneWay,
+                        formKey: _oneWayKey,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: FlightTab(
+                        tmpJourneyType: JourneyType.roundTrip,
+                        formKey: _roundTripKey,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Center(child: Text("Not currently available".tr)),
+                      // لو فعلتها لاحقًا:
+                      // child: FlightTab(tmpJourneyType: JourneyType.multiCity, formKey: _multiCityKey),
+                    ),
+                  ],
                 ),
               ),
-      
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+    
+            const SizedBox(height: 16),
+    
+            SizedBox(
+              width: AppConsts.sizeContext(context).width * 0.9,
+              height: 50,
+              child: GetBuilder<SearchFlightController>(
+                builder: (ctrl) {
+    
+    
+                  return CustomButton(
+                    onPressed: (ctrl.isRequesting) ? null : () async {
+                      // validate form كما عندك...
+                      final FlightSearchResult? result = await ctrl.requestServer(context);
+                      if (result == null) return;
+    
+                      if (widget.isEditor) {
+                        Get.off(
+                          () => FlightOffersList(flightOffers: result.outbound, searchInputs: result.params), 
+                          preventDuplicates: false,
+                        ); 
+                      } else {
+                        // ✅ بحث عادي: افتح صفحة النتائج
+                        Get.to(() => FlightOffersList(flightOffers: result.outbound, searchInputs: result.params));
+                      }
+                    },
+    
+                    label: ctrl.isRequesting
+                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
+                        : Text("Search Flight".tr),
+                  );
+    
+    
+                },
+              ),
+            ),
+    
+            const SizedBox(height: 16),
+          ],
         ),
-      ),
-    );
+      );
   }
 }

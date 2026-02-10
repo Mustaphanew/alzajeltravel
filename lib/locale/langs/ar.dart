@@ -660,4 +660,18 @@ Map<String, String> ar = {
   "Switching to passenger data": "جاري الانتقال لبيانات المسافرين",
   "Passenger data is being saved": "جاري حفظ بيانات المسافرين",
   "Your reservation is being confirmed": "جاري تأكيد الحجز", 
+
+  "Saturday": "السبت",
+  "Sunday": "الأحد",
+  "Monday": "الإثنين",
+  "Tuesday": "الثلاثاء",
+  "Wednesday": "الأربعاء",
+  "Thursday": "الخميس",
+  "Friday": "الجمعة",
+
+  "Hide edit Search": "إخفاء تعديل البحث",
+  "Scan passport": "مسح ضوئي لجواز السفر",
+  "You can fill traveler data by scanning the passport": "يمكنك ملء بيانات المسافر عن طريق مسح جواز السفر",
+  "Hide input fields": "إخفاء حقول الإدخال",
+  "Show input fields": "إظهار حقول الإدخال",
 };

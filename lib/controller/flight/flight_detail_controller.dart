@@ -1,6 +1,7 @@
 // lib/controller/flight/flight_detail_controller.dart
 import 'package:alzajeltravel/controller/travelers_controller.dart';
 import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
+import 'package:alzajeltravel/view/frame/passport_web/passport_forms_web.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
 import 'package:alzajeltravel/model/flight/revalidated_flight_model.dart';
@@ -45,7 +46,10 @@ class FlightDetailApiController extends GetxController {
       final children = travelersController.childrenCounter;
       final infantsInLap = travelersController.infantsInLapCounter;
 
-      Get.to(() => PassportsFormsPage(
+      // Get.to(() => PassportsFormsPage(
+      //   adultsCounter: adults, childrenCounter: children, infantsInLapCounter: infantsInLap,
+      // ));
+      Get.to(() => PassportsFormsWebPage(
         adultsCounter: adults, childrenCounter: children, infantsInLapCounter: infantsInLap,
       ));
 

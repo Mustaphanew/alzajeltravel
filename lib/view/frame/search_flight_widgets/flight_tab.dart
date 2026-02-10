@@ -37,13 +37,14 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
   void initState() {
     super.initState();
     searchFlightController = Get.find<SearchFlightController>();
-    if (widget.tmpJourneyType == JourneyType.roundTrip) {
-      scrollController = searchFlightController.roundTripScrollController;
-    } else if (widget.tmpJourneyType == JourneyType.oneWay) {
-      scrollController = searchFlightController.oneWayScrollController;
-    } else if (widget.tmpJourneyType == JourneyType.multiCity) {
-      scrollController = searchFlightController.multiCityScrollController;
-    }
+    scrollController = ScrollController();
+    // if (widget.tmpJourneyType == JourneyType.roundTrip) {
+    //   scrollController = searchFlightController.roundTripScrollController;
+    // } else if (widget.tmpJourneyType == JourneyType.oneWay) {
+    //   scrollController = searchFlightController.oneWayScrollController;
+    // } else if (widget.tmpJourneyType == JourneyType.multiCity) {
+    //   scrollController = searchFlightController.multiCityScrollController;
+    // }
   }
 
   bool isDirect = false;

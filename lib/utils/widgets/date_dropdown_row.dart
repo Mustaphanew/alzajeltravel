@@ -16,6 +16,8 @@ class DateDropdownRow extends StatefulWidget {
   /// أعلى تاريخ مسموح (اختياري)
   final DateTime? maxDate;
 
+  final String? helpText;
+
   /// Validator مثل TextFormField:
   /// يأخذ DateTime? ويُرجع String? (رسالة خطأ) أو null لو صحيح
   final String? Function(DateTime?)? validator;
@@ -34,6 +36,7 @@ class DateDropdownRow extends StatefulWidget {
     this.initialDate,
     this.minDate,
     this.maxDate,
+    this.helpText,
     this.validator,
     this.defaultValidationMessage = 'Please select a valid date of birth',
     this.onDateChanged,
@@ -424,13 +427,15 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                 ),
               ],
             ),
-            Text(
-              'You must specify the first year, then the month, then the day'.tr,
-              style: TextStyle(
-                fontSize: AppConsts.sm,
-                color: cs.onSurface.withOpacity(0.6),
+            // You must specify the first year, then the month, then the day
+            if (widget.helpText != null)
+              Text(
+                widget.helpText!,
+                style: TextStyle(
+                  fontSize: AppConsts.sm,
+                  color: cs.onSurface.withOpacity(0.6),
+                ),
               ),
-            ),
             if (errorText != null)
               Padding(
                 padding: const EdgeInsets.only(top: 2),

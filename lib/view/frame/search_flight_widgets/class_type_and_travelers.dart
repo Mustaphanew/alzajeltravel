@@ -18,9 +18,9 @@ class ClassTypeAndTravelers extends StatefulWidget {
 }
 
 class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
-  SearchFlightController searchFlightController = Get.find();
-  ClassTypeController classTypeController = Get.find();
-  TravelersController travelersController = Get.find();
+  late SearchFlightController searchFlightController;
+  late ClassTypeController classTypeController;
+  late TravelersController travelersController;
 
   AgeItem? selectedAgeItem;
 
@@ -44,6 +44,20 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
     // TODO: implement initState
     super.initState();
     // selectedAgeItem = ageItems[0];
+
+
+    searchFlightController = Get.isRegistered<SearchFlightController>()
+        ? Get.find<SearchFlightController>()
+        : Get.put(SearchFlightController());
+
+    classTypeController = Get.isRegistered<ClassTypeController>()
+        ? Get.find<ClassTypeController>()
+        : Get.put(ClassTypeController());
+
+    travelersController = Get.isRegistered<TravelersController>()
+        ? Get.find<TravelersController>()
+        : Get.put(TravelersController());
+
 
     for (int i = 0; i < travelersController.maxChildrenCounter(); i++) {
       selectedChildrenAgeItems.add(selectedAgeItem);

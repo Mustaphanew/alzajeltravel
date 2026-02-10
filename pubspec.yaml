@@ -69,6 +69,8 @@ dependencies:
   lottie: ^3.3.2
   animated_toggle_switch: ^0.8.7
 
+  showcaseview: ^5.0.1
+
 
 dev_dependencies:
   flutter_test:

@@ -91,7 +91,14 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
   List<Widget> _buildScreens() {
     return [
       Home2(persistentTabController: frameController.persistentTabController),
-      SearchFlight(),
+      Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: Text("Search Flight".tr),
+          centerTitle: true,
+        ),
+        body: SearchFlight(),
+      ),
       const BookingsReportPage(),
       AppVars.profile != null
           ? ProfilePage(data: AppVars.profile!)
