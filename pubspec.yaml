@@ -71,6 +71,8 @@ dependencies:
 
   showcaseview: ^5.0.1
 
+  two_dimensional_scrollables: ^0.3.8
+
 
 dev_dependencies:
   flutter_test:

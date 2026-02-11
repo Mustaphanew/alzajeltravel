@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'app_vars.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -257,12 +258,12 @@ class AppFuns {
     return '${moneyFormat.format(priceInt)} $coin';
   }
 
-  static String formatDobPretty(DateTime? date, {String? locale}) {
-    if (date == null) return '';
-    // مثال: 2025-Jan-01 → نحولها بعدها لحروف صغيرة
-    final raw = DateFormat('yyyy-MMM-dd', locale).format(date);
-    return AppFuns.replaceArabicNumbers(raw.toLowerCase()); // => 2025-jan-01
-  }
+  // static String formatDobPretty(DateTime? date, {String? locale}) {
+  //   if (date == null) return '';
+  //   // مثال: 2025-Jan-01 → نحولها بعدها لحروف صغيرة
+  //   final raw = DateFormat('yyyy-MMM-dd', locale).format(date);
+  //   return replaceArabicNumbers(raw.toLowerCase()); // => 2025-jan-01
+  // }
 
   static String cabinNameFromBookingClass(String? bookingClass) {
     final code = (bookingClass ?? '').trim().toUpperCase();
@@ -406,6 +407,13 @@ class AppFuns {
     if (c.isEmpty) return false;
     return _upsellEnabledAirlinesSet.contains(c);
   }
+
+
+  static String formatFullDate(DateTime? d) {
+    if (d == null) return '';
+    // Jiffy يعتمد على intl للـ locale
+    return replaceArabicNumbers(Jiffy.parseFromDateTime(d).format(pattern: 'EEEE، d-MMMM-yyyy'));
+  } 
 
 
 

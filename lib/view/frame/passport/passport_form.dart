@@ -104,8 +104,8 @@ class _PassportFormTileState extends State<PassportFormTile> {
         final passportNo = model.documentNumber;
         final fullName = model.fullName;
         final documentNumber = model.documentNumber;
-        final dob = AppFuns.formatDobPretty(model.dateOfBirth);
-        final expiryDate = AppFuns.formatDobPretty(model.dateOfExpiry);
+        final dob = AppFuns.formatFullDate(model.dateOfBirth);
+        final expiryDate = AppFuns.formatFullDate(model.dateOfExpiry);
         final nationality = model.nationality;
         final issuingCountry = model.issuingCountry;
         final sex = model.sex;

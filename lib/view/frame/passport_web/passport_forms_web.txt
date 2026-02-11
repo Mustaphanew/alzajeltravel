@@ -1,0 +1,763 @@
+// passport_forms_web.dart
+import 'dart:math' as math;
+
+import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/widgets/date_dropdown_row.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:alzajeltravel/controller/passport/passports_forms_controller.dart';
+import 'package:alzajeltravel/controller/passport/passport_controller.dart';
+import 'package:alzajeltravel/model/country_model.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
+import 'package:alzajeltravel/utils/widgets/country_picker.dart';
+import 'package:alzajeltravel/view/frame/passport/contact_information_form.dart';
+// review
+import 'package:alzajeltravel/view/frame/travelers_review/travelers_review_page.dart';
+import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
+import 'package:alzajeltravel/model/passport/passport_model.dart';
+import 'package:alzajeltravel/utils/enums.dart';
+import 'passport_form_web.dart';
+import 'package:showcaseview/showcaseview.dart';
+
+class PassportsFormsWebPage extends StatefulWidget {
+  final int adultsCounter;
+  final int childrenCounter;
+  final int infantsInLapCounter;
+
+  const PassportsFormsWebPage({
+    super.key,
+    required this.adultsCounter,
+    required this.childrenCounter,
+    required this.infantsInLapCounter,
+  });
+
+  @override
+  State<PassportsFormsWebPage> createState() => _PassportsFormsWebPageState();
+}
+
+class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
+  final _vCtrl = ScrollController();
+  final _hCtrl = ScrollController();
+  final _webFormKey = GlobalKey<FormState>();
+
+  // ✅ حافظت على مقاساتك الحالية لأنك قلت "التصميم ممتاز"
+  static const double wScan = 40;
+  static const double wGiven = 180;
+  static const double wSur = 120;
+  static const double wDob = 320;
+  static const double wSex = 100;
+  static const double wPass = 130;
+  static const double wNat = 100;
+  static const double wIss = 100;
+  static const double wExp = 300;
+
+  // ✅ خليها ثابتة وتستخدمها في DataTable أيضاً
+  static const double _hMargin = 8;     // نفس DataTable.horizontalMargin
+  static const double _colSpace = 8;    // نفس DataTable.columnSpacing
+  static const double _borderW = 1;     // TableBorder.all الافتراضي
+
+  // مجموع عرض محتوى الأعمدة (بدون أي padding)
+  double get _contentW => wScan + wGiven + wSur + wDob + wSex + wPass + wNat + wIss + wExp;
+
+  // ✅ عرض الجدول الحقيقي (يشمل margins + spacing بين الأعمدة + border)
+  double get _naturalTableOuterW =>
+      _contentW + (2 * _hMargin) + (8 * _colSpace) + (2 * _borderW); // 9 cols => 8 gaps
+
+  // ✅ استبدل _tableMinWidth بهذا
+  double get _tableMinWidth => _naturalTableOuterW;
+
+
+  // ✅ عرض مجموعة Traveler داخل الجدول (داخل border) بنفس توزيع DataTable
+  double get _travelerGroupInnerW =>
+    // columns: Scan, Given, Sur, Dob, Sex  => 5 cols => 4 gaps
+    (wScan + wGiven + wSur + wDob + wSex) +
+    _hMargin +                 // start margin لأول عمود
+    (4 * _colSpace) +          // gaps الداخلية بين أعمدة المجموعة
+    (_colSpace / 2);           // نصف spacing لأنه في أول عمود عنده فقط right-half
+
+  // ✅ عرض مجموعة Passport داخل الجدول (داخل border) بنفس توزيع DataTable
+  double get _passportGroupInnerW =>
+    // columns: Pass, Nat, Iss, Exp => 4 cols => 3 gaps
+    (wPass + wNat + wIss + wExp) +
+    _hMargin +                 // end margin لآخر عمود
+    (3 * _colSpace) +          // gaps الداخلية
+    (_colSpace / 2);           // نصف spacing لأنه في آخر عمود عنده فقط left-half
+
+
+  final GlobalKey _scanShowcaseKey = GlobalKey();
+  bool _showcaseStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ التسجيل مرة واحدة لهذه الصفحة (بديل ShowCaseWidget)
+    ShowcaseView.register(
+      // زر إغلاق داخل الـ tooltip (اختياري: تنسيق عام)
+      globalTooltipActionConfig: const TooltipActionConfig(
+        position: TooltipActionPosition.insideRight,
+        gapBetweenContentAndAction: 8,
+      ),
+    );
+
+    // ✅ ابدأ بعد أول frame مع retry
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        print("startShowCase");
+        try {
+          ShowcaseView.get().startShowCase([_scanShowcaseKey]);
+        } catch (e) {
+          print(e);
+        }
+      });
+    });
+  }
+
+
+  @override
+  void dispose() {
+    _vCtrl.dispose();
+    _hCtrl.dispose();
+    ShowcaseView.get().unregister(); // ✅ مهم
+    super.dispose();
+  }
+
+
+  
+
+  // --- Helpers لتقليل التكرار ---
+  Widget _pc(String tag, Widget Function(PassportController pc) b) {
+    return GetBuilder<PassportController>(tag: tag, builder: b);
+  }
+
+  DataColumn _col(String text, double w, {String? helpText}) {
+    return DataColumn(
+      label: SizedBox(
+        width: w,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (text == "scan")
+              Showcase(
+                key: _scanShowcaseKey,
+                title: 'Scan passport'.tr,
+                titlePadding: EdgeInsets.only(bottom: 12),
+                description: 'You can fill traveler data by scanning the passport'.tr,
+                descriptionPadding: EdgeInsets.only(bottom: 6),
+                titleAlignment: AlignmentDirectional.centerStart,
+                tooltipActions: [
+                  TooltipActionButton(
+                    type: TooltipDefaultActionType.skip,
+                    name: "",
+                    leadIcon: ActionButtonIcon(
+                      icon: Icon(Icons.close, color: Colors.white),
+                      padding: EdgeInsets.zero,
+
+                    ),
+                    padding: EdgeInsets.all(4),
+                    textStyle: TextStyle(color: Colors.white),
+                    // وجودها غالبًا يكفي، لكن لو تحب ضمان الإغلاق:
+                    onTap: ShowcaseView.get().dismiss,
+                  ),
+                ],               
+                child: Tooltip(
+                  message: "Scan passport".tr,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        ShowcaseView.get().startShowCase([_scanShowcaseKey]);
+                      },
+                      child: Icon(
+                        Icons.camera_alt,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (text != "scan")
+              Text(
+                text, 
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            if (helpText != null)
+              Text(
+                helpText,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[800],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveWeb(PassportsFormsController formsController) async {
+    AppFuns.hideKeyboard();
+
+    // 1) validate الجدول
+    if (_webFormKey.currentState?.validate() != true) {
+      Get.snackbar(
+        'Validation'.tr,
+        'Please complete all required passport fields'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    // 2) validate بيانات الاتصال
+    if (!formsController.validateContactForm()) return;
+
+    // 3) جمع الموديلات
+    final passports = formsController.collectModels();
+
+    // 4) إنشاء الحجز
+    context.loaderOverlay.show();
+    final bookingResponse =
+        await formsController.createBookingServer(passports, formsController.contactModel);
+    if (context.mounted) context.loaderOverlay.hide();
+
+    if (bookingResponse == null) return;
+
+    final insertId = bookingResponse['insert_id'];
+    if (insertId == null) {
+      Get.snackbar('Error'.tr, 'Booking request failed, please try again.'.tr,
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    final List<dynamic> passengersJson = (bookingResponse['passengers'] as List?) ?? [];
+    final List<TravelerReviewModel> travelersReviewList = [];
+
+    double _parseDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString()) ?? 0.0;
+    }
+
+    AgeGroup _ageGroupFromAny(dynamic v) {
+      final s = (v ?? '').toString().trim().toLowerCase();
+      if (s == 'inf' || s == 'infant') return AgeGroup.infant;
+      if (s == 'cnn' || s == 'chd' || s == 'child') return AgeGroup.child;
+      if (s == 'adt' || s == 'adult') return AgeGroup.adult;
+      return AgeGroup.adult;
+    }
+
+    for (int index = 0; index < passengersJson.length; index++) {
+      final Map<String, dynamic>? passengerJson =
+          (passengersJson[index] is Map<String, dynamic>) ? passengersJson[index] as Map<String, dynamic> : null;
+
+      final baseFare = _parseDouble(passengerJson?['Base_Amount']);
+      final taxTotal = _parseDouble(passengerJson?['Tax_Total']);
+
+      final PassportModel travelerPassport = PassportModel.fromJson({
+        "documentNumber": passengerJson?['passport_no'],
+        "givenNames": passengerJson?['first_name'],
+        "surnames": passengerJson?['last_name'],
+        "dateOfBirth": passengerJson?['dob'],
+        "sex": passengerJson?['gender'],
+        "nationality": passengerJson?['nationality'],
+        "issueCountry": passengerJson?['issue_country'],
+        "dateOfExpiry": passengerJson?['expiry_date'],
+      });
+
+      travelersReviewList.add(
+        TravelerReviewModel(
+          passport: travelerPassport,
+          baseFare: baseFare,
+          taxTotal: taxTotal,
+          seat: null,
+          ageGroup: _ageGroupFromAny(passengerJson?['pax_type']),
+        ),
+      );
+    }
+
+    Get.to(() => TravelersReviewPage(
+          travelers: travelersReviewList,
+          insertId: insertId,
+          contact: formsController.contactModel,
+        ));
+  }
+
+  bool showTextBox = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<PassportsFormsController>(
+      init: PassportsFormsController(
+        adultsCounter: widget.adultsCounter,
+        childrenCounter: widget.childrenCounter,
+        infantsInLapCounter: widget.infantsInLapCounter,
+      ),
+      builder: (formsController) {
+        final cs = Theme.of(context).colorScheme;
+        final travelers = formsController.sortedTravelers;
+
+        return PopScope(
+
+          canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+
+            final ok = await AppFuns.confirmExit(
+              title: "Exit".tr,
+              message: "Are you sure you want to exit?".tr,
+            );
+
+            if (ok && context.mounted) {
+              Navigator.of(context).pop(result); 
+              // أو فقط pop() إذا ما تحتاج result
+            }
+          },
+
+
+          child: SafeArea(
+            top: false,
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text('Travelers data'.tr),
+                actions: [
+                  
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: showTextBox ? cs.secondary : cs.primary,
+                      foregroundColor: showTextBox ? cs.primary : cs.onPrimary,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      showTextBox = !showTextBox;
+                      formsController.update();
+                    },
+                    child: Text(showTextBox ? 'Hide input fields'.tr : 'Show input fields'.tr),
+                  ),
+                  SizedBox(width: 12),
+                ],
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: Scrollbar(
+                      controller: _vCtrl,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: _vCtrl,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tableWidth = math.max(constraints.maxWidth, _tableMinWidth);
+          
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // ✅ سكرول أفقي للجدول + شريط
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 0),
+                                  child: CupertinoScrollbar(
+                                    controller: _hCtrl,
+                                    thumbVisibility: true,
+                                    thickness: 6,
+                                    radius: Radius.circular(99),
+                                    radiusWhileDragging: Radius.circular(99),
+                                    thicknessWhileDragging: 8,
+                                    notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
+                                    child: SingleChildScrollView(
+                                      controller: _hCtrl,
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.only(
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 48
+                                      ),
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(minWidth: tableWidth),
+                                        child: Form(
+                                          key: _webFormKey,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _buildGroupHeaderRow(cs, tableWidth: tableWidth),
+                                              const SizedBox(height: 0),
+                                              DataTable(
+                                                showCheckboxColumn: false,
+                                                headingRowHeight: 50,
+                                                horizontalMargin: _hMargin, 
+                                                columnSpacing: _colSpace,
+                                                dataRowMinHeight: showTextBox ? 70 : 35,
+                                                dataRowMaxHeight: showTextBox ? 70 : 35,
+                                                border: TableBorder.all(color: cs.outline, width: _borderW),
+                                                headingRowColor: WidgetStateProperty.all(Colors.blue[800]!.withOpacity(0.2)),
+                                                
+                                                columns: [ 
+                                                  _col('scan', wScan),
+                                                  _col('Given names'.tr, wGiven),
+                                                  _col('SURNAMES'.tr, wSur),
+                                                  _col(
+                                                    'Date of birth'.tr, 
+                                                    wDob,
+                                                    helpText: 'You must specify the first year, then the month, then the day'.tr,
+                                                  ),
+                                                  _col('Sex'.tr, wSex),
+                                                  _col('DOCUMENT NUMBER'.tr, wPass),
+                                                  _col('NATIONALITY'.tr, wNat),
+                                                  _col('ISSUING COUNTRY'.tr, wIss),
+                                                  _col(
+                                                    'DATE OF EXPIRY'.tr, 
+                                                    wExp,
+                                                    helpText: 'You must specify the first year, then the month, then the day'.tr,
+                                                  ),
+                                                ],
+                                                rows: [
+                                                  for (int i = 0; i < travelers.length; i++)
+                                                    _buildRow(
+                                                      formsController, 
+                                                      travelers[i], 
+                                                      i,
+                                                      showTextBox: showTextBox,
+                                                    ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                
+                                const SizedBox(height: 12),
+                                // ✅ خارج الـ horizontal scroll (مهم)
+                                Opacity(
+                                  opacity: 0,
+                                  child: Container(
+                                    height: 10,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: ContactInformationForm(controller: formsController),
+                                  ),
+                                ),
+                                
+                                const SizedBox(height: 30), // مساحة قبل البار السفلي
+                              
+
+                              
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+            
+                  // Bottom bar ثابت
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    height: 80,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainer,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text("Total flight".tr),
+                              Text(
+                                AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => _saveWeb(formsController),
+                          child: Text("Save and continue".tr),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+  DataRow _buildRow(
+    PassportsFormsController formsController, 
+    dynamic traveler, 
+    int visualIndex,
+    {bool showTextBox = true,}
+  ) {
+    final tag = traveler.tag as String;
+    final travelerIndex = traveler.index as int;
+    final ageGroup = traveler.ageGroup;
+
+    final onlyEnAlphaNumSpace = <TextInputFormatter>[
+      FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z ]")),
+    ];
+
+    return DataRow(
+      cells: [
+        DataCell(
+          SizedBox(
+            width: 40,
+            child: IconButton(
+              icon: const Icon(Icons.document_scanner_outlined),
+              onPressed: () {},
+            ),
+          ),
+        ),
+
+        // Given names
+        DataCell(
+          _pc(tag, (pc) {
+            final ageLabel = formsController.ageGroupLabel(ageGroup);
+            if (showTextBox) {
+              return WebTableTextField(
+                width: wGiven,
+                controller: pc.givenNamesCtr,
+                // autofocus: visualIndex == 0,
+                formatters: onlyEnAlphaNumSpace,
+                showLabel: true,
+                label: 'Given names'.tr + ' (${'traveler'.tr} $travelerIndex: $ageLabel)',
+              );
+            }
+            return Text("${pc.givenNamesCtr.text}");
+          }),
+        ),
+
+        // Surnames
+        DataCell(
+          _pc(tag, (pc) {
+            if (showTextBox) {
+              return WebTableTextField(
+                width: wSur,
+                controller: pc.surnamesCtr,
+                formatters: onlyEnAlphaNumSpace,
+                label: 'SURNAMES'.tr,
+              );
+            }
+            return Text("${pc.surnamesCtr.text}");
+          }),
+        ),
+
+        // ✅ DOB (DateDropdownRow مرتبط بالكنترولر)
+        DataCell(
+          _pc(tag, (pc) {
+            if (showTextBox) {
+              return SizedBox(
+                width: wDob,
+                child: DateDropdownRow(
+                  title: const SizedBox.shrink(),
+                  initialDate: pc.model.dateOfBirth,
+                  minDate: formsController.minDob(ageGroup),
+                  maxDate: formsController.maxDob(ageGroup),
+                  onDateChanged: pc.setDateOfBirth,
+                  validator: (date) {
+                    if (date == null) return 'Please select a valid date'.tr;
+                    if (date.isAfter(DateTime.now())) return 'Date of birth cannot be in the future'.tr;
+                    return null;
+                  },
+                ),
+              );
+            }
+            return Text(AppFuns.formatFullDate(pc.model.dateOfBirth));
+          }),
+        ),
+
+        // ✅ Sex (مُصلح: يعرض القيمة بعد الاختيار)
+        DataCell(
+          _pc(tag, (pc) {
+            if (showTextBox) {
+              return WebTableSexField(width: wSex, controller: pc);
+            }
+            return Text("${pc.model.sex?.label}");
+          }),
+        ),
+
+        // Document number
+        DataCell(
+          _pc(tag, (pc) {
+            if (showTextBox) {
+              return WebTableTextField(
+                width: wPass,
+                controller: pc.documentNumberCtr,
+                formatters: [FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z0-9]"))],
+                caps: TextCapitalization.characters,
+                label: 'DOCUMENT NUMBER'.tr,
+              );
+            }
+            return Text("${pc.model.documentNumber}");
+          }),
+        ),
+
+        // Nationality
+        DataCell(
+          _pc(tag, (pc) {
+            final full = countryDisplayName(pc.model.nationality, formsController.lang);
+            final short = countryShort(pc.model.nationality);
+            if (showTextBox) {
+              return WebTableCountryField(
+                width: wNat,
+                label: 'NATIONALITY'.tr,
+                valueShort: full,
+                tooltip: full.isEmpty ? null : full,
+                onTap: () async {
+                final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                if (picked != null) {
+                  pc.setNationality(picked);
+                  try {
+                    pc.update();
+                  } catch (_) {}
+                }
+              },
+            );
+            }
+            return Text("${pc.model.nationality?.name[AppVars.lang]}");
+          }),
+        ),
+
+        // Issuing country
+        DataCell(
+          _pc(tag, (pc) {
+            final full = countryDisplayName(pc.model.issuingCountry, formsController.lang);
+            final short = countryShort(pc.model.issuingCountry);
+            if (showTextBox) {
+              return WebTableCountryField(
+                width: wIss,
+                label: 'ISSUING COUNTRY'.tr,
+                valueShort: full,
+                tooltip: full.isEmpty ? null : full,
+                onTap: () async {
+                final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                if (picked != null) {
+                  pc.setIssuingCountry(picked);
+                  try {
+                    pc.update();
+                  } catch (_) {}
+                }
+              },
+            );
+            }
+            return Text("${pc.model.issuingCountry?.name[AppVars.lang]}");
+          }),
+        ),
+
+        // ✅ Expiry (DateDropdownRow مرتبط بالكنترولر)
+        DataCell(
+          _pc(tag, (pc) {
+            final min = formsController.lastDateInSearch.add(const Duration(days: 180));
+            final max = DateTime(formsController.lastDateInSearch.year + 12, 12, 31);
+
+            if (showTextBox) {
+              return SizedBox(
+                  width: wExp,
+                  child: DateDropdownRow(
+                    title: const SizedBox.shrink(),
+                    initialDate: pc.model.dateOfExpiry,
+                  minDate: min,
+                  maxDate: max,
+                  onDateChanged: pc.setDateOfExpiry,
+                  validator: (date) => date == null ? 'Please select a valid date'.tr : null,
+                ),
+              );
+            }
+
+            return Text(AppFuns.formatFullDate(pc.model.dateOfExpiry));
+          }),
+        ),
+      ],
+    );
+  }
+
+
+// widths (عدّلها حسب اللي عندك)
+
+static const double wName = 180;
+static const double wSurname = 120;
+static const double wPassport = 130;
+static const double wNationality = 100;
+static const double wIssuing = 100;
+static const double wExpiry = 300;
+// لازم يساوي DataTable.columnSpacing
+static const double colGap = 8; 
+
+double get travelerGroupWidth =>
+    (wScan + wName + wSurname + wDob + wSex) + (colGap * 5) + 2;
+
+double get passportGroupWidth =>
+    (wPassport + wNationality + wIssuing + wExpiry) + (colGap * 4) + 2;
+
+Widget _buildGroupHeaderRow(ColorScheme cs, {required double tableWidth}) {
+  // لو الجدول اتفرض عليه يكون أعرض من الطبيعي (بسبب minWidth = tableWidth)
+  final extraOuter = (tableWidth - _naturalTableOuterW).clamp(0.0, double.infinity);
+
+  // extraOuter لازم يروح للداخل (بدون border) بنفس المقدار
+  final travelerW = _travelerGroupInnerW;
+  final passportW = _passportGroupInnerW + extraOuter;
+
+  return SizedBox(
+    width: tableWidth,
+    child: Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: cs.secondary, // بدون ألوان ثابتة
+        border: Border.all(color: cs.outline, width: _borderW),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: travelerW,
+            child: Container(
+              alignment: AlignmentDirectional.centerStart,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                border: BorderDirectional(
+                  end: BorderSide(color: cs.outline, width: _borderW),
+                ),
+              ),
+              child: Text(
+                'Traveler data'.tr,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: passportW,
+            child: Container(
+              alignment: AlignmentDirectional.centerStart,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'Passport data'.tr,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+}

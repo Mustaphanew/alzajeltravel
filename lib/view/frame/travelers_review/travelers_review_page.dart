@@ -176,8 +176,8 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                                 const Divider(thickness: 1),
                                                 SecondTitle(title: "Sex".tr),
                                                 const Divider(thickness: 1),
-                                                SecondTitle(title: "Ticket".tr),
-                                                const Divider(thickness: 1),
+                                                // SecondTitle(title: "Ticket".tr),
+                                                // const Divider(thickness: 1),
                                                 SecondTitle(title: "Nationality".tr),
                                                 const Divider(thickness: 1),
                                                 SecondTitle(title: "ISSUING COUNTRY".tr),
@@ -237,7 +237,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                 );
                               },
                               separatorBuilder: (context, index) =>
-                                  Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
+                                  Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Divider(
+                                    thickness: 3,
+                                    color: cs.outline,
+                                  )),
                             ),
                           ),
                         ),
@@ -394,7 +397,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Date of birth'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                      Text(AppFuns.formatDobPretty(p.dateOfBirth,)), 
+                                      Text(AppFuns.formatFullDate(p.dateOfBirth,)), 
                                       const SizedBox(height: 4),
                                       Text('Nationality'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
                                       Text(p.nationality?.name['en'] ?? '-',), 
@@ -409,7 +412,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text('Date of expiry'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                        Text(AppFuns.formatDobPretty(p.dateOfExpiry)), 
+                                        Text(AppFuns.formatFullDate(p.dateOfExpiry)), 
                                         const SizedBox(height: 4), 
                                         Text('Issuing country'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
                                         Text(p.issuingCountry?.name['en'] ?? '-'), 

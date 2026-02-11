@@ -99,12 +99,12 @@ class MoreFlightDetailPage extends StatelessWidget {
                                 children: [
                                   const SizedBox(height: 8),
                                   _InfoRow(
-                                    label: "Exchange".tr,
+                                    label: "Exchange fee".tr,
                                     value: AppFuns.priceWithCoin(20, "USD"),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
                                   _InfoRow(
-                                    label: "Cancel".tr,
+                                    label: "Cancelation fee".tr,
                                     value: AppFuns.priceWithCoin(10, "USD"),
                                   ),
                                 ],
