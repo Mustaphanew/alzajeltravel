@@ -1,201 +1,102 @@
 // lib/view/frame/flights/filter_offers_page.dart
+
+import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
+import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
-import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
-
-class FilterOffersPage extends StatelessWidget {
+class FilterOffersPage extends StatefulWidget {
   final List<FlightOfferModel> offers;
   final FilterOffersState state;
 
-  const FilterOffersPage({super.key, required this.offers, required this.state});
+  const FilterOffersPage({
+    super.key,
+    required this.offers,
+    required this.state,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return GetBuilder<FilterOffersController>(
-      init: FilterOffersController(originalOffers: offers, initialState: state),
-      global: false,
-      builder: (c) {
-        final theme = Theme.of(context);
+  State<FilterOffersPage> createState() => _FilterOffersPageState();
+}
 
-        final departureAvailable = _availableDepartureBuckets(offers);
-        final arrivalAvailable = _availableArrivalBuckets(offers);
+class _FilterOffersPageState extends State<FilterOffersPage> {
+  late final String _tag;
+  late final FilterOffersController ctrl;
 
-        return SafeArea(
-          bottom: true,
-          left: false,
-          right: false,
-          top: false,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text('Filter'.tr),
-              actions: [
-                TextButton(onPressed: c.hasAnyFilter ? c.clearAll : null, child: Text('Clear'.tr)),
-                TextButton(onPressed: c.done, child: Text('Done'.tr)),
-              ],
-            ),
-            body: ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                // 0) ===== Sort =====
-                _SectionTitle(title: 'Sort'.tr),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<SortOffersOption?>(
-                  value: c.selectedSort,
-                  decoration: InputDecoration(
-                    hintText: 'Select sort'.tr,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    isDense: true,
-                  ),
-                  items: <DropdownMenuItem<SortOffersOption?>>[
-                    DropdownMenuItem<SortOffersOption?>(
-                      value: null,
-                      child: Text('No sorting'.tr),
-                    ),
-                    DropdownMenuItem(
-                      value: SortOffersOption.priceLow,
-                      child: Text(FilterOffersController.sortLabel(SortOffersOption.priceLow).tr),
-                    ),
-                    DropdownMenuItem(
-                      value: SortOffersOption.priceHigh,
-                      child: Text(FilterOffersController.sortLabel(SortOffersOption.priceHigh).tr),
-                    ),
-                    DropdownMenuItem(
-                      value: SortOffersOption.travelTimeLow,
-                      child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeLow).tr),
-                    ),
-                    DropdownMenuItem(
-                      value: SortOffersOption.travelTimeHigh,
-                      child: Text(FilterOffersController.sortLabel(SortOffersOption.travelTimeHigh).tr),
-                    ),
-                  ],
-                  onChanged: (v) => c.setSort(v),
-                ),
+  late final TextEditingController _outRefCtrl;
+  late final TextEditingController _inRefCtrl;
 
-                const SizedBox(height: 22),
+  // ✅ يسمح فقط: A-Z 0-9 - ,
+  final _refAllowed = FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-,]'));
+  final _noSpaces = FilteringTextInputFormatter.deny(RegExp(r'\s'));
 
-                // 1) ===== Stops =====
-                _SectionTitle(title: 'Stops'.tr),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if(c.availableStops.contains(0))
-                      FilterChip(
-                        label: Text('Non-stop'.tr),
-                        selected: c.selectedStops.contains(0),
-                        onSelected: (_) => c.toggleStop(0),
-                      ),
-                    if(c.availableStops.contains(1))
-                      FilterChip(
-                        label: Text('1 Stop'.tr),
-                        selected: c.selectedStops.contains(1),
-                        onSelected: (_) => c.toggleStop(1),
-                      ),
-                    if(c.availableStops.contains(2))
-                      FilterChip(
-                        label: Text('2 Stops'.tr),
-                        selected: c.selectedStops.contains(2),
-                        onSelected: (_) => c.toggleStop(2),
-                      ),
-                  ],
-                ),
+  @override
+  void initState() {
+    super.initState();
+    _tag = 'filter_offers_${DateTime.now().microsecondsSinceEpoch}';
 
-                const SizedBox(height: 22),
+    ctrl = Get.put(
+      FilterOffersController(
+        originalOffers: widget.offers,
+        initialState: widget.state,
+      ),
+      tag: _tag,
+    );
 
-                // 2) ===== Price range =====
-                _SectionTitle(title: '${'Price range'.tr} ${'USD'.tr}'),
-                const SizedBox(height: 8),
-                _RangeHeader(
-                  left: c.selectedPriceFrom.toStringAsFixed(2),
-                  right: c.selectedPriceTo.toStringAsFixed(2),
-                ),
-                RangeSlider(
-                  min: c.minPrice,
-                  max: c.sliderPriceMax,
-                  values: RangeValues(c.selectedPriceFrom, c.selectedPriceTo),
-                  onChanged: (v) => c.updatePriceRange(v.start, v.end),
-                ),
-                _RangeFooter(
-                  left: c.minPrice.toStringAsFixed(2),
-                  right: c.maxPrice.toStringAsFixed(2),
-                ),
+    _outRefCtrl = TextEditingController(text: ctrl.outboundRefQuery);
+    _inRefCtrl = TextEditingController(text: ctrl.inboundRefQuery);
+  }
 
-                const SizedBox(height: 22),
+  @override
+  void dispose() {
+    _outRefCtrl.dispose();
+    _inRefCtrl.dispose();
+    Get.delete<FilterOffersController>(tag: _tag, force: true);
+    super.dispose();
+  }
 
-                // 3) ===== Travel time =====
-                _SectionTitle(title: 'Travel time'.tr),
-                const SizedBox(height: 8),
-                _RangeHeader(
-                  left: FilterOffersController.minutesToText(c.selectedTravelFrom),
-                  right: FilterOffersController.minutesToText(c.selectedTravelTo),
-                ),
-                RangeSlider(
-                  min: c.minTravelMinutes.toDouble(),
-                  max: c.sliderTravelMax.toDouble(),
-                  values: RangeValues(c.selectedTravelFrom.toDouble(), c.selectedTravelTo.toDouble()),
-                  onChanged: (v) => c.updateTravelRange(v.start.round(), v.end.round()),
-                ),
-                _RangeFooter(
-                  left: FilterOffersController.minutesToText(c.minTravelMinutes),
-                  right: FilterOffersController.minutesToText(c.maxTravelMinutes),
-                ),
+  Widget _sectionTitle(BuildContext context, String title) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(top: 14, bottom: 8),
+      child: Text(
+        title.tr,
+        style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
 
-                const SizedBox(height: 22),
+  String _stopLabel(int s) {
+    if (s == 0) return "Direct".tr;
+    if (s == 1) return "1 Stop".tr;
+    return "2 "+ "Stops".tr;
+  }
 
-                // 4) ===== Departure time =====
-                _SectionTitle(title: 'Departure time'.tr),
-                const SizedBox(height: 10),
-                _TimeBucketTilesGrid(
-                  buckets: departureAvailable.isEmpty ? TimeBucket.values.toList() : departureAvailable,
-                  isSelected: (b) => c.selectedDepartureBuckets.contains(b),
-                  onTap: (b) => c.toggleDepartureBucket(b),
-                ),
-
-                const SizedBox(height: 22),
-
-                // 5) ===== Arrival time =====
-                _SectionTitle(title: 'Arrival time'.tr),
-                const SizedBox(height: 10),
-                _TimeBucketTilesGrid(
-                  buckets: arrivalAvailable.isEmpty ? TimeBucket.values.toList() : arrivalAvailable,
-                  isSelected: (b) => c.selectedArrivalBuckets.contains(b),
-                  onTap: (b) => c.toggleArrivalBucket(b),
-                ),
-
-                const SizedBox(height: 22),
-
-                // 6) ===== Airlines =====
-                _SectionTitle(title: 'Airlines'.tr),
-                const SizedBox(height: 8),
-                if (c.availableAirlineCodes.isEmpty)
-                  Text('No airlines found'.tr, style: theme.textTheme.bodyMedium)
-                else
-                  Column(
-                    children: [
-                      for (final code in c.availableAirlineCodes) ...[
-                        _AirlineCheckboxRow(
-                          code: code,
-                          value: c.selectedAirlineCodes.contains(code),
-                          onChanged: (_) => c.toggleAirline(code),
-                        ),
-                        const Divider(),
-                      ],
-                    ],
-                  ),
-
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        );
-      },
+  Widget _chip({
+    required bool selected,
+    required String label,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return ChoiceChip(
+      selected: selected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 16),
+            const SizedBox(width: 6),
+          ],
+          Text(label),
+        ],
+      ),
+      onSelected: (_) => onTap(),
     );
   }
 
@@ -218,31 +119,340 @@ class FilterOffersPage extends StatelessWidget {
     }
     return set;
   }
-}
-
-// =================== Widgets ===================
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800));
+    final cs = Theme.of(context).colorScheme;
+
+    return GetBuilder<FilterOffersController>(
+      tag: _tag,
+      builder: (c) {
+        final showInbound = c.hasInboundLeg;
+
+        // ✅ اعرض فقط البكتس المتاحة إن وجدت
+        final departureAvailable = _availableDepartureBuckets(widget.offers);
+        final arrivalAvailable = _availableArrivalBuckets(widget.offers);
+
+        // ✅ تأكد UI يعكس sanitize دائماً
+        if (_outRefCtrl.text != c.outboundRefQuery) {
+          _outRefCtrl.value = _outRefCtrl.value.copyWith(text: c.outboundRefQuery);
+        }
+        if (_inRefCtrl.text != c.inboundRefQuery) {
+          _inRefCtrl.value = _inRefCtrl.value.copyWith(text: c.inboundRefQuery);
+        }
+
+        return SafeArea(
+          top: false,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text("Sort & Filter".tr),
+
+            ),
+            body: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                // =========================
+                // ✅ Flight reference (refSegs)
+                // =========================
+                _sectionTitle(context, "Flight reference"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _outRefCtrl,
+                          inputFormatters: [
+                            _refAllowed,
+                            _noSpaces,
+                            LengthLimitingTextInputFormatter(40),
+                          ],
+                          textCapitalization: TextCapitalization.characters,
+                          textInputAction: showInbound ? TextInputAction.next : TextInputAction.done,
+                          decoration: InputDecoration(
+                            labelText: "Flight No Outbound".tr,
+                            hintText: "Example: 70,KL- or KL-6070".tr,
+                            border: const OutlineInputBorder(),
+                          ),
+                          onChanged: c.setOutboundRefQuery,
+                        ),
+                        if (showInbound) ...[
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _inRefCtrl,
+                            inputFormatters: [
+                              _refAllowed,
+                              _noSpaces,
+                              LengthLimitingTextInputFormatter(40),
+                            ],
+                            textCapitalization: TextCapitalization.characters,
+                            textInputAction: TextInputAction.done,
+                            decoration: InputDecoration(
+                              labelText: "Flight No Return".tr,
+                              hintText: "Example: SV-555 or 55".tr,
+                              border: const OutlineInputBorder(),
+                            ),
+                            onChanged: c.setInboundRefQuery,
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            "Search is applied on leg.refSegs (contains)".tr,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          
+                // =========================
+                // Sort
+                // =========================
+                _sectionTitle(context, "Sort"),
+                Card(
+                  child: Column(
+                    children: [
+                      RadioListTile<SortOffersOption?>(
+                        value: null,
+                        groupValue: c.selectedSort,
+                        title: Text("No sorting".tr),
+                        onChanged: (_) => c.setSort(null),
+                      ),
+                      const Divider(height: 1),
+                      ...SortOffersOption.values.map((opt) {
+                        return RadioListTile<SortOffersOption?>(
+                          value: opt,
+                          groupValue: c.selectedSort,
+                          title: Text(FilterOffersController.sortLabel(opt).tr),
+                          onChanged: (v) => c.setSort(v),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+          
+                // =========================
+                // Stops
+                // =========================
+                _sectionTitle(context, "Stops"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: c.availableStops.map((s) {
+                        final selected = c.selectedStops.contains(s);
+                        return _chip(
+                          selected: selected,
+                          label: _stopLabel(s),
+                          icon: Icons.route,
+                          onTap: () => c.toggleStop(s),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+          
+                // =========================
+                // ✅ Airlines (بنفس تصميم checkbox + شعار)
+                // =========================
+                _sectionTitle(context, "Airlines"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: (c.availableAirlineCodes.isEmpty)
+                        ? Text("No airlines found".tr)
+                        : Column(
+                            children: [
+                              for (final code in c.availableAirlineCodes) ...[
+                                _AirlineCheckboxRow(
+                                  code: code,
+                                  value: c.selectedAirlineCodes.contains(code),
+                                  onChanged: (_) => c.toggleAirline(code),
+                                ),
+                                const Divider(height: 1),
+                              ],
+                            ],
+                          ),
+                  ),
+                ),
+          
+                // =========================
+                // ✅ Departure time (بنفس تصميم tiles grid)
+                // =========================
+                _sectionTitle(context, "Departure time"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: _TimeBucketTilesGrid(
+                      buckets: departureAvailable.isEmpty ? TimeBucket.values : departureAvailable,
+                      isSelected: (b) => c.selectedDepartureBuckets.contains(b),
+                      onTap: (b) => c.toggleDepartureBucket(b),
+                    ),
+                  ),
+                ),
+          
+                // =========================
+                // ✅ Arrival time (بنفس تصميم tiles grid)
+                // =========================
+                _sectionTitle(context, "Arrival time"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: _TimeBucketTilesGrid(
+                      buckets: arrivalAvailable.isEmpty ? TimeBucket.values : arrivalAvailable,
+                      isSelected: (b) => c.selectedArrivalBuckets.contains(b),
+                      onTap: (b) => c.toggleArrivalBucket(b),
+                    ),
+                  ),
+                ),
+          
+                // =========================
+                // Price range
+                // =========================
+                _sectionTitle(context, "Price range"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          "${"From".tr}: ${c.selectedPriceFrom.toStringAsFixed(0)}   •   ${"To".tr}: ${c.selectedPriceTo.toStringAsFixed(0)}",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        RangeSlider(
+                          values: RangeValues(c.selectedPriceFrom, c.selectedPriceTo),
+                          min: c.minPrice,
+                          max: c.sliderPriceMax,
+                          onChanged: (v) => c.updatePriceRange(v.start, v.end),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${"Min".tr}: ${c.minPrice.toStringAsFixed(0)}   •   ${"Max".tr}: ${c.maxPrice.toStringAsFixed(0)}",
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          
+                // =========================
+                // Travel time range
+                // =========================
+                _sectionTitle(context, "Travel time"),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          "${"From".tr}: ${FilterOffersController.minutesToText(c.selectedTravelFrom)}   •   ${"To".tr}: ${FilterOffersController.minutesToText(c.selectedTravelTo)}",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        RangeSlider(
+                          values: RangeValues(
+                            c.selectedTravelFrom.toDouble(),
+                            c.selectedTravelTo.toDouble(),
+                          ),
+                          min: c.minTravelMinutes.toDouble(),
+                          max: c.sliderTravelMax.toDouble(),
+                          onChanged: (v) => c.updateTravelRange(v.start.round(), v.end.round()),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${"Min".tr}: ${FilterOffersController.minutesToText(c.minTravelMinutes)}   •   ${"Max".tr}: ${FilterOffersController.minutesToText(c.maxTravelMinutes)}",
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          
+                const SizedBox(height: 16),
+              ],
+            ),
+            bottomNavigationBar: Container(
+              padding: const EdgeInsetsDirectional.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: cs.outline,
+                    width: 1,
+                  ),
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 16),
+                  Text(
+                    "${"Active filters".tr}: ${c.buildState().countFiltersActive}",
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: AppConsts.lg),
+                  ),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    onPressed: () => c.done(),
+                    icon: const Icon(Icons.check),
+                    label: Text("Done".tr),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    onPressed: (c.buildState().countFiltersActive > 0) ? () => c.clearAll() : null,
+                    child: Text("Clear".tr),
+                  ),
+                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
+
+// =================== Widgets (Airlines) ===================
 
 class _AirlineCheckboxRow extends StatelessWidget {
   final String code;
   final bool value;
   final ValueChanged<bool?> onChanged;
 
-  const _AirlineCheckboxRow({required this.code, required this.value, required this.onChanged});
+  const _AirlineCheckboxRow({
+    required this.code,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final a = AirlineRepo.searchByCode(code);
+    final title = a != null ? '${a.name[AppVars.lang]} ($code)' : code;
+
     return InkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: () => onChanged(!value),
@@ -252,19 +462,18 @@ class _AirlineCheckboxRow extends StatelessWidget {
           children: [
             Checkbox(value: value, onChanged: onChanged),
             const SizedBox(width: 6),
-            SizedBox(width: 30, height: 30, child: CacheImg(AppFuns.airlineImgURL(code), sizeCircleLoading: 10,)),
+            SizedBox(
+              width: 30,
+              height: 30,
+              child: CacheImg(AppFuns.airlineImgURL(code), sizeCircleLoading: 10),
+            ),
             const SizedBox(width: 12),
-            if (AirlineRepo.searchByCode(code) != null)
-              Expanded(
-                child: Text(
-                  AirlineRepo.searchByCode(code)!.name[AppVars.lang] + ' ($code)',
-                  style: theme.textTheme.titleMedium,
-                ),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium,
               ),
-            if (AirlineRepo.searchByCode(code) == null)
-              Expanded(
-                child: Text(code, style: theme.textTheme.titleMedium),
-              ),
+            ),
           ],
         ),
       ),
@@ -272,12 +481,18 @@ class _AirlineCheckboxRow extends StatelessWidget {
   }
 }
 
+// =================== Widgets (Time buckets grid) ===================
+
 class _TimeBucketTilesGrid extends StatelessWidget {
   final Iterable<TimeBucket> buckets;
   final bool Function(TimeBucket) isSelected;
   final void Function(TimeBucket) onTap;
 
-  const _TimeBucketTilesGrid({required this.buckets, required this.isSelected, required this.onTap});
+  const _TimeBucketTilesGrid({
+    required this.buckets,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +511,11 @@ class _TimeBucketTilesGrid extends StatelessWidget {
             for (final b in ordered)
               SizedBox(
                 width: tileW,
-                child: _TimeBucketTile(bucket: b, selected: isSelected(b), onTap: () => onTap(b)),
+                child: _TimeBucketTile(
+                  bucket: b,
+                  selected: isSelected(b),
+                  onTap: () => onTap(b),
+                ),
               ),
           ],
         );
@@ -306,7 +525,12 @@ class _TimeBucketTilesGrid extends StatelessWidget {
 
   List<TimeBucket> _orderBuckets(Iterable<TimeBucket> buckets) {
     final set = buckets.toSet();
-    final order = <TimeBucket>[TimeBucket.earlyMorning, TimeBucket.morning, TimeBucket.afternoon, TimeBucket.evening];
+    final order = <TimeBucket>[
+      TimeBucket.earlyMorning,
+      TimeBucket.morning,
+      TimeBucket.afternoon,
+      TimeBucket.evening,
+    ];
     return order.where(set.contains).toList();
   }
 }
@@ -316,7 +540,11 @@ class _TimeBucketTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _TimeBucketTile({required this.bucket, required this.selected, required this.onTap});
+  const _TimeBucketTile({
+    required this.bucket,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -397,43 +625,5 @@ class _TimeBucketTile extends StatelessWidget {
       case TimeBucket.evening:
         return '(6:00pm - 11:59pm)';
     }
-  }
-}
-
-class _RangeHeader extends StatelessWidget {
-  final String left;
-  final String right;
-
-  const _RangeHeader({required this.left, required this.right});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(left, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-        Text(right, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
-}
-
-class _RangeFooter extends StatelessWidget {
-  final String left;
-  final String right;
-
-  const _RangeFooter({required this.left, required this.right});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(left, style: theme.textTheme.bodySmall),
-        Text(right, style: theme.textTheme.bodySmall),
-      ],
-    );
   }
 }

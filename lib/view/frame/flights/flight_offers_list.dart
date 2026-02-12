@@ -58,7 +58,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
 
   late FlightSearchParams searchInputs;
 
-  // ✅ لمنع setState المتكرر أثناء أنيميشن ExpansionTile
   bool _lastExpanded = false;
 
   @override
@@ -81,7 +80,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
 
   void _handleExpansion() {
     final v = expansionController.isExpanded;
-    if (v == _lastExpanded) return; // ✅ يمنع rebuild أثناء الأنيميشن
+    if (v == _lastExpanded) return;
     _lastExpanded = v;
     setState(() {});
   }
@@ -96,7 +95,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
   }
 
   // =========================
-  // Filtering + Sorting (same logic as FilterOffersController)
+  // Filtering + Sorting
   // =========================
 
   int? _parseDurationToMinutes(String text) {
@@ -126,7 +125,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
   bool _matchStops(FlightOfferModel offer) {
     if (filterState.stops.isEmpty) return true;
 
-    // OR between legs
     for (final leg in offer.legs) {
       final normalized = leg.stops >= 2 ? 2 : leg.stops;
       if (filterState.stops.contains(normalized)) return true;
@@ -179,7 +177,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
     final to = filterState.travelTimeTo;
     if (from == null && to == null) return true;
 
-    // match if ANY leg duration is within range
     for (final leg in offer.legs) {
       final m = _parseDurationToMinutes(leg.totalDurationText);
       if (m == null) continue;
@@ -188,13 +185,47 @@ class _FlightOffersListState extends State<FlightOffersList> {
     return false;
   }
 
+  // =========================
+  // ✅ Flight Ref filtering via leg.refSegs
+  // =========================
+
+  String _sanitizeRef(String v) {
+    // trim + remove spaces + uppercase + allow only A-Z0-9-,
+    final up = v.trim().replaceAll(RegExp(r'\s+'), '').toUpperCase();
+    return up.replaceAll(RegExp(r'[^A-Z0-9\-,]'), '');
+  }
+
+  bool _matchRefSegs(FlightOfferModel offer) {
+    final outQ = _sanitizeRef(filterState.outboundRefQuery);
+    final inQ = _sanitizeRef(filterState.inboundRefQuery);
+
+    if (outQ.isEmpty && inQ.isEmpty) return true;
+
+    String normHay(String v) => _sanitizeRef(v);
+
+    // outbound (always)
+    if (outQ.isNotEmpty) {
+      final outLeg = offer.outbound;
+      if (!normHay(outLeg.refSegs).contains(outQ)) return false;
+    }
+
+    // inbound (only if exists)
+    if (inQ.isNotEmpty) {
+      final inLeg = offer.inbound;
+      if (inLeg == null) return false;
+      if (!normHay(inLeg.refSegs).contains(inQ)) return false;
+    }
+
+    return true;
+  }
+
   void _applySort(List<FlightOfferModel> list) {
-    final s = filterState.sort; // requires sort in FilterOffersState
+    final s = filterState.sort;
     if (s == null) return;
 
     int cmpNullableInt(int? a, int? b, {required bool asc}) {
       if (a == null && b == null) return 0;
-      if (a == null) return 1; // null last
+      if (a == null) return 1;
       if (b == null) return -1;
       return asc ? a.compareTo(b) : b.compareTo(a);
     }
@@ -222,6 +253,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
 
   Future<void> _rebuildOffersFromState({bool scrollTop = false}) async {
     final filtered = allOffers.where((offer) {
+      if (!_matchRefSegs(offer)) return false;
       if (!_matchStops(offer)) return false;
       if (!_matchPrice(offer)) return false;
       if (!_matchTravelTime(offer)) return false;
@@ -237,7 +269,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
       offers = filtered;
     });
 
-    // ✅ حماية: لا تعمل animateTo إلا إذا الـ controller مرتبط (hasClients)
     if (scrollTop && filtered.isNotEmpty) {
       await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
@@ -266,7 +297,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
       }
     }
 
-    final list = set.toList()..sort(); // 0,1,2
+    final list = set.toList()..sort();
     return list;
   }
 
@@ -361,8 +392,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
                         ),
                         DropdownMenuItem(
                           value: OfferQuickOption.travelTimeLow,
-                          child:
-                              Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          child: Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
                         ),
                         if (availableStops.contains(0))
                           DropdownMenuItem(
@@ -550,8 +580,10 @@ class _FlightOffersListState extends State<FlightOffersList> {
                                                 ),
                                               ),
                                               TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
-                                              if (searchInputs.chd > 0) TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
-                                              if (searchInputs.inf > 0) TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
+                                              if (searchInputs.chd > 0)
+                                                TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
+                                              if (searchInputs.inf > 0)
+                                                TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
                                               WidgetSpan(
                                                 alignment: PlaceholderAlignment.middle,
                                                 child: Container(
@@ -585,7 +617,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
                 ),
               ),
 
-              // ============ Edit Search Expanded ============
               if (isExpanded) ...[
                 Expanded(
                   child: SearchFlight(
@@ -606,14 +637,12 @@ class _FlightOffersListState extends State<FlightOffersList> {
 
                       await _rebuildOffersFromState(scrollTop: true);
 
-                      // (اختياري) تأكيد الإغلاق
                       expansionController.collapse();
                     },
                   ),
                 ),
               ],
 
-              // ============ Results ============
               if (!isExpanded) ...[
                 if (offers.isNotEmpty)
                   Expanded(
@@ -628,8 +657,6 @@ class _FlightOffersListState extends State<FlightOffersList> {
                               selectedIndex: 4,
                             ),
                           ),
-
-                          // ✅ SliverList = lazy build (أسرع بكثير من shrinkWrap داخل SingleChildScrollView)
                           SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -706,7 +733,12 @@ class _FlightOffersListState extends State<FlightOffersList> {
                       ),
                     ),
                   ),
-                if (offers.isEmpty) Center(child: Text('No offers found'.tr)),
+                if (offers.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Text('No offers found'.tr),
+                    ),
+                  ),
               ],
             ],
           ),
@@ -742,12 +774,9 @@ class FlightOfferCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final isUpsellEnabled = AppFuns.isUpsellEnabledAirline(offer.airlineCode);
-
     final timeFormat = DateFormat('hh:mm a', AppVars.lang);
     final dateFormat = DateFormat('EEE, dd MMM', AppVars.lang);
 
-    // ===== شركات طيران مسار الذهاب فقط (للهيدر) =====
     final outboundLeg = offer.outbound;
     final outboundCodes = _uniqueMarketingCodesForLeg(outboundLeg);
     final headerCodes = outboundCodes.isNotEmpty ? outboundCodes : <String>[offer.airlineCode];
@@ -778,7 +807,6 @@ class FlightOfferCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ====== header ======
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -800,11 +828,28 @@ class FlightOfferCard extends StatelessWidget {
                           const SizedBox(width: 4),
                         ],
                         Expanded(
-                          child: Text(
-                            airlineNamesText,
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                airlineNamesText,
+                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(
+                                height: 18,
+                                child: SelectableText(
+                                  offer.outbound.refSegs,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: AppConsts.sm,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  maxLines: 2,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -938,7 +983,7 @@ class FlightOfferCard extends StatelessWidget {
                               backgroundColor: cs.secondary,
                               foregroundColor: cs.shadow,
                             ),
-                            onPressed: (isUpsellEnabled) ? onOtherPrices! : null,
+                            onPressed: (offer.isOtherPrice) ? onOtherPrices! : null,
                             icon: const Icon(Icons.attach_money),
                             label: Text('Other Prices'.tr),
                           ),
@@ -1039,9 +1084,6 @@ class _LegRow extends StatelessWidget {
     final bool isArabic = AppVars.lang == 'ar';
     final cs = Theme.of(context).colorScheme;
 
-    // (غير مستخدم بصريًا لكنه كان موجود عندك)
-    // final double planeAngle = isArabic ? -math.pi / 2 : math.pi / 2;
-    // ignore: unused_local_variable
     final double planeAngle = isArabic ? -math.pi / 2 : math.pi / 2;
 
     return Column(
@@ -1070,11 +1112,28 @@ class _LegRow extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(
-                  legNamesText,
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      legNamesText,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(
+                      height: 18,
+                      child: SelectableText(
+                        leg.refSegs,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1123,7 +1182,6 @@ class _LegRow extends StatelessWidget {
               ],
             ),
 
-            // Middle
             Expanded(
               flex: 2,
               child: Column(
@@ -1297,55 +1355,57 @@ class _FlightFareCalendarState extends State<FlightFareCalendar> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 18),
         child: Row(
-          spacing: 8,
           children: List.generate(widget.itemCount, (index) {
             final isSelected = widget.selectedIndex == index;
 
-            return Container(
-              key: _itemKeys[index],
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  backgroundColor: isSelected ? const Color(0xFFe2e6f9) : cs.onPrimary,
-                  foregroundColor: cs.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 3,
-                ),
-                onPressed: () => widget.onTap?.call(index),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Saturday".tr),
-                        const SizedBox(width: 4),
-                        Container(
-                          height: 6,
-                          width: 6,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF687489)),
-                        ),
-                        const SizedBox(width: 4),
-                        Text("12 ${"Feb".tr}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "117",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF4fa054)),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          "USD",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF687489)),
-                        ),
-                      ],
-                    ),
-                  ],
+            return Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: Container(
+                key: _itemKeys[index],
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    backgroundColor: isSelected ? const Color(0xFFe2e6f9) : cs.onPrimary,
+                    foregroundColor: cs.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
+                  ),
+                  onPressed: () => widget.onTap?.call(index),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Saturday".tr),
+                          const SizedBox(width: 4),
+                          Container(
+                            height: 6,
+                            width: 6,
+                            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF687489)),
+                          ),
+                          const SizedBox(width: 4),
+                          Text("12 ${"Feb".tr}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "117",
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF4fa054)),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            "USD",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF687489)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

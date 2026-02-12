@@ -13,7 +13,6 @@ enum SortOffersOption {
   travelTimeHigh,
 }
 
-
 enum OfferQuickOption {
   none,
 
@@ -51,7 +50,6 @@ extension OfferQuickOptionX on OfferQuickOption {
   }
 }
 
-
 class FilterOffersState {
   final Set<int> stops; // 0,1,2 (2 = 2+)
   final Set<String> airlineCodes;
@@ -69,6 +67,10 @@ class FilterOffersState {
   // sorting
   final SortOffersOption? sort;
 
+  // ✅ NEW: flight refs queries (search in leg.refSegs)
+  final String outboundRefQuery;
+  final String inboundRefQuery;
+
   bool get isFilter =>
       stops.isNotEmpty ||
       airlineCodes.isNotEmpty ||
@@ -78,7 +80,9 @@ class FilterOffersState {
       priceTo != null ||
       travelTimeFrom != null ||
       travelTimeTo != null ||
-      sort != null;
+      sort != null ||
+      outboundRefQuery.trim().isNotEmpty ||
+      inboundRefQuery.trim().isNotEmpty;
 
   int get countFiltersActive =>
       stops.length +
@@ -89,7 +93,9 @@ class FilterOffersState {
       (priceTo != null ? 1 : 0) +
       (travelTimeFrom != null ? 1 : 0) +
       (travelTimeTo != null ? 1 : 0) +
-      (sort != null ? 1 : 0);
+      (sort != null ? 1 : 0) +
+      (outboundRefQuery.trim().isNotEmpty ? 1 : 0) +
+      (inboundRefQuery.trim().isNotEmpty ? 1 : 0);
 
   const FilterOffersState({
     this.stops = const <int>{},
@@ -101,6 +107,8 @@ class FilterOffersState {
     this.travelTimeFrom,
     this.travelTimeTo,
     this.sort,
+    this.outboundRefQuery = '',
+    this.inboundRefQuery = '',
   });
 
   FilterOffersState copyWith({
@@ -113,9 +121,13 @@ class FilterOffersState {
     int? travelTimeFrom,
     int? travelTimeTo,
     SortOffersOption? sort,
+    String? outboundRefQuery,
+    String? inboundRefQuery,
     bool setPriceNull = false,
     bool setTravelTimeNull = false,
     bool setSortNull = false,
+    bool clearOutboundRef = false,
+    bool clearInboundRef = false,
   }) {
     return FilterOffersState(
       stops: stops ?? this.stops,
@@ -127,6 +139,8 @@ class FilterOffersState {
       travelTimeFrom: setTravelTimeNull ? null : (travelTimeFrom ?? this.travelTimeFrom),
       travelTimeTo: setTravelTimeNull ? null : (travelTimeTo ?? this.travelTimeTo),
       sort: setSortNull ? null : (sort ?? this.sort),
+      outboundRefQuery: clearOutboundRef ? '' : (outboundRefQuery ?? this.outboundRefQuery),
+      inboundRefQuery: clearInboundRef ? '' : (inboundRefQuery ?? this.inboundRefQuery),
     );
   }
 }
@@ -162,6 +176,12 @@ class FilterOffersController extends GetxController {
   // sorting
   SortOffersOption? selectedSort;
 
+  // ✅ NEW: ref queries
+  String outboundRefQuery = '';
+  String inboundRefQuery = '';
+
+  bool get hasInboundLeg => originalOffers.isNotEmpty && originalOffers.first.legs.length > 1;
+
   // available airlines (codes)
   late final List<String> availableAirlineCodes;
 
@@ -193,6 +213,10 @@ class FilterOffersController extends GetxController {
 
     selectedSort = initialState.sort;
 
+    // ✅ init ref queries from previous state
+    outboundRefQuery = _sanitizeRefQuery(initialState.outboundRefQuery);
+    inboundRefQuery = _sanitizeRefQuery(initialState.inboundRefQuery);
+
     // airlines from any segment (out+in)
     availableAirlineCodes = _extractAirlineCodes(originalOffers);
 
@@ -205,7 +229,7 @@ class FilterOffersController extends GetxController {
     minTravelMinutes = travelBounds.$1;
     maxTravelMinutes = travelBounds.$2;
 
-    // available stops in current search results: 0,1,2 (2 = 2+)
+    // available stops
     availableStops = _extractStops(originalOffers);
 
     // safe max for sliders (avoid min==max issues)
@@ -227,6 +251,11 @@ class FilterOffersController extends GetxController {
       final tmp = selectedTravelFrom;
       selectedTravelFrom = selectedTravelTo;
       selectedTravelTo = tmp;
+    }
+
+    // ✅ لو البحث الحالي One-way: لا تخلي inboundRefQuery القديمة تكسر الفلترة
+    if (!hasInboundLeg) {
+      inboundRefQuery = '';
     }
   }
 
@@ -274,6 +303,23 @@ class FilterOffersController extends GetxController {
     }
   }
 
+  // ===== sanitize ref query =====
+  static String _sanitizeRefQuery(String v) {
+    // trim + remove spaces + uppercase + allow only A-Z/0-9/-,,
+    final up = v.trim().replaceAll(RegExp(r'\s+'), '').toUpperCase();
+    return up.replaceAll(RegExp(r'[^A-Z0-9\-,]'), '');
+  }
+
+  void setOutboundRefQuery(String v) {
+    outboundRefQuery = _sanitizeRefQuery(v);
+    update();
+  }
+
+  void setInboundRefQuery(String v) {
+    inboundRefQuery = _sanitizeRefQuery(v);
+    update();
+  }
+
   // ===== filter activity =====
   bool get _priceIsFiltered => (selectedPriceFrom > minPrice + 1e-9) || (selectedPriceTo < maxPrice - 1e-9);
   bool get _travelIsFiltered => (selectedTravelFrom > minTravelMinutes) || (selectedTravelTo < maxTravelMinutes);
@@ -285,7 +331,9 @@ class FilterOffersController extends GetxController {
       selectedArrivalBuckets.isNotEmpty ||
       _priceIsFiltered ||
       _travelIsFiltered ||
-      selectedSort != null;
+      selectedSort != null ||
+      outboundRefQuery.trim().isNotEmpty ||
+      inboundRefQuery.trim().isNotEmpty;
 
   // ===== toggles =====
   void toggleStop(int stop) {
@@ -359,6 +407,9 @@ class FilterOffersController extends GetxController {
 
     selectedSort = null;
 
+    outboundRefQuery = '';
+    inboundRefQuery = '';
+
     // reset sliders to full bounds
     selectedPriceFrom = minPrice;
     selectedPriceTo = maxPrice.clamp(minPrice, sliderPriceMax);
@@ -386,15 +437,40 @@ class FilterOffersController extends GetxController {
       travelTimeFrom: travelFromState,
       travelTimeTo: travelToState,
       sort: selectedSort,
+      outboundRefQuery: outboundRefQuery,
+      inboundRefQuery: hasInboundLeg ? inboundRefQuery : '',
     );
   }
 
-  // ===== matching logic (one-way + round-trip) =====
+  // ===== matching logic =====
+
+  bool _matchRefSegs(FlightOfferModel offer) {
+    final outQ = _sanitizeRefQuery(outboundRefQuery);
+    final inQ = _sanitizeRefQuery(inboundRefQuery);
+
+    if (outQ.isEmpty && inQ.isEmpty) return true;
+
+    String norm(String v) => _sanitizeRefQuery(v); // same sanitizer works for haystack too
+
+    // outbound: always check in offer.outbound.refSegs
+    if (outQ.isNotEmpty) {
+      final outLeg = offer.outbound;
+      if (!norm(outLeg.refSegs).contains(outQ)) return false;
+    }
+
+    // inbound: only if offer has inbound
+    if (inQ.isNotEmpty) {
+      final inLeg = offer.inbound;
+      if (inLeg == null) return false;
+      if (!norm(inLeg.refSegs).contains(inQ)) return false;
+    }
+
+    return true;
+  }
 
   bool _matchStops(FlightOfferModel offer) {
     if (selectedStops.isEmpty) return true;
 
-    // OR between legs
     for (final leg in offer.legs) {
       final s = leg.stops;
       final normalized = s >= 2 ? 2 : s;
@@ -443,7 +519,6 @@ class FilterOffersController extends GetxController {
   bool _matchTravelTime(FlightOfferModel offer) {
     if (!_travelIsFiltered) return true;
 
-    // match if ANY leg duration is within range (as you already decided)
     for (final leg in offer.legs) {
       final minutes = _parseDurationToMinutes(leg.totalDurationText);
       if (minutes == null) continue;
@@ -455,7 +530,6 @@ class FilterOffersController extends GetxController {
   // ===== sorting =====
 
   int? _offerTotalDurationMinutes(FlightOfferModel offer) {
-    // total duration for whole itinerary = sum of each leg totalDurationText
     int sum = 0;
     for (final leg in offer.legs) {
       final m = _parseDurationToMinutes(leg.totalDurationText);
@@ -471,7 +545,7 @@ class FilterOffersController extends GetxController {
 
     int cmpNullableInt(int? a, int? b, {required bool asc}) {
       if (a == null && b == null) return 0;
-      if (a == null) return 1; // null last
+      if (a == null) return 1;
       if (b == null) return -1;
       return asc ? a.compareTo(b) : b.compareTo(a);
     }
@@ -500,10 +574,10 @@ class FilterOffersController extends GetxController {
   }
 
   List<FlightOfferModel> applyFilters() {
-    // even if no filters, we may still sort
     final base = List<FlightOfferModel>.from(originalOffers);
 
     final filtered = base.where((offer) {
+      if (!_matchRefSegs(offer)) return false;
       if (!_matchStops(offer)) return false;
       if (!_matchAirlines(offer)) return false;
       if (!_matchDepartureTime(offer)) return false;
@@ -578,7 +652,7 @@ class FilterOffersController extends GetxController {
       }
     }
 
-    final list = set.toList()..sort(); // 0,1,2
+    final list = set.toList()..sort();
     return list;
   }
 
@@ -588,8 +662,7 @@ class FilterOffersController extends GetxController {
     return v;
   }
 
-  /// Parses formats like:
-  /// "01h: 30m", "8h: 45m", "10h: 25m", "00h: 00m"
+  /// Parses formats like: "01h: 30m", "8h: 45m"
   static int? _parseDurationToMinutes(String text) {
     final s = text.trim();
     if (s.isEmpty) return null;

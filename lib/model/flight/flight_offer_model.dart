@@ -1,5 +1,6 @@
 // lib/model/flight/flight_offer_model.dart
 import 'package:alzajeltravel/repo/airline_repo.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/airline_controller.dart';
@@ -117,6 +118,7 @@ class FlightOfferModel {
   }
 
   int get totalStops => legs.fold(0, (sum, leg) => sum + leg.stops);
+  bool get isOtherPrice => AppFuns.isUpsellEnabledAirline(airlineCode);
 
   factory FlightOfferModel.fromJson(Map<String, dynamic> json) {
     final airlineController = Get.find<AirlineController>();
@@ -185,6 +187,8 @@ class FlightOfferModel {
     }
 
     final validatingCode = _s(json['validatingAirlineCode']);
+
+    
 
     // int countStops(List<FlightLegModel> legs) {
     //   int count = 0;

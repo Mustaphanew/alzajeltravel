@@ -30,6 +30,9 @@ class FlightSegmentModel {
   /// المقاعد المتبقية في هذا السيجمنت
   final String seatsRemaining;
 
+  // ref is marketingAirlineCode-marketingAirlineNumber
+  String get ref => "$marketingAirlineCode-$marketingAirlineNumber";
+
   FlightSegmentModel({
     required this.marketingAirlineCode,
     required this.marketingAirlineNumber,

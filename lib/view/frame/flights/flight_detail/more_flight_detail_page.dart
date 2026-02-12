@@ -514,7 +514,7 @@ class SegCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            '${seg.marketingAirlineCode}-${seg.marketingAirlineNumber}',
+                            seg.ref,
                           ),
                         ),
                       

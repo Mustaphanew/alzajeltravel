@@ -674,4 +674,9 @@ Map<String, String> ar = {
   "You can fill traveler data by scanning the passport": "يمكنك ملء بيانات المسافر عن طريق مسح جواز السفر",
   "Hide input fields": "إخفاء حقول الإدخال",
   "Show input fields": "إظهار حقول الإدخال",
+
+  "Flight reference": "رقم الرحلة",
+
+  "Active filters": "الفلاتر النشطة",
+  "Search is applied on leg.refSegs (contains)": "يتم تطبيق البحث على مسار الرحلة",
 };

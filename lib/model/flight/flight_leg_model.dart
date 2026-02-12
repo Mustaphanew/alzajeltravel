@@ -12,6 +12,9 @@ class FlightLegModel {
   final String totalLayoverDurationText;
   final String totalDurationText;
 
+  // refsegs GF-511,SV-555,SV-556
+  String get refSegs => segments.map((s) => s.ref).join(',');
+
   FlightLegModel({
     required this.segments,
     required this.stops,
