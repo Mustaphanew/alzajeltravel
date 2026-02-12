@@ -1,5 +1,4 @@
 import 'package:alzajeltravel/controller/airline_controller.dart';
-import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/controller/travelers_controller.dart';
 import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
@@ -15,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/frame_controller.dart';
-import 'package:alzajeltravel/locale/translation_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/view/frame/my_drawer.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
@@ -31,16 +29,26 @@ class Frame extends StatefulWidget {
 }
 
 class _FrameState extends State<Frame> with WidgetsBindingObserver {
-  final TranslationController translationController = Get.put(TranslationController());
-  final FrameController frameController = Get.put(FrameController());
-  final AirlineController airlineController = Get.put(AirlineController());
 
-  // final SearchFlightController searchFlightController = Get.put(SearchFlightController());
-  final TravelersController travelersController = Get.put(TravelersController());
+final FrameController frameController =
+    Get.isRegistered<FrameController>()
+        ? Get.find<FrameController>()
+        : Get.put(FrameController(), permanent: true);
+
+final AirlineController airlineController =
+    Get.isRegistered<AirlineController>()
+        ? Get.find<AirlineController>()
+        : Get.put(AirlineController(), permanent: true);
+
+final TravelersController travelersController =
+    Get.isRegistered<TravelersController>()
+        ? Get.find<TravelersController>()
+        : Get.put(TravelersController(), permanent: true);
+
 
 
   DateTime? _leftAt;
-  final int timeout = 30;
+  final int timeout = 10;
 
   // ✅ منع تكرار نافذة الخروج عند الضغط السريع
   bool _isExitDialogOpen = false;
@@ -50,11 +58,11 @@ class _FrameState extends State<Frame> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    AppVars.profile = AppVars.getStorage.read('profile') != null
-        ? ProfileModel.fromJson(AppVars.getStorage.read('profile'))
+    final raw = AppVars.getStorage.read('profile');
+    AppVars.profile = raw is Map
+        ? ProfileModel.fromJson(Map<String, dynamic>.from(raw))
         : null;
 
-    print("profile: ${AppVars.profile?.id}");
     Jiffy.setLocale(AppVars.lang ?? 'en');
   }
 

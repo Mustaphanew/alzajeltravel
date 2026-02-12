@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/controller/class_type_controller.dart';
 import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,7 @@ class SearchFlight extends StatefulWidget {
 class _SearchFlightState extends State<SearchFlight> with SingleTickerProviderStateMixin {
   late final SearchFlightController searchFlightController;
   late final TravelersController travelersController;
+  late ClassTypeController classTypeController;
   late final AirlineController airlineController;
 
   late final TabController _tabController;
@@ -65,12 +67,16 @@ void initState() {
   if (!Get.isRegistered<TravelersController>()) {
     Get.put(TravelersController(), permanent: true);
   }
+  if (!Get.isRegistered<ClassTypeController>()) {
+    Get.put(ClassTypeController(), permanent: true);
+  }
   if (!Get.isRegistered<AirlineController>()) {
     Get.put(AirlineController(), permanent: true);
   }
 
   searchFlightController = Get.find<SearchFlightController>();
   travelersController = Get.find<TravelersController>();
+  classTypeController = Get.find<ClassTypeController>();
   airlineController = Get.find<AirlineController>();
 
   // ✅ حدّد initial قبل ما تعمل أي update

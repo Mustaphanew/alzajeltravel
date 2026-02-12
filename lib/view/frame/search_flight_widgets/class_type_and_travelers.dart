@@ -1,10 +1,12 @@
+// lib/view/frame/search_flight_widgets/class_type_and_travelers.dart
+
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+
 import 'package:alzajeltravel/controller/class_type_controller.dart';
-import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/controller/travelers_controller.dart';
 import 'package:alzajeltravel/model/class_type_model.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
@@ -18,368 +20,300 @@ class ClassTypeAndTravelers extends StatefulWidget {
 }
 
 class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
-  late SearchFlightController searchFlightController;
-  late ClassTypeController classTypeController;
-  late TravelersController travelersController;
+  final ClassTypeController classTypeController =
+    Get.isRegistered<ClassTypeController>()
+        ? Get.find<ClassTypeController>()
+        : Get.put(ClassTypeController(), permanent: true);
 
-  AgeItem? selectedAgeItem;
-
-  List<AgeItem?> selectedChildrenAgeItems = [];
-  List<AgeItem> childrenAgeItems = [
-    for (int i = 1; i < 17; i++) AgeItem(id: i, age: i + 1, type: "child"),
-  ];
-
-  List<AgeItem?> selectedInfantsSeatsAgeItems = [];
-  List<AgeItem> infantsSeatsAgeItems = [
-    for (int i = 1; i < 2; i++) AgeItem(id: i, age: i + 1, type: "infant_seat"),
-  ];
-
-  List<AgeItem?> selectedInfantsLapAgeItems = [];
-  List<AgeItem> infantsLapAgeItems = [
-    for (int i = 1; i < 2; i++) AgeItem(id: i, age: i + 1, type: "infant_lap"),
-  ];
+  final TravelersController travelersController =
+    Get.isRegistered<TravelersController>()
+        ? Get.find<TravelersController>()
+        : Get.put(TravelersController(), permanent: true);
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // selectedAgeItem = ageItems[0];
 
-
-    searchFlightController = Get.isRegistered<SearchFlightController>()
-        ? Get.find<SearchFlightController>()
-        : Get.put(SearchFlightController());
-
-    classTypeController = Get.isRegistered<ClassTypeController>()
-        ? Get.find<ClassTypeController>()
-        : Get.put(ClassTypeController());
-
-    travelersController = Get.isRegistered<TravelersController>()
-        ? Get.find<TravelersController>()
-        : Get.put(TravelersController());
-
-
-    for (int i = 0; i < travelersController.maxChildrenCounter(); i++) {
-      selectedChildrenAgeItems.add(selectedAgeItem);
-    }
-
-    for (int i = 0; i < travelersController.maxInfantsInSeatCounter(); i++) {
-      selectedInfantsSeatsAgeItems.add(selectedAgeItem);
-    }
-
-    for (int i = 0; i < travelersController.maxInfantsInLapCounter(); i++) {
-      selectedInfantsLapAgeItems.add(selectedAgeItem);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
     return DraggableScrollableSheet(
-      expand: false, // حتى لا تملأ الشاشة مباشرة
-      initialChildSize: 0.75, // 👈 تبدأ بنصف الشاشة
-      minChildSize: 0.30, // 👈 أقل ارتفاع (يمكن سحبها للأسفل)
-      maxChildSize: 0.90, // 👈 أقصى ارتفاع عند السحب للأعلى
+      expand: false,
+      initialChildSize: 0.75,
+      minChildSize: 0.30,
+      maxChildSize: 0.90,
       builder: (context, scrollController) {
-        return Column(
-          children: [
-            Expanded(
-              child: CupertinoScrollbar(
-                controller: scrollController,
-                thumbVisibility: true,
-                thickness: 8,
-                radius: const Radius.circular(100),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Container(
-                    padding: const EdgeInsets.all(0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // يجعل الارتفاع حسب المحتوى
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 0),
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                        Row(
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: Material(
+            color: cs.surface,
+            child: Column(
+              children: [
+                // محتوى قابل للتمرير
+                Expanded(
+                  child: CupertinoScrollbar(
+                    controller: scrollController,
+                    thumbVisibility: true,
+                    thickness: 8,
+                    radius: const Radius.circular(100),
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: const Icon(
-                                CupertinoIcons.back,
-                                color: Colors.black,
+                            const SizedBox(height: 12),
+
+                            // Handle
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: cs.outlineVariant,
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                              onPressed: () => Navigator.pop(context),
                             ),
-                            Text(
-                              'Class Type and Travelers'.tr,
-                              style: TextStyle(
-                                fontSize: AppConsts.xlg,
-                                fontWeight: FontWeight.w500,
-                              ),
+
+                            const SizedBox(height: 8),
+
+                            // Header
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(CupertinoIcons.back, color: cs.onSurface),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    "Class Type and Travelers".tr,
+                                    style: TextStyle(
+                                      fontSize: AppConsts.xlg,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: AppConsts.font,
+                                      color: cs.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Class type dropdown
+                            GetBuilder<ClassTypeController>(
+                              builder: (ctrl) {
+                                return ClassTypeDropdown(controller: ctrl);
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Travelers counters
+                            GetBuilder<TravelersController>(
+                              builder: (ctrl) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TravelerListTile(
+                                      type: TravelerType.adults,
+                                      controller: ctrl,
+                                      title: "Adults".tr,
+                                      body: "Greater than or equal to 12 years".tr,
+                                      counter: ctrl.adultsCounter,
+                                      icon: Icon(FontAwesomeIcons.solidUser, size: 22, color: Colors.blue[600]),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TravelerListTile(
+                                      type: TravelerType.children,
+                                      controller: ctrl,
+                                      title: "Children".tr,
+                                      body: "between 2 and 11 years".tr,
+                                      counter: ctrl.childrenCounter,
+                                      icon: Icon(FontAwesomeIcons.child, size: 22, color: Colors.green[600]),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TravelerListTile(
+                                      type: TravelerType.infantsLap,
+                                      controller: ctrl,
+                                      title: "Infants in Lap".tr,
+                                      body: "Less than 2 years old".tr,
+                                      counter: ctrl.infantsInLapCounter,
+                                      icon: Icon(FontAwesomeIcons.babyCarriage, size: 22, color: Colors.red[600]),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        // DropdownSearch<ClassType>(),
-                        GetBuilder<ClassTypeController>(
-                          builder: (controller) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: ClassTypeDropdown(controller: controller),
-                            );
-                          },
-                        ),
-
-                        GetBuilder<TravelersController>(
-                          builder: (controller) {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 12),
-                                TravelerListTile(
-                                  controller: controller,
-                                  title: 'Adults'.tr,
-                                  body: 'Greater than or equal to 12 years'.tr,
-                                  counter: controller.adultsCounter,
-                                  changeCounter: controller.changeAdultsCounter,
-                                  icon: Icon(
-                                    FontAwesomeIcons.solidUser,
-                                    size: 24,
-                                    color: Colors.blue[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TravelerListTile(
-                                  controller: controller,
-                                  title: 'Children'.tr,
-                                  body: 'between 2 and 11 years'.tr,
-                                  counter: controller.childrenCounter,
-                                  changeCounter:
-                                      controller.changeChildrenCounter,
-                                  icon: Icon(
-                                    FontAwesomeIcons.child,
-                                    size: 24,
-                                    color: Colors.green[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                // for (int i = 0; i < controller.childrenCounter; i++)
-                                //   Container(
-                                //     width:
-                                //         AppConsts.sizeContext(context).width - 64,
-                                //     child: DropdownButtonFormField<AgeItem>(
-                                //       initialValue: selectedChildrenAgeItems[i],
-                                //       decoration: InputDecoration(
-                                //         labelText: " Child ${i + 1} Age ",
-                                //       ),
-                                //       menuMaxHeight: 160,
-                                //       items: childrenAgeItems
-                                //           .where((e) {
-                                //             return e.type == "child";
-                                //           })
-                                //           .map((item) {
-                                //             return DropdownMenuItem<AgeItem>(
-                                //               value: item,
-                                //               child: Text(item.age.toString()),
-                                //             );
-                                //           })
-                                //           .toList(),
-                                //       onChanged: (value) {
-                                //         selectedChildrenAgeItems[i] = value;
-                                //         controller.update();
-                                //       },
-                                //     ),
-                                //   ),
-
-
-                                // const SizedBox(height: 8),
-                                // TravelerListTile(
-                                //   controller: controller,
-                                //   title: 'Infants in Seat',
-                                //   body: 'Less than 2 years old',
-                                //   counter: controller.infantsInSeatCounter,
-                                //   changeCounter:
-                                //       controller.changeInfantsInSeatCounter,
-                                // ),
-
-
-                                const SizedBox(height: 8),
-                                TravelerListTile(
-                                  controller: controller,
-                                  title: 'Infants in Lap'.tr,
-                                  body: 'Less than 2 years old'.tr,
-                                  counter: controller.infantsInLapCounter,
-                                  changeCounter:
-                                      controller.changeInfantsInLapCounter,
-                                  icon: Icon(
-                                    FontAwesomeIcons.babyCarriage,
-                                    color: Colors.red[600],
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                              ],
-                            );
-                          },
-                        ),
-                      
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+
+                // زر الحفظ (ثابت تحت)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  child: SizedBox(
+                    height: 52,
+                    width: AppConsts.sizeContext(context).width * 0.9,
+                    child: GetBuilder<ClassTypeController>(
+                      builder: (ctrl) {
+                        return ElevatedButton(
+                          onPressed: (ctrl.selectedClassType == null)
+                              ? null
+                              : () {
+                                  Navigator.of(context).pop();
+                                },
+                          child: Text("Save".tr),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+              ],
             ),
-            SizedBox(
-              height: 60,
-              width: AppConsts.sizeContext(context).width * 0.9,
-              child: GetBuilder<ClassTypeController>(
-                builder: (controller) {
-                  return ElevatedButton(
-                    onPressed: (controller.selectedClassType == null)
-                        ? null
-                        : () async {
-                            if (controller.selectedClassType != null) {
-                              print(
-                                "classTypeSelected: ${controller.selectedClassType!.name}",
-                              );
-                            }
-                            Navigator.pop(context);
-                          },
-                    child: Text("حفظ"),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 40),
-          ],
+          ),
         );
       },
     );
   }
 }
 
+enum TravelerType { adults, children, infantsSeat, infantsLap }
+
 class TravelerListTile extends StatelessWidget {
+  final TravelerType type;
   final String title;
   final String body;
   final TravelersController controller;
   final int counter;
-  final Function(int counter) changeCounter;
   final Widget icon;
+
   const TravelerListTile({
     super.key,
+    required this.type,
     required this.controller,
     required this.title,
     required this.body,
-    required this.changeCounter,
     required this.counter,
     required this.icon,
   });
 
-  Function()? minusCounter() {
-    print("minusCounter: $counter");
-    if (changeCounter == controller.changeAdultsCounter && counter > 1) {
-      print("minusCounter 2: $counter");
-      return () {
-        changeCounter(-1);
-      };
-    } else if (changeCounter == controller.changeChildrenCounter &&
-        counter > 0) {
-      return () {
-        changeCounter(-1);
-      };
-    } else if (changeCounter == controller.changeInfantsInSeatCounter &&
-        counter > 0) {
-      return () {
-        changeCounter(-1);
-      };
-    } else if (changeCounter == controller.changeInfantsInLapCounter &&
-        counter > 0) {
-      return () {
-        changeCounter(-1);
-      };
-    } else {
-      return null;
+  void _change(int delta) {
+    switch (type) {
+      case TravelerType.adults:
+        controller.changeAdultsCounter(delta);
+        break;
+      case TravelerType.children:
+        controller.changeChildrenCounter(delta);
+        break;
+      case TravelerType.infantsSeat:
+        controller.changeInfantsInSeatCounter(delta);
+        break;
+      case TravelerType.infantsLap:
+        controller.changeInfantsInLapCounter(delta);
+        break;
     }
   }
 
-  Function()? plusCounter() {
-    if (changeCounter == controller.changeAdultsCounter &&
-        controller.travelersCounter() < controller.maxTravelersCounter) {
-      return () {
-        changeCounter(1);
-      };
-    } else if (changeCounter == controller.changeChildrenCounter &&
-        controller.travelersCounter() < controller.maxTravelersCounter &&
-        counter < controller.maxChildrenCounter()) {
-      return () {
-        changeCounter(1);
-      };
-    } else if (changeCounter == controller.changeInfantsInSeatCounter &&
-        controller.travelersCounter() < controller.maxTravelersCounter &&
-        counter < controller.maxInfantsInSeatCounter()) {
-      return () {
-        changeCounter(1);
-      };
-    } else if (changeCounter == controller.changeInfantsInLapCounter &&
-        controller.travelersCounter() < controller.maxTravelersCounter &&
-        counter < controller.maxInfantsInLapCounter()) {
-      return () {
-        changeCounter(1);
-      };
-    } else {
-      return null;
+  bool get canMinus {
+    switch (type) {
+      case TravelerType.adults:
+        return counter > 1;
+      case TravelerType.children:
+      case TravelerType.infantsSeat:
+      case TravelerType.infantsLap:
+        return counter > 0;
+    }
+  }
+
+  bool get canPlus {
+    final totalOk = controller.travelersCounter() < controller.maxTravelersCounter;
+    if (!totalOk) return false;
+
+    switch (type) {
+      case TravelerType.adults:
+        return true;
+      case TravelerType.children:
+        return counter < controller.maxChildrenCounter();
+      case TravelerType.infantsSeat:
+        return counter < controller.maxInfantsInSeatCounter();
+      case TravelerType.infantsLap:
+        return counter < controller.maxInfantsInLapCounter();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
-      padding: EdgeInsetsDirectional.only(start: 12),
+      padding: const EdgeInsetsDirectional.only(start: 8, end: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: cs.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
-          icon,
-          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: icon,
+          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: AppConsts.lg,
-                    fontWeight: FontWeight.w500,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: AppConsts.lg,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppConsts.font,
+                      color: cs.onSurface,
+                    ),
                   ),
-                ),
-                Text(
-                  body,
-                  style: TextStyle(
-                    fontSize: AppConsts.normal,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      fontSize: AppConsts.normal,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: AppConsts.font,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Row(
             children: [
               IconButton(
                 icon: const Icon(CupertinoIcons.minus_circle),
-                onPressed: minusCounter(),
+                onPressed: canMinus ? () => _change(-1) : null,
               ),
-              Text("$counter"),
+              Text(
+                "$counter",
+                style: TextStyle(
+                  fontFamily: AppConsts.font,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
+              ),
               IconButton(
                 icon: const Icon(CupertinoIcons.plus_circle),
-                onPressed: plusCounter(),
+                onPressed: canPlus ? () => _change(1) : null,
               ),
             ],
           ),
@@ -398,111 +332,86 @@ class ClassTypeDropdown extends StatefulWidget {
 }
 
 class _ClassTypeDropdownState extends State<ClassTypeDropdown> {
-  // ClassType? selected;
+  final TextEditingController _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final lang = AppVars.lang ?? 'en';
+
     return DropdownSearch<ClassTypeModel>(
-      // دالة إحضار العناصر (مع فلترة حسب نص البحث)
+      // تحميل العناصر
       items: (String? filter, LoadProps? infiniteScrollProps) async {
         return widget.controller.getData(filter);
       },
 
+      // فلترة محلية
       filterFn: (item, filter) {
         final q = filter.toLowerCase().trim();
-        return item.name['en'].toString().toLowerCase().contains(q) ||
-            item.name['ar'].toString().toLowerCase().contains(q);
+        final en = (item.name['en'] ?? '').toString().toLowerCase();
+        final ar = (item.name['ar'] ?? '').toString().toLowerCase();
+        return en.contains(q) || ar.contains(q);
       },
 
-      // كيف تعرض النص داخل الحقل/العنصر
-      itemAsString: (item) {
-        return item.name[AppVars.lang];
-      },
+      itemAsString: (item) => (item.name[lang] ?? item.name['en'] ?? '').toString(),
 
-      // للمقارنة الصحيحة بين العنصر المختار والعناصر (بالـid)
-      compareFn: (a, b) {
-        return a.id == b.id;
-      },
+      compareFn: (a, b) => a.id == b.id,
 
-      // اختيار مبدئي (اختياري)
       selectedItem: widget.controller.selectedClassType,
 
-      // ماذا يحدث عند اختيار عنصر
-      onChanged: (value) {
-        widget.controller.changeSelectedClassType(value);
-      },
+      onChanged: (value) => widget.controller.changeSelectedClassType(value),
 
-      // ديكورات الحقل (label/hint/border ...)
       decoratorProps: DropDownDecoratorProps(
         decoration: InputDecoration(
-          labelText: ' ${'Class Type'.tr} ',
-          hintText: 'Select Class Type'.tr,
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          // prefix: IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-          alignLabelWithHint: true,
-          // floatingLabelAlignment: FloatingLabelAlignment.center,
-          prefixIcon: Icon(
-            FontAwesomeIcons.chair,
-            color: Colors.green[600],
-            size: 22,
-          ),
+          labelText: " ${'Class Type'.tr} ",
+          hintText: "Select Class Type".tr,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          prefixIcon: Icon(FontAwesomeIcons.chair, size: 20, color: Colors.green[600]),
         ),
       ),
 
-      // إعدادات الـpopup (هنا Menu مع خانة بحث)
       popupProps: PopupProps.menu(
         showSearchBox: true,
         fit: FlexFit.loose,
+        cacheItems: true,
+        disableFilter: false,
+        searchDelay: const Duration(milliseconds: 250),
 
-        cacheItems: true, // بعد التحميل الأول، فلترة محلية فقط
-        disableFilter: false, // اسمح للودجت يفلتر باستخدام filterFn
-
-        searchDelay: Duration(milliseconds: 250), // بحث فوري لفلترة محلية
         title: Padding(
-          padding: EdgeInsets.only(left: 16, right: 8, top: 16, bottom: 8),
-          child: Text('Search'.tr),
+          padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 16, bottom: 8),
+          child: Text("Search".tr, style: TextStyle(color: cs.onSurface)),
         ),
+
         searchFieldProps: TextFieldProps(
-          controller: widget.controller.txtClassType,
+          controller: _searchCtrl,
           decoration: InputDecoration(
-            hintText: '${'Search'.tr} ...',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
+            hintText: "${'Search'.tr} ...",
+            prefixIcon: const Icon(Icons.search),
+            border: const OutlineInputBorder(),
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
         ),
-        // شكّل كل عنصر في القائمة
+
         itemBuilder: (context, item, isSelected, index) => ListTile(
-          title: Text(item.name[AppVars.lang]),
+          title: Text((item.name[lang] ?? item.name['en'] ?? '').toString()),
           selected: isSelected,
         ),
-        // حجم مناسب للقائمة
+
         constraints: const BoxConstraints(maxHeight: 900),
-        // constraints: const BoxConstraints(
-        //   minWidth: 0, // مهم للموبايل
-        //   maxWidth: 400, // اختَر ما يناسب شاشتك
-        //   maxHeight: 500, // اجعل المحتوى ي-scroll بدل ما يقيس intrinsic
-        // ),
-        // خَلّ الـListView يتمدّد داخل القيود بدل ما يطلب intrinsic height
         listViewProps: const ListViewProps(shrinkWrap: true),
       ),
 
-      // أهم شيء: قيود للدايالوج (العرض/الارتفاع الأقصى)
-      // أزرار الملحقات: زر السهم + زر مسح القيمة
       suffixProps: const DropdownSuffixProps(
         clearButtonProps: ClearButtonProps(isVisible: false),
-        // dropdownButtonProps: DropdownButtonProps(icon: Icon(Icons.expand_more)),
       ),
     );
   }
-
-}
-
-class AgeItem {
-  final int id;
-  final int age;
-  final String type;
-  AgeItem({required this.id, required this.age, required this.type});
 }

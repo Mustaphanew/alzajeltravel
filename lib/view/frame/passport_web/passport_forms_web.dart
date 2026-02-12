@@ -299,9 +299,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         return SizedBox(
           width: _innerWidth(0),
           child: IconButton(
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.zero,
-            ),
+            style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
             icon: const Icon(Icons.document_scanner_outlined),
             onPressed: () {},
           ),
@@ -389,7 +387,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               valueShort: full,
               tooltip: full.isEmpty ? null : full,
               onTap: () async {
-                final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                final CountryModel? picked =
+                    await Get.to<CountryModel>(() => const CountryPicker());
                 if (picked != null) {
                   pc.setNationality(picked);
                   try {
@@ -399,7 +398,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               },
             );
           }
-          return Text("${pc.model.nationality?.name[AppVars.lang] ?? ''}", overflow: TextOverflow.ellipsis);
+          return Text("${pc.model.nationality?.name[AppVars.lang] ?? ''}",
+              overflow: TextOverflow.ellipsis);
         });
 
       case 7:
@@ -412,7 +412,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               valueShort: full,
               tooltip: full.isEmpty ? null : full,
               onTap: () async {
-                final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
+                final CountryModel? picked =
+                    await Get.to<CountryModel>(() => const CountryPicker());
                 if (picked != null) {
                   pc.setIssuingCountry(picked);
                   try {
@@ -422,7 +423,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               },
             );
           }
-          return Text("${pc.model.issuingCountry?.name[AppVars.lang] ?? ''}", overflow: TextOverflow.ellipsis);
+          return Text("${pc.model.issuingCountry?.name[AppVars.lang] ?? ''}",
+              overflow: TextOverflow.ellipsis);
         });
 
       case 8:
@@ -484,7 +486,6 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
       }
 
       if (err != null) {
-        // حاول تسكرول لمكانه (حساب تقريبي ممتاز لأن الارتفاعات Fixed)
         final offsetY = _groupHeaderH + _columnsHeaderH + (i * _dataRowH);
         _vCtrl.animateTo(
           offsetY,
@@ -492,11 +493,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           curve: Curves.easeInOut,
         );
 
-        Get.snackbar(
-          'Validation'.tr,
-          err,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        Get.snackbar('Validation'.tr, err, snackPosition: SnackPosition.BOTTOM);
         return false;
       }
     }
@@ -507,15 +504,11 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
   Future<void> _saveWeb(PassportsFormsController formsController) async {
     AppFuns.hideKeyboard();
 
-    // ✅ validate الظاهر
     final visibleOk = _webFormKey.currentState?.validate() ?? true;
-
-    // ✅ validate الكل (مهم بسبب lazy)
     final allOk = _validateAllTravelers(formsController);
 
     if (!visibleOk || !allOk) return;
 
-    // validate بيانات الاتصال
     if (!formsController.validateContactForm()) return;
 
     final passports = formsController.collectModels();
@@ -556,7 +549,9 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
 
     for (int index = 0; index < passengersJson.length; index++) {
       final Map<String, dynamic>? passengerJson =
-          (passengersJson[index] is Map<String, dynamic>) ? passengersJson[index] as Map<String, dynamic> : null;
+          (passengersJson[index] is Map<String, dynamic>)
+              ? passengersJson[index] as Map<String, dynamic>
+              : null;
 
       final baseFare = _parseDouble(passengerJson?['Base_Amount']);
       final taxTotal = _parseDouble(passengerJson?['Tax_Total']);
@@ -591,10 +586,14 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
   }
 
   Widget _buildTwoDimTable(
+    BuildContext context,
     ColorScheme cs,
     PassportsFormsController formsController,
     List<dynamic> travelers,
   ) {
+    // ✅ LTR/RTL حسب اتجاه التطبيق
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
     final headerBg0 = cs.secondaryContainer; // group header
     final headerBg1 = cs.surfaceContainerHighest; // columns header
 
@@ -607,14 +606,12 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
 
     // ✅ IMPORTANT:
     // لا يمكن merge عبر pinned/unpinned
-    // traveler header سيكون merged من col 1 إلى col 4 (span=4)
     const int travelerStart = pinnedColumnCount; // 1
     const int travelerSpan = 4; // 1..4
     const int passportStart = 5;
     const int passportSpan = 4; // 5..8
 
     // --- Merged cells (Row 0) ---
-    // خلية للعمود pinned (scan) منفصلة (لا دمج)
     final scanGroupCell = TableViewCell(
       child: _cellBox(
         cs: cs,
@@ -625,7 +622,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           cs: cs,
           top: true,
           left: true,
-          right: true, // فاصل pinned/unpinned
+          right: true,
           bottom: true,
         ),
         alignment: AlignmentDirectional.center,
@@ -641,12 +638,11 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         row: 0,
         col: travelerStart,
         bg: headerBg0,
-        // لا نرسم left هنا (الحد موجود من العمود 0 right)
         borderOverride: _gridBorder(
           cs: cs,
           top: true,
           left: false,
-          right: true, // فاصل قبل passport
+          right: isRtl ? false : true, // RTL: الفاصل سيأتي من passport side
           bottom: true,
         ),
         child: _groupHeaderText('Traveler data'.tr),
@@ -664,7 +660,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         borderOverride: _gridBorder(
           cs: cs,
           top: true,
-          left: false, // الفاصل مرسوم من traveler right
+          left: isRtl ? true : false,
           right: true,
           bottom: true,
         ),
@@ -679,7 +675,6 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
     }
 
     TableSpan _buildColumnSpan(int index) {
-      // ✅ آخر عمود يتمدد لو المساحة أكبر
       if (index == 8) {
         return const TableSpan(
           extent: MaxTableSpanExtent(
@@ -695,14 +690,12 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
       final r = v.row;
       final c = v.column;
 
-      // ===== Row 0: Group header (merged) =====
       if (r == 0) {
         if (c == 0) return scanGroupCell;
         if (c >= travelerStart && c <= (travelerStart + travelerSpan - 1)) return travelerHeaderCell;
         if (c >= passportStart && c <= (passportStart + passportSpan - 1)) return passportHeaderCell;
       }
 
-      // ===== Row 1: Column headers (pinned) =====
       if (r == 1) {
         return TableViewCell(
           child: _cellBox(
@@ -718,7 +711,6 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         );
       }
 
-      // ===== Rows 2..: Data =====
       final visualIndex = r - 2;
       if (visualIndex < 0 || visualIndex >= travelers.length) {
         return const TableViewCell(child: SizedBox.shrink());
@@ -739,38 +731,75 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
     // ✅ cacheExtent “يغطي كل الجدول” = تعطيل lazy عمليًا
     final totalH = _groupHeaderH + _columnsHeaderH + (travelers.length * _dataRowH);
     final totalW = _colWidths.fold<double>(0.0, (a, b) => a + b) + (2 * _hMargin);
-    final forcedCacheExtent = math.max(totalH, totalW) + 1000; // هامش أمان
+    final forcedCacheExtent = math.max(totalH, totalW) + 1000;
 
-    return Form(
-      key: _webFormKey,
-      child: CupertinoScrollbar(
-        controller: _vCtrl,
-        thumbVisibility: true,
-        notificationPredicate: (n) => n.metrics.axis == Axis.vertical,
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Form(
+        key: _webFormKey,
         child: CupertinoScrollbar(
-          controller: _hCtrl,
+          controller: _vCtrl,
           thumbVisibility: true,
-          scrollbarOrientation: ScrollbarOrientation.bottom,
-          notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
-          child: TableView.builder(
-            columnCount: columnCount,
-            rowCount: rowCount,
-            cacheExtent: forcedCacheExtent,
-            pinnedRowCount: pinnedRowCount,
-            pinnedColumnCount: pinnedColumnCount,
-            diagonalDragBehavior: DiagonalDragBehavior.free,
-            verticalDetails: ScrollableDetails.vertical(
-              controller: _vCtrl,
+          notificationPredicate: (n) => n.metrics.axis == Axis.vertical,
+          child: CupertinoScrollbar(
+            controller: _hCtrl,
+            thumbVisibility: true,
+            scrollbarOrientation: ScrollbarOrientation.bottom,
+            notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
+            child: TableView.builder(
+              columnCount: columnCount,
+              rowCount: rowCount,
+              cacheExtent: forcedCacheExtent,
+              pinnedRowCount: pinnedRowCount,
+              pinnedColumnCount: pinnedColumnCount,
+              diagonalDragBehavior: DiagonalDragBehavior.free,
+              verticalDetails: ScrollableDetails.vertical(controller: _vCtrl),
+              horizontalDetails: ScrollableDetails.horizontal(
+                controller: _hCtrl,
+                reverse: isRtl, // ✅ RTL فقط
+              ),
+              rowBuilder: _buildRowSpan,
+              columnBuilder: _buildColumnSpan,
+              cellBuilder: _buildCell,
             ),
-            horizontalDetails: ScrollableDetails.horizontal(
-              controller: _hCtrl,
-              reverse: true,
-            ),
-            rowBuilder: _buildRowSpan,
-            columnBuilder: _buildColumnSpan,
-            cellBuilder: _buildCell,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(ColorScheme cs, PassportsFormsController formsController) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Total flight".tr),
+                Text(
+                  AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => _saveWeb(formsController),
+            child: Text("Save and continue".tr),
+          ),
+        ],
       ),
     );
   }
@@ -786,6 +815,9 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
       builder: (formsController) {
         final cs = Theme.of(context).colorScheme;
         final travelers = formsController.sortedTravelers;
+
+        // ✅ هل الكيبورد مفتوح؟
+        final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
         return PopScope(
           canPop: false,
@@ -804,6 +836,9 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           child: SafeArea(
             top: false,
             child: Scaffold(
+              // ✅ خلي الـ body يتصرف طبيعي مع الكيبورد
+              resizeToAvoidBottomInset: true,
+
               appBar: AppBar(
                 title: Text('Travelers data'.tr),
                 actions: [
@@ -815,7 +850,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
                       ),
                     ),
                     onPressed: () {
-                      showTextBox = !showTextBox;
+                      setState(() => showTextBox = !showTextBox);
                       formsController.update();
                     },
                     child: Text(showTextBox ? 'Hide input fields'.tr : 'Show input fields'.tr),
@@ -823,13 +858,14 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
                   const SizedBox(width: 12),
                 ],
               ),
+
               body: Column(
                 children: [
                   Expanded(
-                    child: _buildTwoDimTable(cs, formsController, travelers),
+                    child: _buildTwoDimTable(context, cs, formsController, travelers),
                   ),
 
-                  // ✅ خارج الجدول (مبني مثل ما كان عندك)
+                  // ✅ خارج الجدول (كما عندك)
                   Opacity(
                     opacity: 0,
                     child: SizedBox(
@@ -840,43 +876,12 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
                       ),
                     ),
                   ),
-
-                  // Bottom bar ثابت
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    height: 80,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: cs.surfaceContainer,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text("Total flight".tr),
-                              Text(
-                                AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => _saveWeb(formsController),
-                          child: Text("Save and continue".tr),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
+
+
+              // ✅ BottomNavigationBar مع إخفاء بسلاسة عند ظهور الكيبورد
+              bottomNavigationBar: keyboardOpen ? const SizedBox(height: 0) : _buildBottomBar(cs, formsController),
             ),
           ),
         );

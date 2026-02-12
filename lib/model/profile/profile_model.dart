@@ -45,10 +45,29 @@ class ProfileModel {
   static List<String> _readPermissions(Map<String, dynamic> map, List<String> keys) {
     for (final k in keys) {
       final v = map[k];
-      if (v != null) return v;
+      if (v == null) continue;
+
+      if (v is List<String>) return v;
+
+      if (v is List) {
+        return v
+            .map((e) => e.toString())
+            .where((s) => s.trim().isNotEmpty)
+            .toList();
+      }
+
+      if (v is String) {
+        // لو وصلت كسلسلة مثل "a,b,c"
+        return v
+            .split(',')
+            .map((e) => e.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
     }
-    return [];
+    return const [];
   }
+
 
   static double _readMoney(Map<String, dynamic> map, List<String> keys) {
     final raw = _readString(map, keys);

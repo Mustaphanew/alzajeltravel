@@ -137,9 +137,13 @@ class LoginController extends GetxController {
 
       final agent = (response['agent'] is Map<String, dynamic>) ? (response['agent'] as Map<String, dynamic>) : <String, dynamic>{};
       print("scopes: 1 ${response['scopes']}");
+
+
       final List<String> permissions = (response['scopes'] as List? ?? const [])
-          .map((e) => e.toString()) 
+          .map((e) => e.toString())
           .toList();
+
+
       print("scopes: 2 $permissions");
 
       if ((agent['email']?.toString() ?? '').isEmpty) {

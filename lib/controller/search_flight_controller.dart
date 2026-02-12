@@ -14,7 +14,6 @@ import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
-import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
 
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -50,8 +49,15 @@ class SearchFlightForm {
 }
 
 class SearchFlightController extends GetxController {
-  final ClassTypeController classTypeController = Get.put(ClassTypeController());
-  final TravelersController travelersController = Get.put(TravelersController());
+  final ClassTypeController classTypeController =
+    Get.isRegistered<ClassTypeController>()
+        ? Get.find<ClassTypeController>()
+        : Get.put(ClassTypeController(), permanent: true);
+
+  final TravelersController travelersController =
+    Get.isRegistered<TravelersController>()
+        ? Get.find<TravelersController>()
+        : Get.put(TravelersController(), permanent: true);
 
   JourneyType journeyType = JourneyType.oneWay;
 
