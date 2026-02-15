@@ -2,6 +2,7 @@ import 'package:alzajeltravel/controller/bookings_report/trip_detail/flight_deta
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/routes.dart';
+import 'package:alzajeltravel/utils/widgets/farings_baggages_table.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/more_flight_detail_page.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
 import 'package:flutter/cupertino.dart';
@@ -55,6 +56,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
 
   int _currentTravelerIndex = 0; // 👈 مؤشر السلايدر
 
+  List<Map<String, dynamic>> faringsData = [];
+
+  List<Map<String, dynamic>> baggagesData = [];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -64,24 +69,50 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
       init: TravelersReviewController(widget.travelers),
       builder: (c) {
         final offerDetail = flightDetailApiController.revalidatedDetails.value;
+
+        List<Map<String, dynamic>> faringsData = [];
+
+        List<Map<String, dynamic>> baggagesData = [];
+
+        if (offerDetail != null) {
+          final summary = c.summary;
+          if (summary.adultCount > 0) {
+            faringsData.add({
+              "type": "Adult X ".tr + " ${summary.adultCount}",
+              "Total fare": AppFuns.priceWithCoin(summary.adultTotalFare, ""),
+            });
+            baggagesData.add({"type": "Adult".tr, "Weight": AppFuns.formatBaggageWeight(offerDetail.offer.baggagePerSegment.first)});
+          }
+          if (summary.childCount > 0) {
+            faringsData.add({
+              "type": "Child X ".tr + " ${summary.childCount}",
+              "Total fare": AppFuns.priceWithCoin(summary.childTotalFare, ""),
+            });
+            baggagesData.add({"type": "Child".tr, "Weight": "10kg"});
+          }
+          if (summary.infantLapCount > 0) {
+            faringsData.add({
+              "type": "Infant X ".tr + " ${summary.infantLapCount}",
+              "Total fare": AppFuns.priceWithCoin(summary.infantLapTotalFare, ""),
+            });
+            baggagesData.add({"type": "Infant".tr, "Weight": "5kg"});
+          }
+        }
+
         return SafeArea(
           bottom: true,
           top: false,
           left: false,
           right: false,
           child: PopScope(
-
             canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
             onPopInvokedWithResult: (didPop, result) async {
               if (didPop) return;
 
-              final ok = await AppFuns.confirmExit(
-                title: "Exit".tr,
-                message: "Are you sure you want to exit?".tr,
-              );
+              final ok = await AppFuns.confirmExit(title: "Exit".tr, message: "Are you sure you want to exit?".tr);
 
               if (ok && context.mounted) {
-                Navigator.of(context).pop(result); 
+                Navigator.of(context).pop(result);
                 // أو فقط pop() إذا ما تحتاج result
               }
             },
@@ -97,156 +128,171 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-
+                          // if (offerDetail != null) ...[
+                          //   Padding(
+                          //     padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0),
+                          //     child: FlightOfferCard(
+                          //       offer: offerDetail.offer,
+                          //       showSeatLeft: false,
+                          //       showBaggage: false,
+                          //       onDetails: () {
+                          //         // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
+                          //         Get.to(
+                          //           () => MoreFlightDetailPage(
+                          //             flightOffer: offerDetail.offer,
+                          //             fareRules: offerDetail.fareRules,
+                          //             showContinueButton: false,
+                          //             // revalidatedDetails: widget.offerDetail,
+                          //           ),
+                          //         );
+                          //       },
+                          //       showFare: false,
+                          //     ),
+                          //   ),
+                          //   SizedBox(height: 8),
+                          // ],
                           if (offerDetail != null) ...[
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 0), 
-                              child: FlightOfferCard(
-                                offer: offerDetail.offer,
-                                showSeatLeft: false,
-                                showBaggage: false,
-                                onDetails: () {
-                                  // Get.to(() => FlightDetailPage(detail: widget.offerDetail, showContinueButton: false));
-                                  Get.to(
-                                    () => MoreFlightDetailPage(
-                                      flightOffer: offerDetail.offer,
-                                      fareRules: offerDetail.fareRules,
-                                      showContinueButton: false,
-                                      // revalidatedDetails: widget.offerDetail,
-                                    ),
-                                  );
-                                },
-                                showFare: false,
+                            
+                            Container(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 12),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: FirstTitle(title: "Flight details".tr),
+                                  ),
+                                  MoreFlightDetailPage(
+                                    flightOffer: offerDetail.offer,
+                                    fareRules: offerDetail.fareRules,
+                                    showContinueButton: false,
+                                    showJustBody: true,
+                                    // revalidatedDetails: widget.offerDetail,
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: 0),
                           ],
-            
+
                           // ======= قائمة المسافرين كسلايدر =======
                           if (c.travelers.isNotEmpty) ...[
                             const SizedBox(height: 0),
 
-                                  
-                      ...[
-                        SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: FirstTitle(title: "Travelers data".tr), 
-                        ),
-                        SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Container(
-                            
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: cs.outlineVariant),
-                            ),
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: c.travelers.length,
-                              padding: EdgeInsets.zero,
-                              itemBuilder: (context, index) {
-                                final traveler = c.travelers[index];
-                                return Ink(
-                                  color: cs.surfaceContainer,
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      Ink(
-                                        color: cs.surface,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                          child: IntrinsicWidth(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              spacing: 3,
-                                              children: [
-                                                SecondTitle(title: "Full Name".tr),
-                                                const Divider(thickness: 1),
-                                                SecondTitle(title: "Document number".tr),
-                                                const Divider(thickness: 1),
-                                                SecondTitle(title: "Date of Birth".tr),
-                                                const Divider(thickness: 1),
-                                                SecondTitle(title: "Date of expiry".tr),
-                                                const Divider(thickness: 1),
-                                                SecondTitle(title: "Sex".tr),
-                                                const Divider(thickness: 1),
-                                                // SecondTitle(title: "Ticket".tr),
-                                                // const Divider(thickness: 1),
-                                                SecondTitle(title: "Nationality".tr),
-                                                const Divider(thickness: 1),
-                                                SecondTitle(title: "ISSUING COUNTRY".tr),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            spacing: 3,
-                                            children: [
-                                              FittedBox(
-                                                fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
-                                                alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
-                                                child: Text(
-                                                  traveler.passport.fullName,
-                                                  style: TextStyle(
-                                                    fontSize: AppConsts.lg, // الحجم الأقصى
-                                                    fontWeight: FontWeight.bold,
+                            ...[
+                              SizedBox(height: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: FirstTitle(title: "Travelers data".tr),
+                              ),
+                              SizedBox(height: 4),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: cs.outlineVariant),
+                                  ),
+                                  child: ListView.separated(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: c.travelers.length,
+                                    padding: EdgeInsets.zero,
+                                    itemBuilder: (context, index) {
+                                      final traveler = c.travelers[index];
+                                      return Ink(
+                                        color: cs.surfaceContainer,
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(height: 4),
+                                            Ink(
+                                              color: cs.surface,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                child: IntrinsicWidth(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    spacing: 3,
+                                                    children: [
+                                                      SecondTitle(title: "Full Name".tr),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: "Document number".tr),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: "Date of Birth".tr),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: "Date of expiry".tr),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: "Sex".tr),
+                                                      const Divider(thickness: 1),
+                                                      // SecondTitle(title: "Ticket".tr),
+                                                      // const Divider(thickness: 1),
+                                                      SecondTitle(title: "Nationality".tr),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: "ISSUING COUNTRY".tr),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(
-                                                title: traveler.passport.documentNumber??'N/A',
-                                              ),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(
-                                                title: AppFuns.replaceArabicNumbers(
-                                                  intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                            ),
+                                            Expanded(
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  spacing: 3,
+                                                  children: [
+                                                    FittedBox(
+                                                      fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
+                                                      alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
+                                                      child: Text(
+                                                        traveler.passport.fullName,
+                                                        style: TextStyle(
+                                                          fontSize: AppConsts.lg, // الحجم الأقصى
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(title: traveler.passport.documentNumber ?? 'N/A'),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(
+                                                      title: AppFuns.replaceArabicNumbers(
+                                                        intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                                      ),
+                                                    ),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(
+                                                      title: AppFuns.replaceArabicNumbers(
+                                                        intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfExpiry!),
+                                                      ),
+                                                    ),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(title: traveler.passport.sex?.label ?? 'N/A'),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(title: traveler.passport.nationality?.name[AppVars.lang] ?? 'N/A'),
+                                                    const Divider(thickness: 1),
+                                                    SecondTitle(title: traveler.passport.issuingCountry?.name[AppVars.lang] ?? 'N/A'),
+                                                  ],
                                                 ),
                                               ),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(
-                                                title: AppFuns.replaceArabicNumbers(
-                                                  intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfExpiry!),
-                                                ),
-                                              ),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(
-                                                title: traveler.passport.sex?.label??'N/A',
-                                              ),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: traveler.passport.nationality?.name[AppVars.lang] ?? 'N/A'),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: traveler.passport.issuingCountry?.name[AppVars.lang] ?? 'N/A'),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    },
+                                    separatorBuilder: (context, index) => Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 4),
+                                      child: Divider(thickness: 3, color: cs.outline),
+                                    ),
                                   ),
-                                );
-                              },
-                              separatorBuilder: (context, index) =>
-                                  Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Divider(
-                                    thickness: 3,
-                                    color: cs.outline,
-                                  )),
-                            ),
-                          ),
-                        ),
-                      ],
-      
-            
+                                ),
+                              ),
+                            ],
+
                             // CarouselSlider.builder(
                             //   itemCount: c.travelers.length,
                             //   itemBuilder: (context, index, realIndex) {
@@ -272,20 +318,48 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                             //     },
                             //   ),
                             // ),
-            
+                            const SizedBox(height: 16),
 
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  FirstTitle(title: "Baggage".tr),
+                                  FaringsBaggagesTable(context: context, data: baggagesData),
+                                  const SizedBox(height: 8),
+                                  FirstTitle(title: "Pricing".tr),
+                                  FaringsBaggagesTable(context: context, data: faringsData),
+                                  // total all
+                                  const SizedBox(height: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Row(
+                                      children: [
+                                        SecondTitle(title: "Total All".tr),
+                                        const Spacer(),
+                                        SelectableText(
+                                          AppFuns.priceWithCoin(c.summary.totalPrice, offerDetail!.offer.currency),
+                                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                            const SizedBox(height: 0),
-            
+                            const SizedBox(height: 16),
                           ],
-            
+
                           // ======= بيانات الاتصال =======
                           // Padding(padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8), child: _buildContactTile(context)),
                         ],
                       ),
                     ),
                   ),
-            
+
                   // ======= شريط التلخيص + زر التأكيد =======
                   _buildSummaryBar(context, c, cs),
                 ],
@@ -327,43 +401,46 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                   
+
                   children: [
                     // العنوان: Traveler 1: Adult
                     Row(
                       children: [
-                        Icon(CupertinoIcons.person_circle, color: cs.primaryContainer, size: 28,),
+                        Icon(CupertinoIcons.person_circle, color: cs.primaryContainer, size: 28),
                         const SizedBox(width: 8),
                         Text(
                           '${'Traveler'.tr} ${index + 1}: ',
                           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppConsts.xlg),
                         ),
                         const SizedBox(width: 8),
-                        Text(ageGroupLabel, style: const TextStyle(fontSize: AppConsts.xlg),),
+                        Text(ageGroupLabel, style: const TextStyle(fontSize: AppConsts.xlg)),
                         const Spacer(),
                         Text('${index + 1} / $travelersCount'),
                       ],
                     ),
                     const SizedBox(height: 8),
-                        
+
                     Padding(
                       padding: const EdgeInsetsDirectional.only(start: 8, end: 16),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 2,
-                        children: [ 
+                        children: [
                           ...[
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.person, color: cs.primaryContainer, size: 28,),
+                                Icon(Icons.person, color: cs.primaryContainer, size: 28),
                                 const SizedBox(width: 8),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Full name'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                                    Text(p.fullName, style: const TextStyle(fontSize: AppConsts.normal),),
+                                    Text(
+                                      'Full name'.tr,
+                                      style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(p.fullName, style: const TextStyle(fontSize: AppConsts.normal)),
                                   ],
                                 ),
                               ],
@@ -373,13 +450,16 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(FontAwesomeIcons.solidIdCard, color: cs.primaryContainer, size: 26,),
+                                Icon(FontAwesomeIcons.solidIdCard, color: cs.primaryContainer, size: 26),
                                 const SizedBox(width: 8),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Passport number'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                                    Text(p.documentNumber??'_', style: const TextStyle(fontSize: AppConsts.normal),), 
+                                    Text(
+                                      'Passport number'.tr,
+                                      style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(p.documentNumber ?? '_', style: const TextStyle(fontSize: AppConsts.normal)),
                                   ],
                                 ),
                               ],
@@ -396,11 +476,11 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Date of birth'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                      Text(AppFuns.formatFullDate(p.dateOfBirth,)), 
+                                      Text('Date of birth'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      Text(AppFuns.formatFullDate(p.dateOfBirth)),
                                       const SizedBox(height: 4),
-                                      Text('Nationality'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                      Text(p.nationality?.name['en'] ?? '-',), 
+                                      Text('Nationality'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      Text(p.nationality?.name['en'] ?? '-'),
                                     ],
                                   ),
                                 ),
@@ -411,11 +491,11 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('Date of expiry'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                        Text(AppFuns.formatFullDate(p.dateOfExpiry)), 
-                                        const SizedBox(height: 4), 
-                                        Text('Issuing country'.tr, style: const TextStyle(fontWeight: FontWeight.bold),),  
-                                        Text(p.issuingCountry?.name['en'] ?? '-'), 
+                                        Text('Date of expiry'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text(AppFuns.formatFullDate(p.dateOfExpiry)),
+                                        const SizedBox(height: 4),
+                                        Text('Issuing country'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text(p.issuingCountry?.name['en'] ?? '-'),
                                       ],
                                     ),
                                   ),
@@ -430,8 +510,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 ),
               ),
             ),
-      
-      
+
             // ---------------- الـ dots داخل الكرت ----------------
             Center(
               child: AnimatedSmoothIndicator(
@@ -452,7 +531,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     );
   }
 
-
   Widget _buildContactTile(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -471,12 +549,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
-        elevation: 2, 
+        elevation: 2,
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           tileColor: cs.surfaceContainer,
           onTap: () {},
@@ -484,7 +560,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.list_alt, color: cs.primaryContainer, size: 28,),
+                  Icon(Icons.list_alt, color: cs.primaryContainer, size: 28),
                   const SizedBox(width: 8),
                   Text(
                     'Contact'.tr,
@@ -493,7 +569,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              Divider(thickness: 1.5,),
+              Divider(thickness: 1.5),
               const SizedBox(height: 8),
             ],
           ),
@@ -501,24 +577,23 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 2, 
+              spacing: 2,
               children: [
                 // const SizedBox(height: 4),
                 ...[
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.person, 
-                        color: cs.primaryContainer,
-                        size: 28, 
-                      ),
+                      Icon(Icons.person, color: cs.primaryContainer, size: 28),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Full name'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                          Text(fullname, style: const TextStyle(fontSize: AppConsts.lg),),
+                          Text(
+                            'Full name'.tr,
+                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                          ),
+                          Text(fullname, style: const TextStyle(fontSize: AppConsts.lg)),
                         ],
                       ),
                     ],
@@ -531,17 +606,16 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.email, 
-                        color: cs.primaryContainer,
-                        size: 28, 
-                      ),
+                      Icon(Icons.email, color: cs.primaryContainer, size: 28),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Email'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                          Text(email.isEmpty ? '-' : email, style: const TextStyle(fontSize: AppConsts.normal),),
+                          Text(
+                            'Email'.tr,
+                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                          ),
+                          Text(email.isEmpty ? '-' : email, style: const TextStyle(fontSize: AppConsts.normal)),
                         ],
                       ),
                     ],
@@ -554,17 +628,20 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.phone, 
-                        color: cs.primaryContainer,
-                        size: 28, 
-                      ),
+                      Icon(Icons.phone, color: cs.primaryContainer, size: 28),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [ 
-                          Text('Phone'.tr, style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),),
-                          Text('+' + phoneLabel, textDirection: TextDirection.ltr, style: const TextStyle(fontSize: AppConsts.normal),),
+                        children: [
+                          Text(
+                            'Phone'.tr,
+                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '+' + phoneLabel,
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(fontSize: AppConsts.normal),
+                          ),
                         ],
                       ),
                     ],
@@ -576,8 +653,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
         ),
       ),
     );
-
-
   }
 
   Widget _buildSummaryBar(BuildContext context, TravelersReviewController c, ColorScheme cs) {
@@ -585,22 +660,12 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     final currency = offerDetail?.offer.currency ?? 'USD';
     print("c.summary.childCount: ${c.travelers.last.ageGroupLabel}");
     return Container(
-      
       width: double.infinity,
       padding: const EdgeInsetsDirectional.only(top: 12, start: 16, end: 16, bottom: 26),
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primaryFixed,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+        boxShadow: [BoxShadow(color: cs.primaryFixed, blurRadius: 5, offset: const Offset(0, 3))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -683,11 +748,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
           // ======= زر تأكيد الحجز =======
           ElevatedButton.icon(
             onPressed: () async {
-              context.loaderOverlay.show(
-                progress: "Your reservation is being confirmed".tr,
-              );
-              final preRes = await c.preBooking(widget.insertId.toString()); 
-              if(preRes != null && preRes is Map<String, dynamic>) {
+              context.loaderOverlay.show(progress: "Your reservation is being confirmed".tr);
+              final preRes = await c.preBooking(widget.insertId.toString());
+              if (preRes != null && preRes is Map<String, dynamic>) {
                 final booking = BookingDataModel.fromJson(preRes['booking']);
                 final flightDetail = FlightDetail.flightDetail(preRes['flight']);
 
@@ -696,7 +759,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   print("ArrivalTerminal: ${segment.toTerminal}");
                 }
 
-                Get.offNamedUntil( 
+                Get.offNamedUntil(
                   Routes.prebookingAndIssueing.path,
                   (route) => route.settings.name == Routes.frame.path,
                   arguments: {
@@ -708,7 +771,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   },
                 );
               }
-              if(context.mounted) context.loaderOverlay.hide();
+              if (context.mounted) context.loaderOverlay.hide();
             },
             icon: Text('Pre-Booking'.tr),
             label: const Icon(Icons.arrow_forward),
@@ -718,8 +781,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     );
   }
 }
-
-
 
 class FirstTitle extends StatelessWidget {
   final String title;

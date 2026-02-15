@@ -154,14 +154,9 @@ class _TimeRemainingState extends State<TimeRemaining> {
     final locale = AppVars.lang; // 'ar' / 'en'
     final f = withTime ? DateFormat('EEE, dd - MMM - yyyy  h:mm a', locale) : DateFormat('EEE, dd - MMM - yyyy', locale);
     return f.format(d);
-  } 
+  }
 
-  Widget _timeBox({
-    required String value,
-    required String label,
-    required double size,
-    required ColorScheme cs,
-  }) {
+  Widget _timeBox({required String value, required String label, required double size, required ColorScheme cs}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -169,27 +164,11 @@ class _TimeRemainingState extends State<TimeRemaining> {
           width: size + 8,
           height: size,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: cs.secondary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              height: 1.0, 
-            ),
-          ),
+          decoration: BoxDecoration(color: cs.secondary, borderRadius: BorderRadius.circular(12)),
+          child: Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.0)),
         ),
         const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -206,11 +185,7 @@ class _TimeRemainingState extends State<TimeRemaining> {
           const SizedBox(height: 8),
           Text(
             widget.expiredText,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: cs.error,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: cs.error),
           ),
           const SizedBox(height: 8),
           bookingDateTimes(),
@@ -223,7 +198,7 @@ class _TimeRemainingState extends State<TimeRemaining> {
       children: [
         const SizedBox(height: 16),
         SizedBox(
-          child: CircularPercentIndicator( 
+          child: CircularPercentIndicator(
             radius: widget.radius,
             lineWidth: widget.lineWidth,
             percent: _percentRemaining,
@@ -235,58 +210,32 @@ class _TimeRemainingState extends State<TimeRemaining> {
               children: [
                 Text(
                   '$_days',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    height: 1.0,
-                    color: cs.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, height: 1.0, color: cs.onSurface),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'days left'.tr,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text('days left'.tr, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
         ),
-        
+
         const SizedBox(height: 22),
 
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _timeBox(
-              value: _two(_hours),
-              label: 'Hours'.tr,
-              size: widget.boxSize,
-              cs: cs,
-            ),
+            _timeBox(value: _two(_hours), label: 'Hours'.tr, size: widget.boxSize, cs: cs),
             const SizedBox(width: 16),
-            _timeBox(
-              value: _two(_minutes),
-              label: 'Minutes'.tr,
-              size: widget.boxSize,
-              cs: cs,
-            ),
+            _timeBox(value: _two(_minutes), label: 'Minutes'.tr, size: widget.boxSize, cs: cs),
             const SizedBox(width: 16),
-            _timeBox(
-              value: _two(_seconds),
-              label: 'Seconds'.tr,
-              size: widget.boxSize,
-              cs: cs,
-            ),
+            _timeBox(value: _two(_seconds), label: 'Seconds'.tr, size: widget.boxSize, cs: cs),
           ],
         ),
 
         const SizedBox(height: 24),
 
         bookingDateTimes(),
-        
+
         const SizedBox(height: 8),
       ],
     );
@@ -294,51 +243,39 @@ class _TimeRemainingState extends State<TimeRemaining> {
 
   IntrinsicWidth bookingDateTimes() {
     return IntrinsicWidth(
-        child: Column(
-          children: [
-            Text(
-              'Time Deadline'.tr,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+      child: Column(
+        children: [
+          Text('Time Deadline'.tr, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              AppFuns.replaceArabicNumbers(_formatDate(widget.timeLimit, withTime: true)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                AppFuns.replaceArabicNumbers(_formatDate(widget.timeLimit, withTime: true)),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-        
-            const Divider(
-              thickness: 2,
-              height: 16,
-            ),
-        
-            Text(
-              'Booking created at'.tr,
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                AppFuns.replaceArabicNumbers(_formatDate(widget.createdAt, withTime: true)),
-                style: TextStyle( 
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-        
-          ],
-        ),
-      );
+          ),
+
+          const SizedBox(height: 8),
+          const Divider(thickness: 2),
+
+          // Text(
+          //   'Booking created at'.tr,
+          //   style: TextStyle(
+          //     fontSize: 16,
+          //     fontWeight: FontWeight.w600,
+          //   ),
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16),
+          //   child: Text(
+          //     AppFuns.replaceArabicNumbers(_formatDate(widget.createdAt, withTime: true)),
+          //     style: TextStyle(
+          //       fontSize: 14,
+          //       fontWeight: FontWeight.w500,
+          //     ),
+          //   ),
+          // ),
+        ],
+      ),
+    );
   }
 }

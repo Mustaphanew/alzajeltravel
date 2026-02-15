@@ -261,7 +261,9 @@ final TravelersController travelersController =
             items: navBarsItems(),
             confineToSafeArea: true,
 
-            // ✅ مهم: نخلي PopScope هو اللي يتحكم بالرجوع
+            onWillPop: null,
+
+           // ✅ مهم: نخلي PopScope هو اللي يتحكم بالرجوع
             handleAndroidBackButtonPress: false,
 
             resizeToAvoidBottomInset: true,

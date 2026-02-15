@@ -206,6 +206,9 @@ void initState() {
     
                   return CustomButton(
                     onPressed: (ctrl.isRequesting) ? null : () async {
+                      final formKey = _keyFor(ctrl.journeyType);
+                      formKey.currentState?.validate();
+                      if (!formKey.currentState!.validate()) return;
                       // validate form كما عندك...
                       final FlightSearchResult? result = await ctrl.requestServer(context);
                       if (result == null) return;

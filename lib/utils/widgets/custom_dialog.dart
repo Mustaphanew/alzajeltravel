@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
@@ -69,34 +70,43 @@ class CustomDialog {
     return dialog;
   }
 
-  static Future<DismissType?> warning(BuildContext context, {required String title, required String desc, String? btnOkText}) async {
+  static Future<DismissType?> warning(BuildContext context, {required String title, required String? desc, String? btnOkText}) async {
     final cs = Theme.of(context).colorScheme;
     final DismissType? dialog = await AwesomeDialog(
       context: context,
       reverseBtnOrder: true,
+      dialogBackgroundColor: cs.onTertiary,
       dialogType: DialogType.warning,
       animType: AnimType.scale,
       title: title,
-      desc: desc,
-      btnOk: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Color(0xfffeb800)),
-        onPressed: () {
-          Navigator.of(context).pop(DismissType.btnOk);
-        },
-        child: Text(btnOkText ?? 'Ok'.tr), 
+      titleTextStyle: TextStyle(
+        fontFamily: AppConsts.font,
+        fontSize: 22,
       ),
-      btnCancel: TextButton(
+      desc: desc,
+      // btnOk: ElevatedButton(
+      //   style: ElevatedButton.styleFrom(backgroundColor: Color(0xfffeb800)),
+      //   onPressed: () {
+      //     Navigator.of(context).pop(DismissType.btnOk);
+      //   },
+      //   child: Text(
+      //     btnOkText ?? 'Ok'.tr,
+      //     style: TextStyle(fontWeight: FontWeight.bold),
+      //   ), 
+      // ),
+      btnCancel: TextButton.icon(
         style: TextButton.styleFrom(
-          foregroundColor: cs.error,
+          foregroundColor: Colors.grey[800],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: cs.error),
+            side: BorderSide(color: Colors.grey[800]!),
           ),
         ),
         onPressed: () {
           Navigator.of(context).pop(DismissType.btnCancel);
         },
-        child: Text('Close'.tr),
+        label: Text('Close'.tr),
+        icon: Icon(Icons.close),
       ),
     ).show();
     return dialog;

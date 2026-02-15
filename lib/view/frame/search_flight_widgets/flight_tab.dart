@@ -328,7 +328,9 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
                       isDismissible: true,
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
                       builder: (BuildContext context) {
-                        return ClassTypeAndTravelers();
+                        return ClassTypeAndTravelers(
+                          isCanbin: true,
+                        );
                       },
                     );
                     controller.setTxtTravelersAndClassType();
@@ -361,7 +363,9 @@ class TextFieldTravelersAndClassType extends StatelessWidget {
                       isDismissible: true,
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
                       builder: (BuildContext context) {
-                        return ClassTypeAndTravelers();
+                        return ClassTypeAndTravelers(
+                          isCanbin: false,
+                        );
                       },
                     );
                     controller.setTxtTravelersAndClassType();

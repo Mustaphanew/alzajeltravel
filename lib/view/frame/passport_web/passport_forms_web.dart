@@ -21,6 +21,7 @@ import 'package:alzajeltravel/view/frame/travelers_review/travelers_review_page.
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
 import 'package:alzajeltravel/model/passport/passport_model.dart';
 import 'package:alzajeltravel/utils/enums.dart';
+import 'package:scrollbar_ultima/scrollbar_ultima.dart';
 
 import 'passport_form_web.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -741,11 +742,20 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           controller: _vCtrl,
           thumbVisibility: true,
           notificationPredicate: (n) => n.metrics.axis == Axis.vertical,
-          child: CupertinoScrollbar(
+          child: ScrollbarUltima(
             controller: _hCtrl,
-            thumbVisibility: true,
-            scrollbarOrientation: ScrollbarOrientation.bottom,
-            notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
+            alwaysShowThumb: true,
+            scrollbarPosition: ScrollbarPosition.bottom,
+            defaultThumbThickness: 12,
+            
+            
+            
+            
+            // thumbVisibility: true,
+            // thickness: 16,
+            // thicknessWhileDragging: 16,
+            // scrollbarOrientation: ScrollbarOrientation.bottom,
+            // notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
             child: TableView.builder(
               columnCount: columnCount,
               rowCount: rowCount,

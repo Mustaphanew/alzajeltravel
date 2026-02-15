@@ -8,6 +8,22 @@ class ClassTypeController extends GetxController {
   ClassTypeRepo classTypeRepo = ClassTypeRepo();
   TextEditingController txtClassType = TextEditingController();
   List<Map<String, dynamic>> results = [];
+
+  // ✅ القائمة الجاهزة للعرض كأزرار
+  final List<ClassTypeModel> classTypes = [];
+
+  Future<void> loadClassTypes() async {
+    final resMaps = await classTypeRepo.search(''); // يرجع الكل (بدون بحث)
+    classTypes
+      ..clear()
+      ..addAll(resMaps.map((e) => ClassTypeModel.fromJson(e)));
+
+    // default (اختياري)
+    selectedClassType ??= classTypes.isNotEmpty ? classTypes.first : null;
+
+    update();
+  }
+
   Future<List<ClassTypeModel>> getData(String? filter) async {
     final trimmed = filter?.trim() ?? '';
     final res = await classTypeRepo.search(trimmed);
@@ -29,5 +45,11 @@ class ClassTypeController extends GetxController {
   changeSelectedClassType(ClassTypeModel? classType) {
     selectedClassType = classType;
     update();
+  }
+
+  @override
+  void onClose() {
+    txtClassType.dispose();
+    super.onClose();
   }
 } 

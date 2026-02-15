@@ -325,7 +325,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
       dt = DateFormat('yyyy-MM-dd').parse(dateStr);
     }
 
-    return AppFuns.replaceArabicNumbers(DateFormat('EEEE، d MMMM', 'ar').format(dt));
+    return AppFuns.replaceArabicNumbers(DateFormat('EEEE، d MMMM', AppVars.lang).format(dt));
   }
 
   @override
@@ -888,7 +888,15 @@ class FlightOfferCard extends StatelessWidget {
 
               if (offer.isRoundTrip && offer.inbound != null) ...[
                 const SizedBox(height: 8),
-                const Divider(),
+                GradientBgContainer(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(bottom: 3),
+                  borderRadius: BorderRadius.circular(99),
+                  alignment: Alignment.center, 
+                  child: Text(
+                    "Return".tr,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 _LegRow(
                   leg: offer.inbound!,

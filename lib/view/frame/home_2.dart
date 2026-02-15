@@ -10,6 +10,8 @@ import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
+import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
+import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -34,6 +36,8 @@ class _Home2State extends State<Home2> {
   BookingsReportData? latestBookings; 
   LatestBookingsController latestBookingsController = Get.put(LatestBookingsController());
 
+  List<Map> services = [];
+
   @override
   void initState() {
     // TODO: implement initState
@@ -45,17 +49,66 @@ class _Home2State extends State<Home2> {
           widget.persistentTabController.jumpToTab(1);
         },
       },
-      {'icon': Icons.hotel_outlined, 'title': 'HOTELS'.tr, 'onTap': () {}},
-      {'icon': Icons.car_rental_outlined, 'title': 'Cars'.tr, 'onTap': () {}},
-      {'icon': Icons.train_outlined, 'title': 'Train'.tr, 'onTap': () {}},
-      {'icon': Icons.card_giftcard_outlined, 'title': 'Packages'.tr, 'onTap': () {}},
-      {'icon': Icons.card_travel_outlined, 'title': 'Visa'.tr, 'onTap': () {}},
+      {
+        'icon': Icons.hotel_outlined, 
+        'title': 'HOTELS'.tr, 
+        'onTap': () async {
+          await CustomDialog.warning(
+            context,
+            title: "This service is not currently available".tr,
+            desc: null,
+          );
+        },
+      },
+      {
+        'icon': Icons.car_rental_outlined, 
+        'title': 'Cars'.tr, 
+        'onTap': () async {
+          await CustomDialog.warning(
+            context,
+            title: "This service is not currently available".tr,
+            desc: null,
+          );
+        },
+      },
+      {
+        'icon': Icons.train_outlined, 
+        'title': 'Train'.tr, 
+        'onTap': () async {
+          await CustomDialog.warning(
+            context,
+            title: "This service is not currently available".tr,
+            desc: null,
+          );
+        },
+      },
+      {
+        'icon': Icons.card_giftcard_outlined, 
+        'title': 'Packages'.tr, 
+        'onTap': () async {
+          await CustomDialog.warning(
+            context,
+            title: "This service is not currently available".tr,
+            desc: null,
+          );
+        },
+      },
+      {
+        'icon': Icons.card_travel_outlined, 
+        'title': 'Visa'.tr, 
+        'onTap': () async {
+          await CustomDialog.warning(
+            context,
+            title: "This service is not currently available".tr,
+            desc: null,
+          );
+        },
+      },
     ];
     super.initState();
     profileModel = GetStorage().read('profile') != null ? ProfileModel.fromJson(GetStorage().read('profile')) : null;
   }
 
-  List<Map> services = [];
 
 
   @override
@@ -76,10 +129,14 @@ class _Home2State extends State<Home2> {
             padding: const EdgeInsetsDirectional.only(end: 8),
             child: IconButton(
               onPressed: () async {
-                print("object: ${AppVars.profile?.permissions}");
-                // context.loaderOverlay.show();
-                // await Future.delayed(const Duration(seconds: 10));
-                // if(context.mounted) context.loaderOverlay.hide();
+
+                await CustomDialog.warning(
+                  context,
+                  title: "This service is not currently available",
+                  desc: null,
+                );
+
+
               }, 
               icon: SvgPicture.asset(
                 (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,
@@ -158,7 +215,11 @@ class _Home2State extends State<Home2> {
                 ),
                 itemBuilder: (context, index) {
                   final service = services[index];
-                  return ServiceCard(icon: service['icon'], title: service['title'], onTap: service['onTap']);
+                  return ServiceCard(
+                    icon: service['icon'], 
+                    title: service['title'], 
+                    onTap: service['onTap'],
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -249,13 +310,30 @@ class _Home2State extends State<Home2> {
                                         'nationality': "ye",
                                       });
         
-                                      Get.to(() => IssuingPage(
-                                        offerDetail: flight, 
-                                        travelers: travelers, 
-                                        contact: contact, 
-                                        pnr: pnr, 
-                                        booking: booking,
-                                      ));
+
+                                      // Get.to(() => IssuingPage(
+                                      //   offerDetail: flight, 
+                                      //   travelers: travelers, 
+                                      //   contact: contact, 
+                                      //   pnr: pnr, 
+                                      //   booking: booking,
+                                      // ));
+
+                                      PersistentNavBarNavigator.pushNewScreen(
+                                        context,
+                                        screen: IssuingPage(
+                                          offerDetail: flight,
+                                          travelers: travelers,
+                                          contact: contact,
+                                          pnr: pnr,
+                                          booking: booking,
+                                        ),
+                                        withNavBar: true, // ✅ يبقي الـ Bottom Nav ظاهر
+                                        pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                                      );
+
+
+
                                     } catch (e) {
                                       // ممكن تعرض Dialog بدل print
                                       print("error: $e");

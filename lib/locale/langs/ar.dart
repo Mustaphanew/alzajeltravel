@@ -679,4 +679,6 @@ Map<String, String> ar = {
 
   "Active filters": "الفلاتر النشطة",
   "Search is applied on leg.refSegs (contains)": "يتم تطبيق البحث على مسار الرحلة",
+
+  "This service is not currently available": "هذا الخدمة غير متاحة حاليا",
 };

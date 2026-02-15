@@ -5,7 +5,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.11.0
 
 dependencies:
   flutter:
@@ -73,6 +73,13 @@ dependencies:
 
   two_dimensional_scrollables: ^0.3.8
 
+  scrollbar_ultima: ^1.0.4
+
+
+
+dependency_overrides:
+  scrollbar_ultima:
+    path: packages/scrollbar_ultima
 
 dev_dependencies:
   flutter_test:

@@ -301,6 +301,7 @@ class PassportsFormsController extends GetxController {
 
       print("passengerJson?['gender']: ${passengerJson?['gender']}");
       print("passengerJson?['issuingCountry']: ${passengerJson?['issue_country']}");
+      print("passengerJson?['nationality']: ${passengerJson?['nationality']}");
 
       final PassportModel travelerPassport = PassportModel.fromJson({
         "documentNumber": passengerJson?['passport_no'],
@@ -389,6 +390,10 @@ class PassportsFormsController extends GetxController {
     // غيّر 'alpha2' إلى اسم الحقل الصحيح في CountryModel لو يختلف
     return p.issuingCountry?.alpha2 ?? p.issuingCountry?.alpha3 ?? "";
   }
+  String _nationalityCode(PassportModel p) {
+    // غيّر 'alpha2' إلى اسم الحقل الصحيح في CountryModel لو يختلف
+    return p.nationality?.alpha2 ?? p.nationality?.alpha3 ?? "";
+  }
 
   DateTime? parseTktTimeLimit(dynamic v) {
     final s = (v ?? '').toString().trim();
@@ -426,6 +431,7 @@ class PassportsFormsController extends GetxController {
       final String dob = _formatDate(passport.dateOfBirth);
       final String passportNo = passport.documentNumber ?? "";
       final String issueCountry = _issueCountryCode(passport);
+      final String nationality = _nationalityCode(passport);
 
       // 🔸 ما عندنا حقل issue_date في PassportModel حاليًا،
       //    لذلك نرسلها فارغة أو تضيف لها لاحقًا عندما تضيف الحقل للموديل.
@@ -441,6 +447,7 @@ class PassportsFormsController extends GetxController {
         "dob": dob, // 1995-01-01
         "passport_no": passportNo, // A100000
         "issue_country": issueCountry, // SA
+        "nationality": nationality,
         "issue_date": null, // 2024-01-01 (لاحقاً)
         "expiry_date": expiryDate, // 2029-01-01
         "frequent_travel_number": "", // حاليًا فارغة

@@ -13,7 +13,10 @@ import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class ClassTypeAndTravelers extends StatefulWidget {
-  const ClassTypeAndTravelers({super.key});
+
+  final bool isCanbin;
+
+  const ClassTypeAndTravelers({super.key, required this.isCanbin});
 
   @override
   State<ClassTypeAndTravelers> createState() => _ClassTypeAndTravelersState();
@@ -42,9 +45,9 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
 
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.75,
-      minChildSize: 0.30,
-      maxChildSize: 0.90,
+      initialChildSize: 0.65,
+      minChildSize: 0.25,
+      maxChildSize: 0.65,
       builder: (context, scrollController) {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -106,7 +109,11 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                             // Class type dropdown
                             GetBuilder<ClassTypeController>(
                               builder: (ctrl) {
-                                return ClassTypeDropdown(controller: ctrl);
+                                if(widget.isCanbin == true){
+                                  // return ClassTypeDropdown(controller: ctrl);
+                                  return ClassTypeButtons(controller: ctrl);
+                                }
+                                return const SizedBox.shrink();
                               },
                             ),
 
@@ -115,7 +122,10 @@ class _ClassTypeAndTravelersState extends State<ClassTypeAndTravelers> {
                             // Travelers counters
                             GetBuilder<TravelersController>(
                               builder: (ctrl) {
-                                return Column(
+                                if(widget.isCanbin == true){
+                                  return const SizedBox.shrink();
+                                }
+                                  return Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     TravelerListTile(
@@ -412,6 +422,109 @@ class _ClassTypeDropdownState extends State<ClassTypeDropdown> {
       suffixProps: const DropdownSuffixProps(
         clearButtonProps: ClearButtonProps(isVisible: false),
       ),
+    );
+  }
+}
+
+// _________________________________
+
+
+class ClassTypeButtons extends StatefulWidget {
+  final ClassTypeController controller;
+  const ClassTypeButtons({super.key, required this.controller});
+
+  @override
+  State<ClassTypeButtons> createState() => _ClassTypeButtonsState();
+}
+
+class _ClassTypeButtonsState extends State<ClassTypeButtons> {
+  @override
+  void initState() {
+    super.initState();
+
+    // حمّل البيانات مرة واحدة
+    if (widget.controller.classTypes.isEmpty) {
+      widget.controller.loadClassTypes();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final lang = Get.locale?.languageCode ?? 'en';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          "Class Type".tr,
+          style: TextStyle(
+            fontSize: AppConsts.lg,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppConsts.font,
+            color: cs.onSurface,
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        GetBuilder<ClassTypeController>(
+          builder: (ctrl) {
+            if (ctrl.classTypes.isEmpty) {
+              return const SizedBox(
+                height: 48,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: ctrl.classTypes.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 3.2,
+              ),
+              itemBuilder: (context, index) {
+                final item = ctrl.classTypes[index];
+                final isSelected = ctrl.selectedClassType?.id == item.id;
+
+                final label = (item.name[lang] ?? item.name['en'] ?? '').toString();
+
+                return isSelected
+                    ? ElevatedButton(
+                        onPressed: () async {
+                          ctrl.changeSelectedClassType(item);
+                          Get.back();
+                        },
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: AppConsts.font,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    : OutlinedButton(
+                        onPressed: () async {
+                          ctrl.changeSelectedClassType(item);
+                          Get.back();
+                        },
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: AppConsts.font,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 }

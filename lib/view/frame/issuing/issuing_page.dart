@@ -2,6 +2,7 @@ import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
+import 'package:alzajeltravel/utils/widgets/farings_baggages_table.dart';
 import 'package:alzajeltravel/view/frame/issuing/print_issuing_ar.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -74,9 +75,12 @@ class _IssuingPageState extends State<IssuingPage> {
     if (summary.childCount > 0) {
       faringsData.add({"type": "Child X ".tr + " ${summary.childCount}", "Total fare": AppFuns.priceWithCoin(summary.childTotalFare, "")});
       baggagesData.add({"type": "Child".tr, "Weight": "10kg"});
-    }  
+    }
     if (summary.infantLapCount > 0) {
-      faringsData.add({"type": "Infant X ".tr + " ${summary.infantLapCount}", "Total fare": AppFuns.priceWithCoin(summary.infantLapTotalFare, "")});
+      faringsData.add({
+        "type": "Infant X ".tr + " ${summary.infantLapCount}",
+        "Total fare": AppFuns.priceWithCoin(summary.infantLapTotalFare, ""),
+      });
       baggagesData.add({"type": "Infant".tr, "Weight": "5kg"});
     }
     bookingStatus = booking.status.name;
@@ -95,29 +99,25 @@ class _IssuingPageState extends State<IssuingPage> {
     final diff = now.difference(createdOn);
 
     // أقل من 23 ساعة => مسموح
-    return diff.inMinutes < 23 * 60; 
+    return diff.inMinutes < 23 * 60;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopScope(
-
       canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
 
-        final ok = await AppFuns.confirmExit(
-          title: "Exit".tr,
-          message: "Are you sure you want to exit?".tr,
-        );
+        final ok = await AppFuns.confirmExit(title: "Exit".tr, message: "Are you sure you want to exit?".tr);
 
         if (ok && context.mounted) {
-          Navigator.of(context).pop(result); 
+          Navigator.of(context).pop(result);
           // أو فقط pop() إذا ما تحتاج result
         }
       },
-      
+
       child: SafeArea(
         top: false,
         child: Scaffold(
@@ -131,48 +131,48 @@ class _IssuingPageState extends State<IssuingPage> {
             //   },
             // ),
             actions: [
-              if(widget.booking.status == BookingStatus.confirmed)
+              if (widget.booking.status == BookingStatus.confirmed)
                 Padding(
-                padding: const EdgeInsetsDirectional.only(end: 12),
-                child: TextButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                    minimumSize: const Size(100, 30),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: cs.primaryContainer, width: 1),
+                  padding: const EdgeInsetsDirectional.only(end: 12),
+                  child: TextButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      minimumSize: const Size(100, 30),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: cs.primaryContainer, width: 1),
+                      ),
                     ),
+                    onPressed: () {
+                      if (AppVars.lang == "ar") {
+                        Get.to(
+                          PrintIssuingAr(
+                            pnr: widget.pnr,
+                            bookingData: booking,
+                            offerDetail: widget.offerDetail,
+                            travelersReviewController: travelersReviewController,
+                            contact: widget.contact,
+                            baggagesData: baggagesData,
+                          ),
+                        );
+                      } else {
+                        Get.to(
+                          PrintIssuing(
+                            pnr: widget.pnr,
+                            bookingData: booking,
+                            offerDetail: widget.offerDetail,
+                            travelersReviewController: travelersReviewController,
+                            contact: widget.contact,
+                            baggagesData: baggagesData,
+                          ),
+                        );
+                      }
+                    },
+
+                    icon: const Icon(Icons.print),
+                    label: Text("Print".tr),
                   ),
-                  onPressed: () {
-                    if(AppVars.lang == "ar") {
-                      Get.to(
-                        PrintIssuingAr(
-                          pnr: widget.pnr,
-                          bookingData: booking,
-                          offerDetail: widget.offerDetail,
-                          travelersReviewController: travelersReviewController,
-                          contact: widget.contact,
-                          baggagesData: baggagesData,
-                        ),
-                      );
-                    } else {
-                      Get.to(
-                        PrintIssuing(
-                          pnr: widget.pnr,
-                          bookingData: booking,
-                          offerDetail: widget.offerDetail,
-                          travelersReviewController: travelersReviewController,
-                          contact: widget.contact,
-                          baggagesData: baggagesData,
-                        ),
-                      );
-                    }
-                  },
-                      
-                  icon: const Icon(Icons.print),
-                  label: Text("Print".tr),
                 ),
-              ),
             ],
           ),
           body: Column(
@@ -184,6 +184,158 @@ class _IssuingPageState extends State<IssuingPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (booking.status == BookingStatus.preBooking && !isExpired) ...[
+                            // confirm
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final dialog = await CustomDialog.success(
+                                    context,
+                                    title: 'Confirm Booking'.tr,
+                                    desc:
+                                        'Are you sure you want to confirm this booking?'.tr +
+                                        '\n' +
+                                        AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
+                                        'will be deducted from your balance'.tr,
+                                    btnOkText: 'Confirm'.tr,
+                                  );
+                              
+                                  if (dialog != DismissType.btnOk) {
+                                    return;
+                                  }
+                              
+                                  if (context.mounted) context.loaderOverlay.show();
+                                  try {
+                                    final res = await travelersReviewController.confirmBooking(booking.id);
+                                    if (res != null) {
+                                      // update travelers by setTicketNumber
+                                      final passengers = res['passengers'] as List;
+                                      for (var passenger in passengers) {
+                                        travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
+                                      }
+                                      print("res['booking']['status'] ${res['booking']['status']}");
+                                      booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                      bookingStatus = booking.status.name;
+                                      print("booking.status.name: $bookingStatus");
+                                    }
+                                  } catch (e) {
+                                    Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                  }
+                                  if (context.mounted) context.loaderOverlay.hide();
+                                  setState(() {});
+                                },
+                                child: Text("Confirm Booking".tr),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // cancel
+                            Expanded(
+                              child: TextButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(color: cs.error),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final dialog = await CustomDialog.error(
+                                    context,
+                                    title: 'Cancel Pre-Booking'.tr,
+                                    desc: 'Are you sure you want to cancel this pre-booking?'.tr,
+                                    btnOkText: 'Cancel'.tr,
+                                  );
+                              
+                                  if (dialog != DismissType.btnOk) {
+                                    return;
+                                  }
+                              
+                                  if (context.mounted) context.loaderOverlay.show();
+                                  try {
+                                    final res = await travelersReviewController.cancelPreBooking(booking.id);
+                                    if (res != null) {
+                                      booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                      bookingStatus = booking.status.name;
+                              
+                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+                                          ? DateTime.parse(res['flight']['cancelled_at'])
+                                          : null;
+                                      DateTime? voidTime = res['flight']['void_time'] != null
+                                          ? DateTime.parse(res['flight']['void_time'])
+                                          : null;
+                                      cancelOn = _formatDateTime(cancelledAt);
+                                      voidOn = _formatDateTime(voidTime);
+                                      print("booking.status.name: $bookingStatus");
+                                    }
+                                  } catch (e) {
+                                    Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                    print("cancelPreBooking error: $e");
+                                  }
+                                  if (context.mounted) context.loaderOverlay.hide();
+                                  setState(() {});
+                                },
+                                child: Text("Cancel".tr),
+                              ),
+                            ),
+                          ],
+                          if (booking.status == BookingStatus.confirmed && allowVoid()) ...[
+                            // void
+                            Expanded(
+                              child: TextButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(color: cs.error),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final dialog = await CustomDialog.error(
+                                    context,
+                                    title: 'Void Issue'.tr,
+                                    desc: 'Are you sure you want to void this issue?'.tr,
+                                    btnOkText: 'Void'.tr,
+                                  );
+                              
+                                  if (dialog != DismissType.btnOk) {
+                                    return;
+                                  }
+                              
+                                  if (context.mounted) context.loaderOverlay.show();
+                                  try {
+                                    final res = await travelersReviewController.voidIssue(booking.id);
+                                    if (res != null) {
+                                      booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+                                      bookingStatus = booking.status.name;
+                              
+                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+                                          ? DateTime.parse(res['flight']['cancelled_at'])
+                                          : null;
+                              
+                                      DateTime? voidTime = res['flight']['void_time'] != null
+                                          ? DateTime.parse(res['flight']['void_time'])
+                                          : null;
+                              
+                                      cancelOn = _formatDateTime(cancelledAt);
+                                      voidOn = _formatDateTime(voidTime);
+                                      print("booking.status.name: $bookingStatus");
+                                    }
+                                  } catch (e) {
+                                    Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+                                    print("❌ voidIssue error: $e");
+                                  }
+                                  if (context.mounted) context.loaderOverlay.hide();
+                                  setState(() {});
+                                },
+                                child: Text("Void".tr),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                       if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
                         const SizedBox(height: 12),
                         Card(
@@ -210,7 +362,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Divider(indent: 12, endIndent: 12, thickness: 2),
-      
+
                                 TimeRemaining(
                                   timeLimit: timeLimit,
                                   createdAt: widget.booking.createdOn,
@@ -250,7 +402,7 @@ class _IssuingPageState extends State<IssuingPage> {
                       ...[
                         FirstTitle(title: "Booking".tr),
                         const SizedBox(height: 4),
-      
+
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -275,7 +427,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                           SecondTitle(title: "Number".tr),
                                           Divider(thickness: 1),
                                           SecondTitle(title: "Created at".tr),
-      
+
                                           if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
                                           if (cancelOn != null && voidOn == null) ...[
                                             Divider(thickness: 1),
@@ -286,7 +438,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                     ),
                                   ),
                                 ),
-      
+
                                 // RIGHT (values)
                                 Expanded(
                                   child: Container(
@@ -316,7 +468,7 @@ class _IssuingPageState extends State<IssuingPage> {
                       const SizedBox(height: 16),
                       Divider(),
                       const SizedBox(height: 16),
-      
+
                       ...[
                         FirstTitle(title: "Travelers".tr),
                         Container(
@@ -397,17 +549,17 @@ class _IssuingPageState extends State<IssuingPage> {
                           ),
                         ),
                       ],
-      
+
                       const SizedBox(height: 16),
                       const Divider(),
                       const SizedBox(height: 16),
-                      ...[FirstTitle(title: "Baggage".tr), buildTable(context, baggagesData)],
+                      ...[FirstTitle(title: "Baggage".tr), FaringsBaggagesTable(context: context, data: baggagesData)],
                       const SizedBox(height: 16),
                       Divider(),
                       const SizedBox(height: 16),
                       ...[
                         FirstTitle(title: "Pricing".tr),
-                        buildTable(context, faringsData),
+                        FaringsBaggagesTable(context: context, data: faringsData),
                         // total all
                         const SizedBox(height: 4),
                         Padding(
@@ -424,305 +576,193 @@ class _IssuingPageState extends State<IssuingPage> {
                           ),
                         ),
                       ],
-      
+
                       const SizedBox(height: 30),
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
               ),
-      
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                width: double.infinity,
-                // height: 80,
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainer,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                  // shadow
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 5, blurRadius: 10, offset: const Offset(0, 2))],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("Total".tr, style: const TextStyle(fontSize: AppConsts.lg)),
-                          const SizedBox(height: 8),
-                          SelectableText(
-                            AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (booking.status == BookingStatus.preBooking && !isExpired)
-                      IntrinsicWidth(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () async {
-                                final dialog = await CustomDialog.success(
-                                  context,
-                                  title: 'Confirm Booking'.tr,
-                                  desc:
-                                      'Are you sure you want to confirm this booking?'.tr +
-                                      '\n' +
-                                      AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
-                                      'will be deducted from your balance'.tr,
-                                  btnOkText: 'Confirm'.tr,
-                                );
-      
-                                if (dialog != DismissType.btnOk) {
-                                  return;
-                                }
-      
-                                if (context.mounted) context.loaderOverlay.show();
-                                try {
-                                  final res = await travelersReviewController.confirmBooking(booking.id);
-                                  if (res != null) {
-                                    // update travelers by setTicketNumber
-                                    final passengers = res['passengers'] as List;
-                                    for (var passenger in passengers) {
-                                      travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
-                                    }
-                                    print("res['booking']['status'] ${res['booking']['status']}");
-                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                    bookingStatus = booking.status.name;
-                                    print("booking.status.name: $bookingStatus");
-                                  }
-                                } catch (e) {
-                                  Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
-                                }
-                                if (context.mounted) context.loaderOverlay.hide();
-                                setState(() {});
-                              },
-                              child: Text("Confirm Booking".tr),
-                            ),
-                            const SizedBox(height: 8),
-                            // cancel
-                            TextButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: cs.error,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: cs.error),
-                                ),
-                              ),
-                              onPressed: () async {
-                                final dialog = await CustomDialog.error(
-                                  context,
-                                  title: 'Cancel Pre-Booking'.tr,
-                                  desc: 'Are you sure you want to cancel this pre-booking?'.tr,
-                                  btnOkText: 'Cancel'.tr,
-                                );
-      
-                                if (dialog != DismissType.btnOk) {
-                                  return;
-                                }
-      
-                                if (context.mounted) context.loaderOverlay.show();
-                                try {
-                                  final res = await travelersReviewController.cancelPreBooking(booking.id);
-                                  if (res != null) {
-                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                    bookingStatus = booking.status.name;
-      
-                                    DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                        ? DateTime.parse(res['flight']['cancelled_at'])
-                                        : null;
-                                    DateTime? voidTime = res['flight']['void_time'] != null
-                                        ? DateTime.parse(res['flight']['void_time'])
-                                        : null;
-                                    cancelOn = _formatDateTime(cancelledAt);
-                                    voidOn = _formatDateTime(voidTime);
-                                    print("booking.status.name: $bookingStatus");
-                                  }
-                                } catch (e) {
-                                  Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
-                                  print("cancelPreBooking error: $e");
-                                }
-                                if (context.mounted) context.loaderOverlay.hide();
-                                setState(() {});
-                              },
-                              child: Text("Cancel".tr),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (booking.status == BookingStatus.confirmed && allowVoid())
-                      IntrinsicWidth( 
-                        child: Column(
-                          children: [
-                            // void
-                            TextButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: cs.error,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: cs.error),
-                                ),
-                              ),
-                              onPressed: () async {
-                                final dialog = await CustomDialog.error(
-                                  context,
-                                  title: 'Void Issue'.tr,
-                                  desc: 'Are you sure you want to void this issue?'.tr,
-                                  btnOkText: 'Void'.tr,
-                                );
-      
-                                if (dialog != DismissType.btnOk) {
-                                  return;
-                                }
-      
-                                if (context.mounted) context.loaderOverlay.show();
-                                try {
-                                  final res = await travelersReviewController.voidIssue(booking.id);
-                                  if (res != null) {
-                                    booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
-                                    bookingStatus = booking.status.name;
-      
-                                  DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                      ? DateTime.parse(res['flight']['cancelled_at'])
-                                      : null;
-      
-                                    DateTime? voidTime = res['flight']['void_time'] != null
-                                        ? DateTime.parse(res['flight']['void_time'])
-                                        : null;
-      
-                                    cancelOn = _formatDateTime(cancelledAt);
-                                    voidOn = _formatDateTime(voidTime);
-                                    print("booking.status.name: $bookingStatus");
-                                  }
-                                } catch (e) {
-                                  Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
-                                  print("❌ voidIssue error: $e");
-                                }
-                                if (context.mounted) context.loaderOverlay.hide();
-                                setState(() {});
-                              },
-                              child: Text("Void".tr),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+
+              // Container(
+              //   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              //   width: double.infinity,
+              //   // height: 80,
+              //   decoration: BoxDecoration(
+              //     color: cs.surfaceContainer,
+              //     borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+              //     // shadow
+              //     boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 5, blurRadius: 10, offset: const Offset(0, 2))],
+              //   ),
+              //   child: Row(
+              //     children: [
+              //       Expanded(
+              //         child: Column(
+              //           crossAxisAlignment: CrossAxisAlignment.start,
+              //           mainAxisSize: MainAxisSize.min,
+              //           children: [
+              //             Text("Total".tr, style: const TextStyle(fontSize: AppConsts.lg)),
+              //             const SizedBox(height: 8),
+              //             SelectableText(
+              //               AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
+              //               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xxlg + 4),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //       if (booking.status == BookingStatus.preBooking && !isExpired)
+              //         IntrinsicWidth(
+              //           child: Column(
+              //             crossAxisAlignment: CrossAxisAlignment.stretch,
+              //             children: [
+              //               // confirm
+              //               ElevatedButton(
+              //                 onPressed: () async {
+              //                   final dialog = await CustomDialog.success(
+              //                     context,
+              //                     title: 'Confirm Booking'.tr,
+              //                     desc:
+              //                         'Are you sure you want to confirm this booking?'.tr +
+              //                         '\n' +
+              //                         AppFuns.priceWithCoin(summary.totalPrice, booking.currency) +
+              //                         'will be deducted from your balance'.tr,
+              //                     btnOkText: 'Confirm'.tr,
+              //                   );
+              //                   if (dialog != DismissType.btnOk) {
+              //                     return;
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.show();
+              //                   try {
+              //                     final res = await travelersReviewController.confirmBooking(booking.id);
+              //                     if (res != null) {
+              //                       // update travelers by setTicketNumber
+              //                       final passengers = res['passengers'] as List;
+              //                       for (var passenger in passengers) {
+              //                         travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
+              //                       }
+              //                       print("res['booking']['status'] ${res['booking']['status']}");
+              //                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+              //                       bookingStatus = booking.status.name;
+              //                       print("booking.status.name: $bookingStatus");
+              //                     }
+              //                   } catch (e) {
+              //                     Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.hide();
+              //                   setState(() {});
+              //                 },
+              //                 child: Text("Confirm Booking".tr),
+              //               ),
+              //               const SizedBox(height: 8),
+              //               // cancel
+              //               TextButton(
+              //                 style: ElevatedButton.styleFrom(
+              //                   foregroundColor: cs.error,
+              //                   shape: RoundedRectangleBorder(
+              //                     borderRadius: BorderRadius.circular(12),
+              //                     side: BorderSide(color: cs.error),
+              //                   ),
+              //                 ),
+              //                 onPressed: () async {
+              //                   final dialog = await CustomDialog.error(
+              //                     context,
+              //                     title: 'Cancel Pre-Booking'.tr,
+              //                     desc: 'Are you sure you want to cancel this pre-booking?'.tr,
+              //                     btnOkText: 'Cancel'.tr,
+              //                   );
+              //                   if (dialog != DismissType.btnOk) {
+              //                     return;
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.show();
+              //                   try {
+              //                     final res = await travelersReviewController.cancelPreBooking(booking.id);
+              //                     if (res != null) {
+              //                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+              //                       bookingStatus = booking.status.name;
+              //                       DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+              //                           ? DateTime.parse(res['flight']['cancelled_at'])
+              //                           : null;
+              //                       DateTime? voidTime = res['flight']['void_time'] != null
+              //                           ? DateTime.parse(res['flight']['void_time'])
+              //                           : null;
+              //                       cancelOn = _formatDateTime(cancelledAt);
+              //                       voidOn = _formatDateTime(voidTime);
+              //                       print("booking.status.name: $bookingStatus");
+              //                     }
+              //                   } catch (e) {
+              //                     Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+              //                     print("cancelPreBooking error: $e");
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.hide();
+              //                   setState(() {});
+              //                 },
+              //                 child: Text("Cancel".tr),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       if (booking.status == BookingStatus.confirmed && allowVoid())
+              //         IntrinsicWidth(
+              //           child: Column(
+              //             children: [
+              //               // void
+              //               TextButton(
+              //                 style: ElevatedButton.styleFrom(
+              //                   foregroundColor: cs.error,
+              //                   shape: RoundedRectangleBorder(
+              //                     borderRadius: BorderRadius.circular(12),
+              //                     side: BorderSide(color: cs.error),
+              //                   ),
+              //                 ),
+              //                 onPressed: () async {
+              //                   final dialog = await CustomDialog.error(
+              //                     context,
+              //                     title: 'Void Issue'.tr,
+              //                     desc: 'Are you sure you want to void this issue?'.tr,
+              //                     btnOkText: 'Void'.tr,
+              //                   );
+              //                   if (dialog != DismissType.btnOk) {
+              //                     return;
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.show();
+              //                   try {
+              //                     final res = await travelersReviewController.voidIssue(booking.id);
+              //                     if (res != null) {
+              //                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
+              //                       bookingStatus = booking.status.name;
+              //                       DateTime? cancelledAt = res['flight']['cancelled_at'] != null
+              //                           ? DateTime.parse(res['flight']['cancelled_at'])
+              //                           : null;
+              //                       DateTime? voidTime = res['flight']['void_time'] != null
+              //                           ? DateTime.parse(res['flight']['void_time'])
+              //                           : null;
+              //                       cancelOn = _formatDateTime(cancelledAt);
+              //                       voidOn = _formatDateTime(voidTime);
+              //                       print("booking.status.name: $bookingStatus");
+              //                     }
+              //                   } catch (e) {
+              //                     Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+              //                     print("❌ voidIssue error: $e");
+              //                   }
+              //                   if (context.mounted) context.loaderOverlay.hide();
+              //                   setState(() {});
+              //                 },
+              //                 child: Text("Void".tr),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //     ],
+              //   ),
+              // ),
+            
+            
+            
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget buildTable(
-    BuildContext context,
-    List<Map<String, dynamic>> data, {
-    String? title, // اختياري: عنوان الجدول (مثلاً "Baggage allowance")
-  }) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
-    // لو ما في بيانات نرجّع كرت صغير بسيط
-    if (data.isEmpty) {
-      return Card(
-        color: cs.surfaceContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 1,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text('No data'.tr, style: theme.textTheme.bodyMedium),
-        ),
-      );
-    }
-
-    // نأخذ الأعمدة من أول عنصر (Map)
-    final columnsKeys = data.first.keys.toList();
-
-    bool isNumericColumn(String key) {
-      final k = key.toLowerCase();
-      print("key: $k"); 
-      return k.contains('weight') ||
-          k.contains('price') ||
-          k.contains('amount') ||
-          k.contains('qty') ||
-          k.contains('quantity') ||
-          k.contains('fare') ||
-          k.contains('total') ||
-          k.contains('total fare');
-    }
-
-    String labelFromKey(String key) {
-      if (key.isEmpty) return key;
-      // نضبط أول حرف كابيتال ونترك الباقي مثل ما هو
-      return key[0].toUpperCase() + key.substring(1);
-    }
-
-    return Card(
-      color: cs.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null) ...[
-              Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Divider(color: cs.outline.withOpacity(0.4), height: 16, thickness: 0.7),
-            ],
-
-            // الجدول نفسه
-            DataTable(
-              horizontalMargin: 0,
-              columnSpacing: 32,
-              headingRowHeight: 36,
-              dataRowMinHeight: 32,
-              dataRowMaxHeight: 40,
-              headingTextStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
-              dataTextStyle: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-              headingRowColor: MaterialStateColor.resolveWith((states) => cs.surface.withOpacity(0.7)),
-              columns: [
-                for (final key in columnsKeys)
-                  DataColumn(
-                    label: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(labelFromKey(key).tr, style: TextStyle(color: cs.primaryContainer)),
-                    ),
-                    numeric: isNumericColumn(key),
-                    headingRowAlignment: MainAxisAlignment.start,
-                  ),
-              ],
-              rows: [
-                for (final row in data)
-                  DataRow(
-                    cells: [
-                      for (final key in columnsKeys)
-                        DataCell(
-                          Align(
-                            alignment: isNumericColumn(key)
-                                ? AlignmentDirectional.centerEnd
-                                : AlignmentDirectional.centerStart,
-                            child: Text(
-                              '${row[key] ?? ''}',
-                              textAlign: isNumericColumn(key) ? TextAlign.end : TextAlign.start,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ], 
-            ),
-            
-          ],
-        ),
-      ),
-    ); 
   }
 }
 
@@ -795,6 +835,6 @@ class SecondTitle extends StatelessWidget {
 
 String? _formatDateTime(DateTime? d) {
   if (d == null) return null;
-  final s = intl.DateFormat('dd - MMM - yyyy HH:mm:ss', AppVars.lang).format(d);
+  final s = intl.DateFormat('dd - MMM - yyyy | hh:mm:ss a', AppVars.lang).format(d);
   return AppFuns.replaceArabicNumbers(s);
 }
