@@ -681,4 +681,10 @@ Map<String, String> ar = {
   "Search is applied on leg.refSegs (contains)": "يتم تطبيق البحث على مسار الرحلة",
 
   "This service is not currently available": "هذا الخدمة غير متاحة حاليا",
+
+  "Passport Number": "رقم جواز السفر",
+  "Issuing Country": "بلد الاصدار",
+  "Booking Number": "رقم الحجز",
+  "Created At": "انشئ في",
+  "Date of Expiry": "تاريخ انتهاء الجواز", 
 };

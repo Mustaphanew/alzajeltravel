@@ -177,6 +177,7 @@ class FlightMainCard extends StatelessWidget {
                     fareRules: revalidatedDetails.fareRules,
                     onBook: onBook,
                     onOtherPrices: onOtherPrices,
+                    showContinueButton: false,
                   ));
                 },
                 icon: const Icon(Icons.info_outline),

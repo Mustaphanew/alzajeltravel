@@ -156,6 +156,7 @@ class _MyAppState extends State<MyApp> {
                 contact: Get.arguments["contact"], 
                 pnr: Get.arguments["pnr"],
                 booking: Get.arguments["booking"],
+                fromPage: Get.arguments["fromPage"],
               ),
             ),
           ],

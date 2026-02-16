@@ -318,19 +318,21 @@ class _Home2State extends State<Home2> {
                                       //   pnr: pnr, 
                                       //   booking: booking,
                                       // ));
-
-                                      PersistentNavBarNavigator.pushNewScreen(
-                                        context,
-                                        screen: IssuingPage(
-                                          offerDetail: flight,
-                                          travelers: travelers,
-                                          contact: contact,
-                                          pnr: pnr,
-                                          booking: booking,
-                                        ),
-                                        withNavBar: true, // ✅ يبقي الـ Bottom Nav ظاهر
-                                        pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                                      );
+                                      if (context.mounted) {
+                                        PersistentNavBarNavigator.pushNewScreen(
+                                          context,
+                                          screen: IssuingPage(
+                                            offerDetail: flight,
+                                            travelers: travelers,
+                                            contact: contact,
+                                            pnr: pnr,
+                                            booking: booking,
+                                            fromPage: "home",
+                                          ),
+                                          withNavBar: true, // ✅ يبقي الـ Bottom Nav ظاهر
+                                          pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                                        );
+                                      }
 
 
 

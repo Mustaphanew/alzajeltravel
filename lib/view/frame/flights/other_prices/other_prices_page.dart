@@ -137,6 +137,7 @@ class _OtherPricesPageState extends State<OtherPricesPage> {
                           Get.to(() => MoreFlightDetailPage(
                             flightOffer: flight,
                             fareRules: [],
+                            showContinueButton: false,
                           ));
                         },
                       ),

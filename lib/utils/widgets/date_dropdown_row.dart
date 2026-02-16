@@ -330,7 +330,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
               children: [
                 // السنة
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: _buildDropdownContainer(
                     context: context,
                     value: selectedYear,
@@ -345,7 +345,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                               style: TextStyle(
                                 color: cs.onSurface,
                                 fontFamily: AppConsts.font,
-                                fontSize: AppConsts.normal,
+                                fontSize: AppConsts.sm,
                               ),
                             ),
                           ),
@@ -378,7 +378,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                               style: TextStyle(
                                 fontFamily: AppConsts.font,
                                 color: cs.onSurface,
-                                fontSize: AppConsts.normal,
+                                fontSize: AppConsts.sm,
                               ),
                             ),
                           ),
@@ -411,7 +411,7 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                               style: TextStyle(
                                 fontFamily: AppConsts.font,
                                 color: cs.onSurface,
-                                fontSize: AppConsts.normal,
+                                fontSize: AppConsts.sm,
                               ),
                             ),
                           ),
@@ -479,7 +479,8 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
         labelText: label,
         labelStyle: TextStyle(
           color: labelColor,
-          fontSize: 14),
+          fontSize: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(width: 1, color: borderColor),
@@ -500,7 +501,8 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down),
       style: TextStyle(
-        fontSize: 14),
+        fontSize: 12,
+      ),
       onChanged: (widget.enabled)? (disabled ? null : onChanged) : null,
       items: items,
     );

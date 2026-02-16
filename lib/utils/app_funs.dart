@@ -383,7 +383,9 @@ class AppFuns {
   }
 
   static Future<void> refreshHomePage() async {
-    LatestBookingsController latestBookingsController = Get.find();
+    LatestBookingsController latestBookingsController = Get.isRegistered<LatestBookingsController>() ? 
+      Get.find() : 
+      LatestBookingsController();
     latestBookingsController.fetchData();
   }
 

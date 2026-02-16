@@ -720,7 +720,13 @@ class _FlightOffersListState extends State<FlightOffersList> {
                                         );
                                       },
                                       onMoreDetails: () {
-                                        Get.to(() => MoreFlightDetailPage(flightOffer: offer, fareRules: []));
+                                        Get.to(() => MoreFlightDetailPage(
+                                          flightOffer: offer, 
+                                          fareRules: [],
+                                          showContinueButton: false,
+                                        ),
+                                          
+                                        );
                                       },
                                     ),
                                   ),

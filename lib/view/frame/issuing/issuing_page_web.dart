@@ -1,9 +1,12 @@
+// issuing_page_web.dart
 import 'package:alzajeltravel/controller/bookings_report/bookings_report_controller.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/enums.dart';
+import 'package:alzajeltravel/utils/widgets/booking_data_table.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
 import 'package:alzajeltravel/utils/widgets/farings_baggages_table.dart';
+import 'package:alzajeltravel/utils/widgets/travelers_data_table.dart';
 import 'package:alzajeltravel/view/frame/issuing/print_issuing_ar.dart';
 import 'package:alzajeltravel/view/frame/time_remaining.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -22,14 +25,14 @@ import 'package:alzajeltravel/view/frame/flights/flight_offers_list.dart';
 import 'package:alzajeltravel/view/frame/issuing/print_issuing.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
-class IssuingPage extends StatefulWidget {
+class IssuingPageWeb extends StatefulWidget {
   final RevalidatedFlightModel offerDetail;
   final List<TravelerReviewModel> travelers;
   final ContactModel contact;
   final String pnr;
   final BookingDataModel booking;
   final String fromPage;
-  const IssuingPage({
+  const IssuingPageWeb({
     super.key,
     required this.offerDetail,
     required this.travelers,
@@ -40,10 +43,10 @@ class IssuingPage extends StatefulWidget {
   });
 
   @override
-  State<IssuingPage> createState() => _IssuingPageState();
+  State<IssuingPageWeb> createState() => _IssuingPageWebState();
 }
 
-class _IssuingPageState extends State<IssuingPage> {
+class _IssuingPageWebState extends State<IssuingPageWeb> {
   late TravelersReviewController travelersReviewController;
 
   List<Map<String, dynamic>> faringsData = [];
@@ -62,6 +65,8 @@ class _IssuingPageState extends State<IssuingPage> {
   String createdOn = "";
   String? voidOn;
   String? cancelOn;
+
+  List<Map<String, dynamic>> bookingTableData = [];
 
   @override
   void initState() {
@@ -94,6 +99,22 @@ class _IssuingPageState extends State<IssuingPage> {
     createdOn = _formatDateTime(booking.createdOn)!;
     voidOn = _formatDateTime(widget.offerDetail.voidOn);
     cancelOn = _formatDateTime(widget.offerDetail.cancelOn);
+
+
+final Map<String, dynamic> bookingRow = {
+  "PNR".tr: (widget.pnr.isNotEmpty ? widget.pnr : "N/A".tr),
+  "Booking Number".tr: booking.bookingId,
+  "Created At".tr: createdOn,
+};
+
+if (voidOn != null) {
+  bookingRow["Void On".tr] = voidOn!;
+} else if (cancelOn != null) {
+  bookingRow["Cancel On".tr] = cancelOn!;
+}
+
+bookingTableData = [bookingRow];
+
   }
 
   bool allowVoid() {
@@ -112,6 +133,48 @@ class _IssuingPageState extends State<IssuingPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+
+final travelersTableData = travelersReviewController.travelers.map((t) {
+  String na = "N/A".tr;
+
+  String safe(dynamic v) {
+    if (v == null) return na;
+    final s = v.toString().trim();
+    return (s.isEmpty || s == "null") ? na : s;
+  }
+
+  String safeLangName(dynamic obj) {
+    // obj expected like: obj?.name[AppVars.lang]
+    if (obj == null) return na;
+    try {
+      final v = obj.name[AppVars.lang];
+      return safe(v);
+    } catch (_) {
+      return na;
+    }
+  }
+
+  return <String, String>{
+    "full_name": safe(t.passport.fullName),
+    "dob": t.passport.dateOfBirth == null
+        ? na
+        : AppFuns.replaceArabicNumbers(
+            intl.DateFormat('dd-MMMM-yyyy', AppVars.lang).format(t.passport.dateOfBirth!),
+          ),
+    "sex": safe(t.passport.sex?.label),
+    "passport_number": safe(t.passport.documentNumber),
+    "nationality": safeLangName(t.passport.nationality),
+    "issuing_country": safeLangName(t.passport.issuingCountry),
+    "date_of_expiry": t.passport.dateOfExpiry == null
+        ? na
+        : AppFuns.replaceArabicNumbers(
+            intl.DateFormat('dd-MMMM-yyyy', AppVars.lang).format(t.passport.dateOfExpiry!),
+          ),
+    "ticket": safe(t.ticketNumber ?? na),
+  };
+}).toList();
+
     return PopScope(
       canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
       onPopInvokedWithResult: (didPop, result) async {
@@ -414,155 +477,33 @@ class _IssuingPageState extends State<IssuingPage> {
                       const SizedBox(height: 16),
 
                       ...[
-                        FirstTitle(title: "Booking".tr),
-                        const SizedBox(height: 4),
 
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: Ink(
-                            color: cs.surfaceContainer,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // LEFT (labels) like the travelers design
-                                Ink(
-                                  color: cs.surface,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                    child: IntrinsicWidth(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          SecondTitle(title: "PNR"),
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Number".tr),
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Created at".tr),
 
-                                          if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
-                                          if (cancelOn != null && voidOn == null) ...[
-                                            Divider(thickness: 1),
-                                            SecondTitle(title: "Cancel On".tr),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
+FirstTitle(title: "Booking".tr),
+const SizedBox(height: 4),
 
-                                // RIGHT (values)
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        SecondTitle(title: (widget.pnr.isNotEmpty ? widget.pnr : "N/A")),
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: booking.bookingId),
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: createdOn),
-                                        if (voidOn != null) ...[const Divider(thickness: 1), SecondTitle(title: voidOn!)],
-                                        if (cancelOn != null && voidOn == null) ...[
-                                          const Divider(thickness: 1),
-                                          SecondTitle(title: cancelOn!),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+BookingDataTable(
+  pnr: widget.pnr,
+  bookingNumber: booking.bookingId,
+  createdAt: createdOn,
+  voidOn: voidOn,
+  cancelOn: cancelOn,
+),
+
                       ],
+
                       const SizedBox(height: 16),
                       Divider(),
                       const SizedBox(height: 16),
 
                       ...[
-                        FirstTitle(title: "Travelers".tr),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: travelersReviewController.travelers.length,
-                            padding: EdgeInsets.zero,
-                            itemBuilder: (context, index) {
-                              final traveler = travelersReviewController.travelers[index];
-                              return Ink(
-                                color: cs.surfaceContainer,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Ink(
-                                      color: cs.surface,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                        child: IntrinsicWidth(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            spacing: 3,
-                                            children: [
-                                              SecondTitle(title: "Full Name".tr),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: "Date of Birth".tr),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: "Ticket".tr),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          spacing: 3,
-                                          children: [
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
-                                              alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
-                                              child: Text(
-                                                traveler.passport.fullName,
-                                                style: TextStyle(
-                                                  fontSize: AppConsts.lg, // الحجم الأقصى
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            const Divider(thickness: 1),
-                                            SecondTitle(
-                                              title: AppFuns.replaceArabicNumbers(
-                                                intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
-                                              ),
-                                            ),
-                                            const Divider(thickness: 1),
-                                            SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            separatorBuilder: (context, index) =>
-                                Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
-                          ),
-                        ),
-                      ],
+
+FirstTitle(title: "Travelers".tr),
+const SizedBox(height: 4),
+
+TravelersDataTable(
+  rows: travelersTableData,
+),                      ],
 
                       const SizedBox(height: 16),
                       const Divider(),
@@ -849,6 +790,7 @@ class SecondTitle extends StatelessWidget {
 
 String? _formatDateTime(DateTime? d) {
   if (d == null) return null;
-  final s = intl.DateFormat('dd - MMM - yyyy | hh:mm:ss a', AppVars.lang).format(d);
-  return AppFuns.replaceArabicNumbers(s);
+  final s = intl.DateFormat('dd - MMM - yyyy | hh:mm a', AppVars.lang).format(d);
+  final multiLine = s.replaceAll(' | ', '\n'); // التاريخ سطر + الوقت سطر
+  return AppFuns.replaceArabicNumbers(multiLine);
 }

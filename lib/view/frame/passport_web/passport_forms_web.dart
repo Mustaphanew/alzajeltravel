@@ -56,12 +56,22 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
   static const double wScan = 40;
   static const double wGiven = 180;
   static const double wSur = 120;
-  static const double wDob = 320;
+  static const double wDob = 270;
   static const double wSex = 100;
   static const double wPass = 130;
   static const double wNat = 100;
   static const double wIss = 100;
-  static const double wExp = 320;
+  static const double wExp = 270;
+
+
+  static const double wGivenTxt = 170;
+  static const double wSurTxt = 100;
+  static const double wDobTxt = 200;
+  static const double wSexTxt = 80;
+  static const double wPassTxt = 110;
+  static const double wNatTxt = 100;
+  static const double wIssTxt = 100;
+  static const double wExpTxt = 200;
 
   // ✅ spacing/border
   static const double _hMargin = 8;
@@ -75,6 +85,39 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
   bool showTextBox = true;
 
   final GlobalKey _scanShowcaseKey = GlobalKey();
+
+
+static const int _pinnedCols = 1; // عندك pinnedColumnCount = 1
+
+double _unpinnedStartOffsetForColumn(int col) {
+  // col 1 يبدأ من 0 داخل منطقة الـ unpinned
+  double sum = 0;
+  for (int i = _pinnedCols; i < col; i++) {
+    sum += _colWidths[i];
+  }
+  return sum;
+}
+
+
+void _scrollColumnAfterScan(int col) {
+  if (!_hCtrl.hasClients) return;
+  if (col < _pinnedCols) return;
+
+  final maxExtent = _hCtrl.position.maxScrollExtent;
+  if (maxExtent <= 0) return;
+
+  final start = _unpinnedStartOffsetForColumn(col);
+
+  const double gap = 24; // حسب رغبتك
+  final target = (start - gap).clamp(0.0, maxExtent);
+
+  _hCtrl.animateTo(
+    target,
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeInOut,
+  );
+}
+
 
   @override
   void initState() {
@@ -109,7 +152,9 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
     return GetBuilder<PassportController>(tag: tag, builder: b);
   }
 
-  List<double> get _colWidths => const [
+  List<double> get _colWidths {
+    if (showTextBox == true) {
+      return [
         wScan, // 0 scan (pinned)
         wGiven, // 1
         wSur, // 2
@@ -120,8 +165,21 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         wIss, // 7
         wExp, // 8
       ];
+    } 
+    return [
+      wScan, // 0 scan (pinned)
+      wGivenTxt, // 1
+      wSurTxt, // 2
+      wDobTxt, // 3
+      wSexTxt, // 4
+      wPassTxt, // 5
+      wNatTxt, // 6
+      wIssTxt, // 7
+      wExpTxt, // 8
+    ];
+  }
 
-  double get _dataRowH => showTextBox ? 70 : 35;
+  double get _dataRowH => showTextBox ? 70 : 50;
 
   BorderSide _side(ColorScheme cs) => BorderSide(color: cs.outline, width: _borderW);
 
@@ -194,7 +252,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
     return Text(
       text,
       style: const TextStyle(fontWeight: FontWeight.w700),
-      overflow: TextOverflow.ellipsis,
+      // overflow: TextOverflow.ellipsis,
     );
   }
 
@@ -234,13 +292,23 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
   Widget _columnHeaderCell(ColorScheme cs, int col) {
     const titleStyle = TextStyle(fontWeight: FontWeight.bold);
 
-    Widget title(String t) => Text(t, overflow: TextOverflow.ellipsis, style: titleStyle);
+    Widget title(String t) => Text(
+      t, 
+      // overflow: TextOverflow.ellipsis, 
+      style: titleStyle,
+    );
 
-    Widget help(String t) => Text(
-          t,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-        );
+    Widget help(String t) => Row(
+      children: [
+        Expanded(
+          child: Text(
+                t,
+                // overflow: TextOverf  low.ellipsis,
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+              ),
+        ),
+      ],
+    );
 
     switch (col) {
       case 0:
@@ -255,7 +323,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             title('Date of birth'.tr),
-            help('You must specify the first year, then the month, then the day'.tr),
+            if(showTextBox)
+              help('You must specify the first year, then the month, then the day'.tr),
           ],
         );
       case 4:
@@ -272,7 +341,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             title('DATE OF EXPIRY'.tr),
-            help('You must specify the first year, then the month, then the day'.tr),
+            if(showTextBox)
+              help('You must specify the first year, then the month, then the day'.tr),
           ],
         );
       default:
@@ -318,7 +388,10 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               label: 'Given names'.tr + ' (${'traveler'.tr} $travelerIndex: $ageLabel)',
             );
           }
-          return Text(pc.givenNamesCtr.text, overflow: TextOverflow.ellipsis);
+          return Text(
+            pc.givenNamesCtr.text, 
+            // overflow: TextOverflow.ellipsis,
+          );
         });
 
       case 2:
@@ -331,7 +404,10 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               label: 'SURNAMES'.tr,
             );
           }
-          return Text(pc.surnamesCtr.text, overflow: TextOverflow.ellipsis);
+          return Text(
+            pc.surnamesCtr.text, 
+            // overflow: TextOverflow.ellipsis,
+          );
         });
 
       case 3:
@@ -361,7 +437,10 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
           if (showTextBox) {
             return WebTableSexField(width: _innerWidth(4), controller: pc);
           }
-          return Text("${pc.model.sex?.label ?? ''}", overflow: TextOverflow.ellipsis);
+          return Text(
+            "${pc.model.sex?.label ?? ''}", 
+            //  overflow: TextOverflow.ellipsis,
+          );
         });
 
       case 5:
@@ -375,7 +454,10 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
               label: 'DOCUMENT NUMBER'.tr,
             );
           }
-          return Text("${pc.model.documentNumber ?? ''}", overflow: TextOverflow.ellipsis);
+          return Text(
+            "${pc.model.documentNumber ?? ''}", 
+            // overflow: TextOverflow.ellipsis,
+          );
         });
 
       case 6:
@@ -400,7 +482,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
             );
           }
           return Text("${pc.model.nationality?.name[AppVars.lang] ?? ''}",
-              overflow: TextOverflow.ellipsis);
+              // overflow: TextOverflow.ellipsis,
+            );
         });
 
       case 7:
@@ -425,7 +508,8 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
             );
           }
           return Text("${pc.model.issuingCountry?.name[AppVars.lang] ?? ''}",
-              overflow: TextOverflow.ellipsis);
+            // overflow: TextOverflow.ellipsis,
+          );
         });
 
       case 8:
@@ -677,9 +761,9 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
 
     TableSpan _buildColumnSpan(int index) {
       if (index == 8) {
-        return const TableSpan(
+        return TableSpan(
           extent: MaxTableSpanExtent(
-            FixedTableSpanExtent(wExp),
+            FixedTableSpanExtent(showTextBox ? wExp : wExpTxt),
             RemainingTableSpanExtent(),
           ),
         );
@@ -697,20 +781,37 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
         if (c >= passportStart && c <= (passportStart + passportSpan - 1)) return passportHeaderCell;
       }
 
-      if (r == 1) {
-        return TableViewCell(
-          child: _cellBox(
-            cs: cs,
-            row: r,
-            col: c,
-            bg: headerBg1,
-            child: SizedBox(
-              width: _innerWidth(c),
-              child: _columnHeaderCell(cs, c),
-            ),
-          ),
-        );
-      }
+
+
+if (r == 1) {
+  final headerCell = _cellBox(
+    cs: cs,
+    row: r,
+    col: c,
+    bg: headerBg1,
+    child: SizedBox(
+      width: _innerWidth(c),
+      child: _columnHeaderCell(cs, c),
+    ),
+  );
+
+  if (c == 0) {
+    return TableViewCell(child: headerCell); // لا نلمس scan header
+  }
+
+  return TableViewCell(
+    child: MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _scrollColumnAfterScan(c),
+        child: headerCell,
+      ),
+    ),
+  );
+}
+
+
 
       final visualIndex = r - 2;
       if (visualIndex < 0 || visualIndex >= travelers.length) {
