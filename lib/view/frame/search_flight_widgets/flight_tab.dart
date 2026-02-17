@@ -193,8 +193,8 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                       children: [
                         const SizedBox(height: 8),
                         AirlineIncludeDropDown(), 
-                        SizedBox(height: 8),
-                        AirlineExcludeDropDown(),
+                        // SizedBox(height: 8),
+                        // AirlineExcludeDropDown(),
                         SizedBox(height: 12),
                         Row(
                           children: [

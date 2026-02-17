@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:alzajeltravel/utils/app_apis.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:cross_file/cross_file.dart';
+import 'package:get/get.dart' as getx;
 
 
 Dio dio = Dio(
@@ -135,7 +137,13 @@ class Api {
     } on DioException catch (err) {
       debugPrint("❌ POST error status: ${err.response?.statusCode}");
       debugPrint("❌ POST error data: ${err.response?.data}");
-    }
+      try {
+        AppVars.serverErrMsg = err.response?.data['error']['message'];
+        AppVars.serverErrResponse = (err.response?.data).toString();
+      } catch (e) {
+        AppVars.serverErrMsg = "Something went wrong".tr;
+      }
+    } 
     return null;
   }
 }

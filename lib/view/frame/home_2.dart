@@ -13,6 +13,7 @@ import 'package:alzajeltravel/utils/widgets.dart';
 import 'package:alzajeltravel/utils/widgets/custom_dialog.dart';
 import 'package:alzajeltravel/utils/widgets/custom_snack_bar.dart';
 import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
+import 'package:alzajeltravel/view/notifications/notifications_page.dart';
 import 'package:alzajeltravel/view/profile/profile_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -126,24 +127,43 @@ class _Home2State extends State<Home2> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsetsDirectional.only(end: 8),
-            child: IconButton(
-              onPressed: () async {
-
-                await CustomDialog.warning(
-                  context,
-                  title: "This service is not currently available",
-                  desc: null,
-                );
-
-
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: TextButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: EdgeInsets.zero,
+              ),
+              onPressed: () {
+                Get.to(() => const NotificationsPage());
               }, 
-              icon: SvgPicture.asset(
-                (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,
-                 width: 38,
+              child: Container(
+                height: 38,
+                width: 38,
+                child: SvgPicture.asset(AppConsts.bell),
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: TextButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+              ),
+              onPressed: () {
+                Get.to(() => const NotificationsPage());
+              }, 
+              child: Container(
+                height: 38,
+                width: 38,
+                child: SvgPicture.asset(
+                  (Get.context?.theme.brightness == Brightness.light)? AppConsts.logo : AppConsts.logo3,
+                   width: 38,
+                ),
+              ),
+            ),
+          ),
+
         ],
       ),
       body: RefreshIndicator(

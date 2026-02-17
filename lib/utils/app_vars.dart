@@ -23,4 +23,7 @@ class AppVars {
 
   static FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
+  static String serverErrMsg = "";
+  static String serverErrResponse = "";
+
 }

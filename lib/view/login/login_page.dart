@@ -2,6 +2,7 @@ import 'package:alzajeltravel/controller/login/login_controller.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/view/notifications/notifications_page.dart';
 import 'package:alzajeltravel/view/settings/settings.dart';
 import 'package:alzajeltravel/utils/glassmorphism/glassmorphism.dart';
 import 'package:flutter/foundation.dart';
