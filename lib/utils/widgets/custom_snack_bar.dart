@@ -1,4 +1,3 @@
-import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -63,7 +62,6 @@ class CustomSnackBar {
       ),
     );
   }
-  
   static void error(BuildContext context, String title, {String? subtitle, String? detail, bool copy = true}) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -85,12 +83,6 @@ class CustomSnackBar {
                       softWrap: true,
                       style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.normal),
                     ),
-                  if (subtitle == null)
-                    Text(
-                      AppVars.serverErrMsg,
-                      softWrap: true,
-                      style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.normal),
-                    ),
                 ],
               ),
             ),
@@ -98,7 +90,7 @@ class CustomSnackBar {
               IconButton(
                 style: IconButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
-                  await FlutterClipboard.copy('${title}: ${subtitle??''}\n${detail??AppVars.serverErrResponse}').then((val) {
+                  await FlutterClipboard.copy('${title}: ${subtitle??''}\n${detail??''}').then((val) {
                     Fluttertoast.showToast(
                       msg: "Copied to clipboard".tr,
                       toastLength: Toast.LENGTH_SHORT,
@@ -127,7 +119,6 @@ class CustomSnackBar {
       ),
     );
   }
-  
   static void warning(BuildContext context, String title, {String? subtitle, String? detail, bool copy = true}) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
