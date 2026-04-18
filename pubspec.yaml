@@ -130,6 +130,8 @@ flutter:
     - assets/images/gifs/
     - assets/images/flags/
     - assets/notifications_key/
+    - assets/svg/light/
+    - assets/svg/dark/
 
   fonts:
     - family: Almaria

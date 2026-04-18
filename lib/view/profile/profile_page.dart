@@ -219,106 +219,158 @@ class _BalanceCardState extends State<BalanceCard> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Card(
-      elevation: 0,
-      color: cs.primary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: Radius.circular(16),
-          topEnd: Radius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConsts.primaryColor,
+            Color(0xFF1E2F7A),
+          ],
         ),
-        side: BorderSide(color: cs.outlineVariant),
-      ), 
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Remaining Balance'.tr,
-                  style: TextStyle(
-                    fontSize: AppConsts.xlg,
-                    // fontWeight: FontWeight.bold,
-                    color: cs.onPrimary,
-                  ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConsts.primaryColor.withValues(alpha: 0.30),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          // دائرة ذهبية زخرفية شفّافة في الزاوية (glow حديث)
+          Positioned(
+            top: -40,
+            right: -30,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppConsts.secondaryColor.withValues(alpha: 0.18),
+                    AppConsts.secondaryColor.withValues(alpha: 0.0),
+                  ],
                 ),
-                // copy icon
-                InkWell(
-                  onTap: _copyBalance,
-                  child: Icon(Icons.copy_all, color: cs.onPrimary),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            left: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppConsts.secondaryColor.withValues(alpha: 0.08),
+                    AppConsts.secondaryColor.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // المحتوى
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    // شريط ذهبي صغير أفقي
+                    Container(
+                      width: 3,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: AppConsts.secondaryColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Remaining Balance'.tr,
+                      style: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: _copyBalance,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          Icons.copy_rounded,
+                          color: Colors.white.withValues(alpha: 0.75),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, anim) => FadeTransition(
+                          opacity: anim,
+                          child: child,
+                        ),
+                        child: isHidden
+                            ? Text(
+                                '• • • • • • • •',
+                                key: const ValueKey('hidden'),
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                  color: AppConsts.secondaryColor,
+                                ),
+                              )
+                            : SelectableText(
+                                _formattedBalance,
+                                key: const ValueKey('value'),
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppConsts.secondaryColor,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => isHidden = !isHidden),
+                      icon: Icon(
+                        isHidden ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                      iconSize: 22,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      tooltip: isHidden ? 'Show'.tr : 'Hide'.tr,
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            // Inner "field" like the image
-            Container(
-              decoration: BoxDecoration(color: cs.primary, borderRadius: BorderRadius.circular(14)),
-              padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 12, 10),
-              child: Row(
-                children: [
-                  // Center value / stars
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: isHidden
-                        ? Text(
-                            '********',
-                            key: const ValueKey('hidden'),
-                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, letterSpacing: 6, color: cs.onPrimary),
-                          )
-                        : SelectableText(
-                            _formattedBalance,
-                            key: const ValueKey('value'),
-                            textDirection: TextDirection.ltr,
-                            style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: cs.onPrimary),
-                          ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => setState(() => isHidden = !isHidden),
-                    icon: Icon(isHidden ? Icons.visibility : Icons.visibility_off),
-                    color: cs.onPrimary,
-                    iconSize: 26,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    splashRadius: 22,
-                    tooltip: isHidden ? 'Show'.tr : 'Hide'.tr,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Copy button bottom-right like the image
-            // Align(
-            //   alignment: AlignmentDirectional.centerStart,
-            //   child: TextButton(
-            //     onPressed: _copyBalance,
-            //     style: TextButton.styleFrom(
-            //       padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 0),
-            //       backgroundColor: cs.onTertiaryFixedVariant,
-            //       // raduis
-            //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            //       elevation: 0,
-            //     ),
-            //     child: Text(
-            //       'Copy Balance'.tr,
-            //       style: TextStyle(
-            //         fontSize: AppConsts.sm, 
-            //         fontWeight: FontWeight.w600, 
-            //         color: cs.surfaceContainerLow,
-            //       ),
-            //     ),
-            //   ),
-            // ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
