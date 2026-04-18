@@ -16,6 +16,17 @@
     <!-- اختياري للأجهزة القديمة -->
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
+    <!-- الكاميرا لمسح الجواز/البطاقة -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- الوصول إلى الصور والملفات -->
+    <!-- Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Android 12 وأقدم -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
 
     <!-- Provide required visibility configuration for API level 30 and above -->
     <queries>

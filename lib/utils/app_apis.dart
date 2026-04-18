@@ -11,6 +11,12 @@ class AppApis {
   static const String cancelPnr = '/flight/cancel-pnr';
   static const String voidIssue = '/flight/void'; 
   static const String bookingsReport = '/flight/reports';
-  static const String tripDetail = '/flight/trip/'; 
-  
+  static const String tripDetail = '/flight/trip/';
+
+  /// TODO: استبدل هذا المسار بالـ endpoint الفعلي لمسح الجواز/البطاقة.
+  /// يستقبل ملف صورة (multipart/form-data، اسم الحقل: `image`) ويُرجع JSON
+  /// متوافق مع PassportModel.fromJson (documentNumber / surnames / givenNames /
+  /// dateOfBirth / sex / dateOfExpiry / nationality / issueCountry ...).
+  static const String passportScan = '/passport/scan';
+
 }
