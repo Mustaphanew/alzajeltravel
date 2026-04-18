@@ -36,10 +36,14 @@ class ChangePassword extends StatelessWidget {
               Icons.lock,
               color: Color(0xFFe7b244),
             ),
-            title: Text('Change Password'.tr, style: TextStyle(fontWeight: FontWeight.bold)),
-            // backgroundColor: cs.surfaceContainerHighest,
+            title: Text(
+              'Change Password'.tr,
+              style: TextStyle(fontWeight: FontWeight.bold, color: cs.onSurface),
+            ),
+            iconColor: cs.onSurface,
+            collapsedIconColor: cs.onSurface,
             collapsedBackgroundColor: cs.surfaceContainerHighest,
-            backgroundColor: Color(0xFFe4e4e4),
+            backgroundColor: cs.surfaceContainerHighest,
             shape:  RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
               // border top

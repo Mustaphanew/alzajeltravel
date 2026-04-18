@@ -70,52 +70,59 @@ class FaringsBaggagesTable extends StatelessWidget {
               Divider(color: cs.outline.withOpacity(0.4), height: 16, thickness: 0.7),
             ],
 
-            // الجدول نفسه
-            DataTable(
-              horizontalMargin: 0,
-              columnSpacing: 32,
-              headingRowHeight: 36,
-              dataRowMinHeight: 32,
-              dataRowMaxHeight: 40,
-              headingTextStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
-              dataTextStyle: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-              headingRowColor: MaterialStateColor.resolveWith((states) => cs.surface.withOpacity(0.7)),
-              columns: [
-                for (final key in columnsKeys)
-                  DataColumn(
-                    label: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(labelFromKey(key).tr, style: TextStyle(color: cs.primaryContainer)),
+            // الجدول نفسه — header بهوية Navy + Gold
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: DataTable(
+                horizontalMargin: 12,
+                columnSpacing: 32,
+                headingRowHeight: 40,
+                dataRowMinHeight: 32,
+                dataRowMaxHeight: 40,
+                headingTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.secondary,
+                  letterSpacing: 0.3,
+                ),
+                dataTextStyle: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurface),
+                headingRowColor: WidgetStateColor.resolveWith((states) => cs.primary),
+                dividerThickness: 0.6,
+                columns: [
+                  for (final key in columnsKeys)
+                    DataColumn(
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(labelFromKey(key).tr),
+                      ),
+                      numeric: isNumericColumn(key),
+                      headingRowAlignment: MainAxisAlignment.start,
                     ),
-                    numeric: isNumericColumn(key),
-                    headingRowAlignment: MainAxisAlignment.start,
-                  ),
-              ],
-              rows: [
-                for (final row in data)
-                  DataRow(
-                    cells: [
-                      for (final key in columnsKeys)
-                        DataCell(
-                          Align(
-                            alignment: isNumericColumn(key)
-                                ? AlignmentDirectional.centerEnd
-                                : AlignmentDirectional.centerStart,
-                            child: Text(
-                              '${row[key] ?? ''}',
-                              textAlign: isNumericColumn(key) ? TextAlign.end : TextAlign.start,
+                ],
+                rows: [
+                  for (final row in data)
+                    DataRow(
+                      cells: [
+                        for (final key in columnsKeys)
+                          DataCell(
+                            Align(
+                              alignment: isNumericColumn(key)
+                                  ? AlignmentDirectional.centerEnd
+                                  : AlignmentDirectional.centerStart,
+                              child: Text(
+                                '${row[key] ?? ''}',
+                                textAlign: isNumericColumn(key) ? TextAlign.end : TextAlign.start,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-              ], 
+                      ],
+                    ),
+                ],
+              ),
             ),
-            
           ],
         ),
       ),
-    ); 
+    );
   }
 }
 

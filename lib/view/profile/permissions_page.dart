@@ -43,16 +43,18 @@ class PermissionsPage extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: ExpansionTile(
-          leading: Icon(
+          leading: const Icon(
             Icons.verified_user,
             color: Color(0xFF436df4),
           ),
           title: Text(
             "Permissions".tr,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold, color: cs.onSurface),
           ),
+          iconColor: cs.onSurface,
+          collapsedIconColor: cs.onSurface,
           collapsedBackgroundColor: cs.surfaceContainerHighest,
-          backgroundColor: Color(0xFFe4e4e4),
+          backgroundColor: cs.surfaceContainerHighest,
           shape: RoundedRectangleBorder(
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             side: BorderSide(width: 0, color: cs.outline),

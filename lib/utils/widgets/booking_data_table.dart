@@ -120,13 +120,18 @@ class _BookingDataTableState extends State<BookingDataTable> {
                         horizontalInside: BorderSide(color: cs.outlineVariant),
                       ),
                       children: [
-                        // Header row (one line)
+                        // Header row (one line) — Navy + Gold
                         TableRow(
-                          decoration: BoxDecoration(color: cs.surface.withOpacity(0.7)),
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            border: Border(
+                              bottom: BorderSide(color: cs.secondary, width: 1.5),
+                            ),
+                          ),
                           children: [
                             for (var i = 0; i < cols.length; i++)
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 child: Align(
                                   alignment: _cellAlignment(i, cols.length),
                                   child: Text(
@@ -137,7 +142,8 @@ class _BookingDataTableState extends State<BookingDataTable> {
                                     overflow: TextOverflow.visible,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: cs.primary,
+                                      color: cs.secondary,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
                                 ),
