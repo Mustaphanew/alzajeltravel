@@ -133,26 +133,45 @@ class _IssuingPageState extends State<IssuingPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? cs.surface
+              : const Color(0xFFFAF6F1),
           appBar: AppBar(
-            title: Text("Issuing".tr),
-            // leading: IconButton(
-            //   tooltip: "Back".tr,
-            //   icon: const Icon(Icons.arrow_back),
-            //   onPressed: () {
-            //     Get.back();
-            //   },
-            // ),
+            title: Text(
+              "Issuing".tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: AppConsts.xlg,
+                letterSpacing: 0.3,
+              ),
+            ),
+            backgroundColor: AppConsts.primaryColor,
+            foregroundColor: Colors.white,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: AppConsts.xlg,
+            ),
+            elevation: 0,
+            centerTitle: true,
             actions: [
               if (widget.booking.status == BookingStatus.confirmed)
                 Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 12),
+                  padding: const EdgeInsetsDirectional.only(end: 10),
                   child: TextButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                      minimumSize: const Size(100, 30),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppConsts.secondaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                      minimumSize: const Size(86, 34),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: cs.primaryContainer, width: 1),
+                        side: const BorderSide(color: AppConsts.secondaryColor, width: 1.3),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     onPressed: () {
@@ -200,9 +219,9 @@ class _IssuingPageState extends State<IssuingPage> {
                       Row(
                         children: [
                           if (booking.status == BookingStatus.preBooking && !isExpired) ...[
-                            // confirm
+                            // confirm — زر CTA ذهبي مع نصّ Navy
                             Expanded(
-                              child: ElevatedButton(
+                              child: ElevatedButton.icon(
                                 onPressed: () async {
                                   final dialog = await CustomDialog.success(
                                     context,
@@ -214,24 +233,17 @@ class _IssuingPageState extends State<IssuingPage> {
                                         'will be deducted from your balance'.tr,
                                     btnOkText: 'Confirm'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
                                   try {
                                     final res = await travelersReviewController.confirmBooking(booking.id);
                                     if (res != null) {
-                                      // update travelers by setTicketNumber
                                       final passengers = res['passengers'] as List;
                                       for (var passenger in passengers) {
                                         travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
                                       }
-                                      print("res['booking']['status'] ${res['booking']['status']}");
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                                      print("booking.status.name: $bookingStatus");
                                     }
                                   } catch (e) {
                                     Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
@@ -239,20 +251,25 @@ class _IssuingPageState extends State<IssuingPage> {
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
                                 },
-                                child: Text("Confirm Booking".tr),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppConsts.secondaryColor,
+                                  foregroundColor: AppConsts.primaryColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.check_circle_rounded, size: 18),
+                                label: Text("Confirm Booking".tr),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // cancel
+                            // cancel — زر outlined أحمر
                             Expanded(
-                              child: TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: cs.error,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(color: cs.error),
-                                  ),
-                                ),
+                              child: OutlinedButton.icon(
                                 onPressed: () async {
                                   final dialog = await CustomDialog.error(
                                     context,
@@ -260,50 +277,41 @@ class _IssuingPageState extends State<IssuingPage> {
                                     desc: 'Are you sure you want to cancel this pre-booking?'.tr,
                                     btnOkText: 'Cancel'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
                                   try {
                                     final res = await travelersReviewController.cancelPreBooking(booking.id);
                                     if (res != null) {
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                              
-                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                          ? DateTime.parse(res['flight']['cancelled_at'])
-                                          : null;
-                                      DateTime? voidTime = res['flight']['void_time'] != null
-                                          ? DateTime.parse(res['flight']['void_time'])
-                                          : null;
-                                      cancelOn = _formatDateTime(cancelledAt);
-                                      voidOn = _formatDateTime(voidTime);
-                                      print("booking.status.name: $bookingStatus");
+                                      cancelOn = _formatDateTime(res['flight']['cancelled_at'] != null ? DateTime.parse(res['flight']['cancelled_at']) : null);
+                                      voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
                                     Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
-                                    print("cancelPreBooking error: $e");
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
                                 },
-                                child: Text("Cancel".tr),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  side: BorderSide(color: cs.error, width: 1.3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                label: Text("Cancel".tr),
                               ),
                             ),
                           ],
                           if (booking.status == BookingStatus.confirmed && allowVoid()) ...[
-                            // void
+                            // void — زر outlined أحمر بعرض كامل
                             Expanded(
-                              child: TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: cs.error,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(color: cs.error),
-                                  ),
-                                ),
+                              child: OutlinedButton.icon(
                                 onPressed: () async {
                                   final dialog = await CustomDialog.error(
                                     context,
@@ -311,38 +319,34 @@ class _IssuingPageState extends State<IssuingPage> {
                                     desc: 'Are you sure you want to void this issue?'.tr,
                                     btnOkText: 'Void'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
                                   try {
                                     final res = await travelersReviewController.voidIssue(booking.id);
                                     if (res != null) {
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                              
-                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                          ? DateTime.parse(res['flight']['cancelled_at'])
-                                          : null;
-                              
-                                      DateTime? voidTime = res['flight']['void_time'] != null
-                                          ? DateTime.parse(res['flight']['void_time'])
-                                          : null;
-                              
-                                      cancelOn = _formatDateTime(cancelledAt);
-                                      voidOn = _formatDateTime(voidTime);
-                                      print("booking.status.name: $bookingStatus");
+                                      cancelOn = _formatDateTime(res['flight']['cancelled_at'] != null ? DateTime.parse(res['flight']['cancelled_at']) : null);
+                                      voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
                                     Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
-                                    print("❌ voidIssue error: $e");
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
                                 },
-                                child: Text("Void".tr),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  side: BorderSide(color: cs.error, width: 1.3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.block_rounded, size: 18),
+                                label: Text("Void".tr),
                               ),
                             ),
                           ],
@@ -350,39 +354,72 @@ class _IssuingPageState extends State<IssuingPage> {
                       ),
                       if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
                         const SizedBox(height: 12),
-                        Card(
-                          child: Container(
-                            padding: EdgeInsets.only(top: 12, bottom: 16),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              // color: cs.secondary,
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: cs.surfaceContainerHighest,
+                            border: Border.all(
+                              color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+                              width: 1.3,
                             ),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        "Time Left".tr,
-                                        style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppConsts.secondaryColor.withValues(alpha: 0.10),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: RadialGradient(
+                                        colors: [
+                                          AppConsts.secondaryColor.withValues(alpha: 0.22),
+                                          AppConsts.secondaryColor.withValues(alpha: 0.0),
+                                        ],
                                       ),
-                                      Icon(Icons.access_time, color: cs.primary),
-                                    ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(
+                                      Icons.access_time_filled_rounded,
+                                      color: AppConsts.secondaryColor,
+                                      size: 18,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Divider(indent: 12, endIndent: 12, thickness: 2),
-
-                                TimeRemaining(
-                                  timeLimit: timeLimit,
-                                  createdAt: widget.booking.createdOn,
-                                  expiredText: 'Expired'.tr,
-                                  showExpiredAsZeros: false,
-                                ),
-                              ],
-                            ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    "Time Left".tr,
+                                    style: TextStyle(
+                                      fontSize: AppConsts.lg,
+                                      fontWeight: FontWeight.bold,
+                                      color: cs.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: cs.outlineVariant.withValues(alpha: 0.4),
+                              ),
+                              const SizedBox(height: 10),
+                              TimeRemaining(
+                                timeLimit: timeLimit,
+                                createdAt: widget.booking.createdOn,
+                                expiredText: 'Expired'.tr,
+                                showExpiredAsZeros: false,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -415,153 +452,61 @@ class _IssuingPageState extends State<IssuingPage> {
 
                       ...[
                         FirstTitle(title: "Booking".tr),
-                        const SizedBox(height: 4),
-
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: Ink(
-                            color: cs.surfaceContainer,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // LEFT (labels) like the travelers design
-                                Ink(
-                                  color: cs.surface,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                    child: IntrinsicWidth(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          SecondTitle(title: "PNR"),
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Number".tr),
-                                          Divider(thickness: 1),
-                                          SecondTitle(title: "Created at".tr),
-
-                                          if (voidOn != null) ...[Divider(thickness: 1), SecondTitle(title: "Void On".tr)],
-                                          if (cancelOn != null && voidOn == null) ...[
-                                            Divider(thickness: 1),
-                                            SecondTitle(title: "Cancel On".tr),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // RIGHT (values)
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        SecondTitle(title: (widget.pnr.isNotEmpty ? widget.pnr : "N/A")),
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: booking.bookingId),
-                                        const Divider(thickness: 1),
-                                        SecondTitle(title: createdOn),
-                                        if (voidOn != null) ...[const Divider(thickness: 1), SecondTitle(title: voidOn!)],
-                                        if (cancelOn != null && voidOn == null) ...[
-                                          const Divider(thickness: 1),
-                                          SecondTitle(title: cancelOn!),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                        const SizedBox(height: 10),
+                        _InfoCard(
+                          children: [
+                            _InfoRow(
+                              label: "Number".tr,
+                              value: booking.bookingId,
+                              valueColor: const Color(0xFFC62828), // أحمر كما في الموقع — مميّز للحجز
+                              monospace: true,
+                              copyable: true,
                             ),
-                          ),
+                            _InfoRow(
+                              label: "PNR",
+                              value: widget.pnr.isNotEmpty ? widget.pnr : "N/A".tr,
+                              valueColor: AppConsts.secondaryColor, // ذهبي — نفس لون PNR في بطاقات الحجوزات
+                              monospace: true,
+                              copyable: true,
+                            ),
+                            _InfoRow(
+                              label: "Created at".tr,
+                              value: createdOn,
+                            ),
+                            if (voidOn != null)
+                              _InfoRow(
+                                label: "Void On".tr,
+                                value: voidOn!,
+                                valueColor: const Color(0xFF8E24AA),
+                              ),
+                            if (cancelOn != null && voidOn == null)
+                              _InfoRow(
+                                label: "Cancel On".tr,
+                                value: cancelOn!,
+                                valueColor: const Color(0xFFC62828),
+                              ),
+                          ],
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      Divider(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       ...[
                         FirstTitle(title: "Travelers".tr),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: travelersReviewController.travelers.length,
-                            padding: EdgeInsets.zero,
-                            itemBuilder: (context, index) {
-                              final traveler = travelersReviewController.travelers[index];
-                              return Ink(
-                                color: cs.surfaceContainer,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Ink(
-                                      color: cs.surface,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                        child: IntrinsicWidth(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            spacing: 3,
-                                            children: [
-                                              SecondTitle(title: "Full Name".tr),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: "Date of Birth".tr),
-                                              const Divider(thickness: 1),
-                                              SecondTitle(title: "Ticket".tr),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          spacing: 3,
-                                          children: [
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
-                                              alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
-                                              child: Text(
-                                                traveler.passport.fullName,
-                                                style: TextStyle(
-                                                  fontSize: AppConsts.lg, // الحجم الأقصى
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            const Divider(thickness: 1),
-                                            SecondTitle(
-                                              title: AppFuns.replaceArabicNumbers(
-                                                intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
-                                              ),
-                                            ),
-                                            const Divider(thickness: 1),
-                                            SecondTitle(title: traveler.ticketNumber ?? 'N/A'),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            separatorBuilder: (context, index) =>
-                                Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: const Divider(thickness: 2)),
-                          ),
-                        ),
+                        const SizedBox(height: 10),
+                        ...List.generate(travelersReviewController.travelers.length, (index) {
+                          final traveler = travelersReviewController.travelers[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _TravelerCard(
+                              index: index + 1,
+                              fullName: traveler.passport.fullName,
+                              dateOfBirth: AppFuns.replaceArabicNumbers(
+                                intl.DateFormat('dd MMM yyyy', AppVars.lang).format(traveler.passport.dateOfBirth!),
+                              ),
+                              ticketNumber: traveler.ticketNumber,
+                            ),
+                          );
+                        }),
                       ],
 
                       const SizedBox(height: 16),
@@ -574,17 +519,37 @@ class _IssuingPageState extends State<IssuingPage> {
                       ...[
                         FirstTitle(title: "Pricing".tr),
                         FaringsBaggagesTable(context: context, data: faringsData),
-                        // total all
-                        const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        // total all — سطر بارز بلون ذهبي
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppConsts.secondaryColor.withValues(alpha: 0.12),
+                            border: Border.all(
+                              color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Row(
                             children: [
-                              SecondTitle(title: "Total All"),
+                              Text(
+                                "Total All".tr,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppConsts.lg,
+                                  color: cs.onSurface,
+                                ),
+                              ),
                               const Spacer(),
                               SelectableText(
                                 AppFuns.priceWithCoin(summary.totalPrice, booking.currency),
-                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: AppConsts.xlg,
+                                  color: AppConsts.secondaryColor,
+                                  letterSpacing: 0.4,
+                                ),
                               ),
                             ],
                           ),
@@ -786,34 +751,70 @@ class StatusCard extends StatelessWidget {
   final ColorScheme cs;
   final String bookingStatus;
 
+  ({Color color, IconData icon}) _visuals() {
+    if (bookingStatus == BookingStatus.confirmed.name) {
+      return (color: const Color(0xFF2E7D32), icon: Icons.check_circle_rounded);
+    }
+    if (bookingStatus == BookingStatus.preBooking.name ||
+        bookingStatus == BookingStatus.pending.name) {
+      return (color: const Color(0xFFF59E0B), icon: Icons.schedule_rounded);
+    }
+    if (bookingStatus == BookingStatus.canceled.name ||
+        bookingStatus == BookingStatus.expiry.name) {
+      return (color: const Color(0xFFC62828), icon: Icons.cancel_rounded);
+    }
+    if (bookingStatus == BookingStatus.voided.name ||
+        bookingStatus == BookingStatus.voide.name) {
+      return (color: const Color(0xFF8E24AA), icon: Icons.block_rounded);
+    }
+    return (color: const Color(0xFF78909C), icon: Icons.help_outline_rounded);
+  }
+
   @override
   Widget build(BuildContext context) {
-    Color color = cs.secondary;
-    IconData icon = Icons.info;
-    if (bookingStatus == BookingStatus.preBooking.name) {
-      color = cs.secondary;
-      icon = Icons.info;
-    } else if (bookingStatus == BookingStatus.confirmed.name) {
-      color = cs.secondaryFixed;
-      icon = Icons.check_circle;
-    } else if (bookingStatus == BookingStatus.canceled.name || bookingStatus == BookingStatus.expiry.name) {
-      color = cs.tertiary;
-      icon = Icons.error;
-    } else if (bookingStatus == BookingStatus.voided.name) {
-      color = cs.error;
-      icon = Icons.error;
-    }
+    final v = _visuals();
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(color: color),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            v.color,
+            v.color.withValues(alpha: 0.85),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: v.color.withValues(alpha: 0.30),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: cs.onPrimary),
-          SizedBox(width: 12),
-          // FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
-          FirstTitle(title: bookingStatus.tr, color: cs.onPrimary),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.20),
+            ),
+            alignment: Alignment.center,
+            child: Icon(v.icon, size: 20, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            bookingStatus.tr,
+            style: const TextStyle(
+              fontSize: AppConsts.xlg,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.4,
+            ),
+          ),
         ],
       ),
     );
@@ -827,9 +828,28 @@ class FirstTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: color),
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppConsts.secondaryColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: AppConsts.xlg,
+            fontWeight: FontWeight.bold,
+            color: color ?? cs.onSurface,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -851,4 +871,303 @@ String? _formatDateTime(DateTime? d) {
   if (d == null) return null;
   final s = intl.DateFormat('dd - MMM - yyyy | hh:mm:ss a', AppVars.lang).format(d);
   return AppFuns.replaceArabicNumbers(s);
+}
+
+/// بطاقة حاوية أنيقة — بحدّ ناعم وخلفية متكيّفة مع الثيم
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+  const _InfoCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.45),
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+}
+
+/// صفّ معلومة بنمط "تسمية | قيمة" — مع فاصل ناعم بين الصفوف
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool monospace;
+  final bool copyable;
+
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.monospace = false,
+    this.copyable = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: AppConsts.normal,
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(
+                    value,
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: AppConsts.normal,
+                      color: valueColor ?? cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: monospace ? 0.6 : 0,
+                    ),
+                  ),
+                ),
+              ),
+              if (copyable) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    Get.snackbar(
+                      "Copied".tr,
+                      value,
+                      snackPosition: SnackPosition.BOTTOM,
+                      duration: const Duration(seconds: 2),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      size: 14,
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: cs.outlineVariant.withValues(alpha: 0.3),
+        ),
+      ],
+    );
+  }
+}
+
+/// بطاقة مسافر — Avatar + اسم + تفاصيل مع إمكانية نسخ رقم التذكرة
+class _TravelerCard extends StatelessWidget {
+  final int index;
+  final String fullName;
+  final String dateOfBirth;
+  final String? ticketNumber;
+
+  const _TravelerCard({
+    required this.index,
+    required this.fullName,
+    required this.dateOfBirth,
+    this.ticketNumber,
+  });
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final hasTicket = ticketNumber != null && ticketNumber!.isNotEmpty && ticketNumber != 'N/A';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.45),
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              // Avatar ذهبي صغير برقم المسافر
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppConsts.secondaryColor, Color(0xFFD99C2F)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _initials(fullName),
+                  style: const TextStyle(
+                    color: AppConsts.primaryColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: AppConsts.lg,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Traveler".tr + " #$index",
+                      style: TextStyle(
+                        fontSize: AppConsts.sm,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+          ),
+          _InfoRow(label: "Date of Birth".tr, value: dateOfBirth),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  "Ticket".tr,
+                  style: TextStyle(
+                    fontSize: AppConsts.normal,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: hasTicket
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withValues(alpha: 0.14),
+                              border: Border.all(
+                                color: const Color(0xFF2E7D32).withValues(alpha: 0.55),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              ticketNumber!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF2E7D32),
+                                fontSize: AppConsts.normal,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'N/A'.tr,
+                            style: TextStyle(
+                              fontSize: AppConsts.normal,
+                              color: cs.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                  ),
+                ),
+                if (hasTicket) ...[
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: ticketNumber!));
+                      Get.snackbar(
+                        "Copied".tr,
+                        ticketNumber!,
+                        snackPosition: SnackPosition.BOTTOM,
+                        duration: const Duration(seconds: 2),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.copy_rounded,
+                        size: 14,
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

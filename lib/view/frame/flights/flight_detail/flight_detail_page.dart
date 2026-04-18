@@ -1,6 +1,7 @@
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
-import 'package:alzajeltravel/utils/app_vars.dart'; 
+import 'package:alzajeltravel/utils/app_consts.dart';
+import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -78,11 +79,14 @@ class _FlightDetailPageState extends State<FlightDetailPage> {
             // شريط السعر في الأسفل
             Container(
               width: double.infinity,
-              // height: 150,
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 10),
               decoration: BoxDecoration(
-                color: cs.surfaceContainer,
+                color: cs.surfaceContainerHighest,
                 border: Border(top: BorderSide(color: cs.outlineVariant, width: 0.7)),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
               child: _TripTotalSection(
                 parent: widget,
@@ -564,12 +568,23 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
         // ====== الأزرار ======
         if (widget.parent != null && (widget.parent!.onBook != null || widget.parent!.onOtherPrices != null))
           Row(
-            children: [ 
+            children: [
               if (widget.parent!.onBook != null)
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: widget.parent!.onBook!,
-                    icon: const Icon(Icons.flight_takeoff),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConsts.secondaryColor,
+                      foregroundColor: AppConsts.primaryColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: const Icon(Icons.flight_takeoff, size: 18),
                     label: Text("Book now".tr),
                   ),
                 ),
@@ -578,7 +593,17 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: widget.parent!.onOtherPrices,
-                    icon: const Icon(Icons.attach_money),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppConsts.secondaryColor,
+                      side: const BorderSide(color: AppConsts.secondaryColor, width: 1.4),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: const Icon(Icons.attach_money, size: 18),
                     label: Text("Other Prices".tr),
                   ),
                 ),

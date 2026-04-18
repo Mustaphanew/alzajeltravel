@@ -81,7 +81,27 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Bookings Report'.tr), centerTitle: true),
+      appBar: AppBar(
+        title: Text(
+          'Bookings Report'.tr,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: AppConsts.xlg,
+            letterSpacing: 0.3,
+          ),
+        ),
+        backgroundColor: AppConsts.primaryColor,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: AppConsts.xlg,
+        ),
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           ExpansionTile(
@@ -282,20 +302,7 @@ class _ReportCardState extends State<ReportCard> {
     final issueOn = item.issueOn != null ? _formatDate(item.issueOn!) : null;
     final issueOnDetail = item.issueOn != null ? _formatDateTimeDetail(item.issueOn!) : null;
 
-    Color bgStatus = cs.primaryFixed.withOpacity(0.2);
-    if (item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry) {
-      bgStatus = Colors.red[800]!.withOpacity(0.2);
-    } else if (item.flightStatus == BookingStatus.confirmed) {
-      bgStatus = Colors.green[800]!.withOpacity(0.2);
-    } else if (item.flightStatus == BookingStatus.preBooking) {
-      bgStatus = Colors.yellow[800]!.withOpacity(0.2);
-    } else if (item.flightStatus == BookingStatus.voide || item.flightStatus == BookingStatus.voided) {
-      bgStatus = Colors.red[800]!.withOpacity(0.4);
-    } else if (item.flightStatus == BookingStatus.pending) {
-      bgStatus = Colors.yellow[600]!.withOpacity(0.6);
-    } else if (item.flightStatus == BookingStatus.notFound) {
-      bgStatus = cs.primaryFixed.withOpacity(0.2);
-    }
+    final statusVisual = _statusVisuals(item.flightStatus);
 
     goToIssuingPage() async {
         context.loaderOverlay.show();
@@ -344,308 +351,540 @@ class _ReportCardState extends State<ReportCard> {
 
       }
 
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // booking & amount
-            Row(
-              children: [
-                Text(
-                  item.bookingId,
-                  style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
-                ),
-        
-                InkWell(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
-                    Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
-                  },
-                  child: Tooltip(
-                    message: "Copy booking".tr,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      child: Icon(Icons.copy_outlined, size: 18),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFecf1f8),
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: cs.outlineVariant),
-                  ),
-                  child: Text(
-                    AppFuns.priceWithCoin(item.totalAmount, item.currency),
-                    style: TextStyle(fontSize: AppConsts.xxlg, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+    final isRtl = AppVars.lang == 'ar';
+    final planeQuarterTurns = isRtl ? 3 : 1;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Material(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        elevation: 0,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.5),
+              width: 1,
             ),
-            const SizedBox(height: 6),
-        
-            // PNR
-            Text('PNR'.tr),
-            Text(item.pnr, style: const TextStyle(fontWeight: FontWeight.bold)),
-        
-            const SizedBox(height: 12),
-        
-            // route
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.origin.name[AppVars.lang],
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg),
-                    ),
-                    Text(item.origin.code, style: TextStyle(fontSize: AppConsts.lg)),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const DividerLine(),
-                        if (item.journeyType == JourneyType.oneWay) 
-                          RotatedBox(
-                            quarterTurns: (AppVars.lang == "en")? 1: 3,
-                            child: Icon(
-                              Icons.flight,
-                              size: 24,
-                              color: cs.primaryContainer,
-                            ),
-                          ),
-                        if (item.journeyType == JourneyType.roundTrip)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            color: cs.surfaceContainerHighest,
-                            child: const Icon(Icons.sync_alt, size: 28),
-                          ),
-                      ],
-                    ),
+            boxShadow: [
+              BoxShadow(
+                color: AppConsts.primaryColor.withValues(alpha: 0.10),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ━━━━━━ ❶ Navy ribbon: booking id + amount + PNR/travel date ━━━━━━
+              _buildRibbon(cs, travel),
+
+              // ━━━━━━ ❷ Route ━━━━━━
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: _buildRoute(cs, planeQuarterTurns),
+              ),
+
+              // ━━━━━━ ❸ Info row: conditional issue-on / deadline / cancel / void ━━━━━━
+              if (item.flightStatus == BookingStatus.preBooking ||
+                  item.flightStatus == BookingStatus.confirmed ||
+                  item.flightStatus == BookingStatus.canceled ||
+                  item.flightStatus == BookingStatus.expiry ||
+                  item.flightStatus == BookingStatus.voided ||
+                  item.flightStatus == BookingStatus.voide)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: _buildDatesRow(
+                    cs,
+                    timeDeadline: timeDeadline,
+                    timeDeadlineDetail: timeDeadlineDetail,
+                    issueOn: issueOn,
+                    issueOnDetail: issueOnDetail,
+                    cancelled: cancelled,
+                    cancelledDetail: cancelledDetail,
+                    voided: voided,
+                    voidedDetail: voidedDetail,
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+
+              // Divider
+              Divider(height: 1, thickness: 1, color: cs.outlineVariant.withValues(alpha: 0.4)),
+
+              // ━━━━━━ ❹ Passengers + Status chip ━━━━━━
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: Row(
                   children: [
-                    Text(item.destination.name[AppVars.lang], style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(item.destination.code),
+                    _paxChip(FontAwesomeIcons.solidUser, item.adult, const Color(0xFF436DF4)),
+                    const SizedBox(width: 10),
+                    _paxChip(FontAwesomeIcons.child, item.child, const Color(0xFF438559)),
+                    const SizedBox(width: 10),
+                    _paxChip(FontAwesomeIcons.babyCarriage, item.inf, const Color(0xFFC74649)),
+                    const Spacer(),
+                    _statusChip(statusVisual),
                   ],
                 ),
-              ],
-            ),
-        
-            const SizedBox(height: 8),
-            const Divider(),
-            const SizedBox(height: 8),
-        
-            // travel date (departure & return)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+
+              // ━━━━━━ ❺ Created-at + CTA ━━━━━━
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Row(
                   children: [
-                    Text('Flight Date'.tr),
-                    Text(travel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                if (item.flightStatus == BookingStatus.preBooking)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Time Deadline'.tr),
-                      GestureDetector(
-                        onTap: () => setState(() => showTimeDeadlineDetail = !showTimeDeadlineDetail),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: Text(
-                            showTimeDeadlineDetail ? (timeDeadlineDetail ?? '_') : (timeDeadline ?? '_'),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                    Icon(Icons.schedule_rounded, size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => setState(() => showCreatedAtDetail = !showCreatedAtDetail),
+                      child: Text(
+                        showCreatedAtDetail ? createdDetail : created,
+                        style: TextStyle(
+                          fontSize: AppConsts.sm,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    // زرّ "تفاصيل الرحلة" — خلفية Navy + نص أبيض عريض + سهم ذهبي
+                    Material(
+                      color: AppConsts.primaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: goToIssuingPage,
+                        splashColor: AppConsts.secondaryColor.withValues(alpha: 0.20),
+                        highlightColor: AppConsts.secondaryColor.withValues(alpha: 0.08),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Flight Details'.tr,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: AppConsts.normal,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                isRtl ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                                size: 16,
+                                color: AppConsts.secondaryColor,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                if (item.flightStatus == BookingStatus.confirmed)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Issue On'.tr),
-                      GestureDetector(
-                        onTap: () => setState(() => showIssueOnDetail = !showIssueOnDetail),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: cs.outlineVariant),
-                          ),
-                          child: Text(
-                            showIssueOnDetail ? (issueOnDetail ?? '_') : (issueOn ?? '_'),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-        
-            const SizedBox(height: 8),
-        
-            // cancel_on
-            if (item.flightStatus == BookingStatus.canceled || item.flightStatus == BookingStatus.expiry)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Cancel On'.tr),
-                  GestureDetector(
-                    onTap: () => setState(() => showCancelledDetail = !showCancelledDetail),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: cs.outlineVariant),
-                      ),
-                      child: Text(
-                        showCancelledDetail ? (cancelledDetail ?? '_') : (cancelled ?? '_'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
                     ),
-                  ),
-                ],
-              ),
-        
-            // void_on
-            if (item.flightStatus == BookingStatus.voided || item.flightStatus == BookingStatus.voide)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Void On'.tr),
-                  GestureDetector(
-                    onTap: () => setState(() => showVoidedDetail = !showVoidedDetail),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: cs.outlineVariant),
-                      ),
-                      child: Text(
-                        showVoidedDetail ? (voidedDetail ?? '_') : (voided ?? '_'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-        
-            const SizedBox(height: 8),
-        
-            // count adult children and infants
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: cs.primaryContainer.withOpacity(0.4)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    children: [
-                      const Icon(
-                        FontAwesomeIcons.solidUser, 
-                        color: Color(0xFF436df4),
-                        size: 20,
-                      ), 
-                      Text(item.adult.toString()),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Icon(
-                        FontAwesomeIcons.child,
-                        color: Color(0xFF438559),
-                        size: 22,
-                      ), 
-                      Text(item.child.toString()),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Icon(
-                        FontAwesomeIcons.babyCarriage,
-                        color: Color(0xFFc74649),
-                        size: 22,
-                      ), 
-                      Text(item.inf.toString()),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-        
-            const SizedBox(height: 8),
-        
-            // created at (relative / detail toggle)
-            StatefulBuilder(
-              builder: (context, innerState) {
-                return GestureDetector(
-                  onTap: () => innerState(() => showCreatedAtDetail = !showCreatedAtDetail),
-                  child: Row(
-                    children: [
-                      // show status
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: bgStatus, borderRadius: BorderRadius.circular(4)),
-                        child: Text(item.flightStatus.name.tr, style: TextStyle(fontSize: 14)),
-                      ),
-                
-                      const Spacer(),
-                      Text(showCreatedAtDetail ? createdDetail : created, style: TextStyle(fontSize: AppConsts.sm)),
-                    ],
-                  ),
-                );
-              }
-            ),
-          
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(
-                      color: Color(0xff132057),
-                    ),
-                  ),
+                  ],
                 ),
-                onPressed: goToIssuingPage,
-                child: Text('Flight Details'.tr),
               ),
-            ),
-          
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // Helpers
+  // ══════════════════════════════════════════════════════════════
+
+  Widget _buildRibbon(ColorScheme cs, String travel) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConsts.primaryColor,
+            AppConsts.primaryColor.withValues(alpha: 0.92),
           ],
         ),
       ),
-    
-    
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              InkWell(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
+                  Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
+                },
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(Icons.copy_rounded, size: 16, color: Colors.white.withValues(alpha: 0.7)),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  item.bookingId,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AppConsts.lg,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppConsts.secondaryColor,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  AppFuns.priceWithCoin(item.totalAmount, item.currency),
+                  style: const TextStyle(
+                    color: AppConsts.primaryColor,
+                    fontSize: AppConsts.normal,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'PNR'.tr,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: AppConsts.sm,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                item.pnr.isEmpty ? '—' : item.pnr,
+                style: const TextStyle(
+                  color: AppConsts.secondaryColor,
+                  fontSize: AppConsts.normal,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 3,
+                height: 3,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Icon(Icons.calendar_month_rounded, size: 13, color: Colors.white.withValues(alpha: 0.7)),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  travel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: AppConsts.sm,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildRoute(ColorScheme cs, int planeQuarterTurns) {
+    final nameStyle = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: AppConsts.lg,
+      color: cs.onSurface,
+    );
+    final codeStyle = TextStyle(
+      fontSize: AppConsts.sm,
+      color: cs.onSurfaceVariant,
+      letterSpacing: 1,
+    );
+
+    Widget cityCol({
+      required String name,
+      required String code,
+      required CrossAxisAlignment align,
+      required TextAlign textAlign,
+    }) {
+      // ConstrainedBox يسمح للنص أن يأخذ عرضه الطبيعي حتى 140px،
+      // فوق ذلك يُقتطع بـ ellipsis ويبقى تخطيط البطاقة مستقرًّا.
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 140),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: align,
+          children: [
+            Text(
+              name,
+              textAlign: textAlign,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: nameStyle,
+            ),
+            Text(code, textAlign: textAlign, style: codeStyle),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // ───── المدينة الأولى عند الطرف ─────
+        cityCol(
+          name: item.origin.name[AppVars.lang] ?? '',
+          code: item.origin.code,
+          align: CrossAxisAlignment.start,
+          textAlign: TextAlign.start,
+        ),
+
+        const SizedBox(width: 8),
+        _endDot(),
+
+        // الخطّ الأول: مرن، يبدأ ذهبيًّا عند النقطة ويتلاشى نحو الطائرة
+        Expanded(child: _gradientLine(fromStart: true)),
+
+        // الطائرة (أو sync_alt للـ round-trip)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: (item.journeyType == JourneyType.roundTrip)
+              ? const Icon(Icons.sync_alt_rounded, size: 22, color: AppConsts.secondaryColor)
+              : RotatedBox(
+                  quarterTurns: planeQuarterTurns,
+                  child: const Icon(
+                    Icons.flight_rounded,
+                    size: 22,
+                    color: AppConsts.secondaryColor,
+                  ),
+                ),
+        ),
+
+        // الخطّ الثاني: يتلاشى من الطائرة ويكتمل عند النقطة
+        Expanded(child: _gradientLine(fromStart: false)),
+
+        _endDot(),
+        const SizedBox(width: 8),
+
+        // ───── المدينة الثانية عند الطرف ─────
+        cityCol(
+          name: item.destination.name[AppVars.lang] ?? '',
+          code: item.destination.code,
+          align: CrossAxisAlignment.end,
+          textAlign: TextAlign.end,
+        ),
+      ],
+    );
+  }
+
+  /// خطّ متدرّج ذهبي — أحد طرفيه يبدأ بلون واضح (عند النقطة) والآخر يتلاشى (عند الطائرة)
+  Widget _gradientLine({required bool fromStart}) {
+    final colors = fromStart
+        ? [
+            AppConsts.secondaryColor.withValues(alpha: 0.8),
+            AppConsts.secondaryColor.withValues(alpha: 0.0),
+          ]
+        : [
+            AppConsts.secondaryColor.withValues(alpha: 0.0),
+            AppConsts.secondaryColor.withValues(alpha: 0.8),
+          ];
+    return Container(
+      height: 1.3,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: colors),
+      ),
+    );
+  }
+
+  Widget _endDot() {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppConsts.secondaryColor,
+        boxShadow: [
+          BoxShadow(
+            color: AppConsts.secondaryColor.withValues(alpha: 0.5),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatesRow(
+    ColorScheme cs, {
+    String? timeDeadline,
+    String? timeDeadlineDetail,
+    String? issueOn,
+    String? issueOnDetail,
+    String? cancelled,
+    String? cancelledDetail,
+    String? voided,
+    String? voidedDetail,
+  }) {
+    String? label;
+    String? value;
+    String? valueDetail;
+    bool showDetail = false;
+    VoidCallback? onToggle;
+    IconData icon = Icons.event_note_rounded;
+
+    if (item.flightStatus == BookingStatus.preBooking && timeDeadline != null) {
+      label = 'Time Deadline'.tr;
+      value = timeDeadline;
+      valueDetail = timeDeadlineDetail;
+      showDetail = showTimeDeadlineDetail;
+      onToggle = () => setState(() => showTimeDeadlineDetail = !showTimeDeadlineDetail);
+      icon = Icons.timer_outlined;
+    } else if (item.flightStatus == BookingStatus.confirmed && issueOn != null) {
+      label = 'Issue On'.tr;
+      value = issueOn;
+      valueDetail = issueOnDetail;
+      showDetail = showIssueOnDetail;
+      onToggle = () => setState(() => showIssueOnDetail = !showIssueOnDetail);
+      icon = Icons.send_rounded;
+    } else if ((item.flightStatus == BookingStatus.canceled ||
+            item.flightStatus == BookingStatus.expiry) &&
+        cancelled != null) {
+      label = 'Cancel On'.tr;
+      value = cancelled;
+      valueDetail = cancelledDetail;
+      showDetail = showCancelledDetail;
+      onToggle = () => setState(() => showCancelledDetail = !showCancelledDetail);
+      icon = Icons.cancel_schedule_send_outlined;
+    } else if ((item.flightStatus == BookingStatus.voided ||
+            item.flightStatus == BookingStatus.voide) &&
+        voided != null) {
+      label = 'Void On'.tr;
+      value = voided;
+      valueDetail = voidedDetail;
+      showDetail = showVoidedDetail;
+      onToggle = () => setState(() => showVoidedDetail = !showVoidedDetail);
+      icon = Icons.block_rounded;
+    }
+
+    if (label == null || value == null) return const SizedBox.shrink();
+
+    return GestureDetector(
+      onTap: onToggle,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppConsts.secondaryColor),
+          const SizedBox(width: 6),
+          Text(
+            '$label:',
+            style: TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: AppConsts.sm,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              showDetail ? (valueDetail ?? value) : value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: cs.onSurface,
+                fontSize: AppConsts.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _paxChip(IconData icon, int count, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withValues(alpha: 0.15),
+          ),
+          child: Icon(icon, size: 14, color: color),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$count',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppConsts.normal,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statusChip(({Color color, IconData icon}) v) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: v.color.withValues(alpha: 0.14),
+        border: Border.all(color: v.color.withValues(alpha: 0.6), width: 1),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(v.icon, size: 13, color: v.color),
+          const SizedBox(width: 4),
+          Text(
+            item.flightStatus.name.tr,
+            style: TextStyle(
+              color: v.color,
+              fontSize: AppConsts.sm,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ({Color color, IconData icon}) _statusVisuals(BookingStatus s) {
+    if (s == BookingStatus.confirmed) {
+      return (color: const Color(0xFF2E7D32), icon: Icons.check_circle_rounded);
+    }
+    if (s == BookingStatus.preBooking || s == BookingStatus.pending) {
+      return (color: const Color(0xFFF59E0B), icon: Icons.schedule_rounded);
+    }
+    if (s == BookingStatus.canceled || s == BookingStatus.expiry) {
+      return (color: const Color(0xFFC62828), icon: Icons.cancel_rounded);
+    }
+    if (s == BookingStatus.voided || s == BookingStatus.voide) {
+      return (color: const Color(0xFF8E24AA), icon: Icons.block_rounded);
+    }
+    return (color: const Color(0xFF78909C), icon: Icons.help_outline_rounded);
   }
 }
 

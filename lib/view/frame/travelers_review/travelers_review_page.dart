@@ -118,7 +118,29 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
             },
 
             child: Scaffold(
-              appBar: AppBar(title: Text('Travelers review'.tr)),
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.surface
+                  : const Color(0xFFFAF6F1),
+              appBar: AppBar(
+                title: Text(
+                  'Travelers review'.tr,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontSize: AppConsts.xlg,
+                  ),
+                ),
+                backgroundColor: AppConsts.primaryColor,
+                foregroundColor: Colors.white,
+                iconTheme: const IconThemeData(color: Colors.white),
+                titleTextStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: AppConsts.xlg,
+                ),
+                elevation: 0,
+                centerTitle: true,
+              ),
               body: Column(
                 children: [
                   // ======= المحتوى الرئيسي القابل للتمرير =======
@@ -658,92 +680,95 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
   Widget _buildSummaryBar(BuildContext context, TravelersReviewController c, ColorScheme cs) {
     final offerDetail = flightDetailApiController.revalidatedDetails.value;
     final currency = offerDetail?.offer.currency ?? 'USD';
-    print("c.summary.childCount: ${c.travelers.last.ageGroupLabel}");
+
+    TextStyle breakdownStyle() => TextStyle(
+      fontSize: AppConsts.normal,
+      color: Colors.white.withValues(alpha: 0.85),
+    );
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsetsDirectional.only(top: 12, start: 16, end: 16, bottom: 26),
+      padding: const EdgeInsetsDirectional.only(top: 14, start: 16, end: 16, bottom: 18),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-        boxShadow: [BoxShadow(color: cs.primaryFixed, blurRadius: 5, offset: const Offset(0, 3))],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppConsts.primaryColor,
+            AppConsts.primaryColor.withValues(alpha: 0.92),
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConsts.primaryColor.withValues(alpha: 0.25),
+            offset: const Offset(0, -4),
+            blurRadius: 14,
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ======= تفاصيل الأسعار =======
           Expanded(
-            child: Align(
-              alignment: AlignmentDirectional.topStart,
-              child: IntrinsicWidth(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Adult
-                    Wrap(
-                      direction: Axis.horizontal,
-                      children: [
-                        Text('Adult'.tr + ' ${c.summary.adultCount}', style: const TextStyle(fontSize: AppConsts.lg)),
-                        Text(
-                          ': ${AppFuns.priceWithCoin(c.summary.adultTotalFare ?? 0.0, currency)}',
-                          style: const TextStyle(fontSize: AppConsts.lg),
-                        ),
-                      ],
-                    ),
-
-                    // Child
-                    if (c.summary.childTotalFare != null)
-                      Wrap(
-                        direction: Axis.horizontal,
-                        children: [
-                          Text('Child'.tr + ' ${c.summary.childCount}', style: const TextStyle(fontSize: AppConsts.lg)),
-                          Text(
-                            ': ${AppFuns.priceWithCoin(c.summary.childTotalFare ?? 0.0, currency)}',
-                            style: const TextStyle(fontSize: AppConsts.lg),
-                          ),
-                        ],
-                      ),
-
-                    // Infant
-                    if (c.summary.infantLapTotalFare != null)
-                      Wrap(
-                        direction: Axis.horizontal,
-                        children: [
-                          Text('Infant'.tr + ' ${c.summary.infantLapCount}', style: const TextStyle(fontSize: AppConsts.lg)),
-                          Text(
-                            ': ${AppFuns.priceWithCoin(c.summary.infantLapTotalFare ?? 0.0, currency)}',
-                            style: const TextStyle(fontSize: AppConsts.lg),
-                          ),
-                        ],
-                      ),
-
-                    // 🔹 Divider الآن بعرض الـ Column (يعني على قد النص)
-                    const SizedBox(height: 8),
-                    Divider(color: cs.primaryFixed),
-
-                    // Total
-                    Wrap(
-                      direction: Axis.horizontal,
-                      children: [
-                        Text(
-                          'Total'.tr,
-                          style: TextStyle(color: cs.primaryContainer, fontSize: AppConsts.xxlg, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          ': ${AppFuns.priceWithCoin(c.summary.totalPrice, currency)}',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: cs.primaryContainer, fontSize: AppConsts.xxlg),
-                        ),
-                        Text(" "),
-                      ],
-                    ),
-                  ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Adult
+                Text(
+                  '${'Adult'.tr} ${c.summary.adultCount}: ${AppFuns.priceWithCoin(c.summary.adultTotalFare ?? 0.0, currency)}',
+                  style: breakdownStyle(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+
+                // Child
+                if (c.summary.childTotalFare != null)
+                  Text(
+                    '${'Child'.tr} ${c.summary.childCount}: ${AppFuns.priceWithCoin(c.summary.childTotalFare ?? 0.0, currency)}',
+                    style: breakdownStyle(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                // Infant
+                if (c.summary.infantLapTotalFare != null)
+                  Text(
+                    '${'Infant'.tr} ${c.summary.infantLapCount}: ${AppFuns.priceWithCoin(c.summary.infantLapTotalFare ?? 0.0, currency)}',
+                    style: breakdownStyle(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                const SizedBox(height: 6),
+                Divider(
+                  height: 10,
+                  thickness: 1,
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+
+                // Total
+                Text(
+                  '${'Total'.tr}: ${AppFuns.priceWithCoin(c.summary.totalPrice, currency)}',
+                  style: const TextStyle(
+                    color: AppConsts.secondaryColor,
+                    fontSize: AppConsts.xxlg,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
 
           // ======= زر تأكيد الحجز =======
           ElevatedButton.icon(
@@ -754,11 +779,6 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 final booking = BookingDataModel.fromJson(preRes['booking']);
                 final flightDetail = FlightDetail.flightDetail(preRes['flight']);
 
-                for (var segment in flightDetail.offer.segments) {
-                  print("DepartureTerminal: ${segment.fromTerminal}");
-                  print("ArrivalTerminal: ${segment.toTerminal}");
-                }
-
                 Get.offNamedUntil(
                   Routes.prebookingAndIssueing.path,
                   (route) => route.settings.name == Routes.frame.path,
@@ -768,13 +788,27 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                     "contact": widget.contact,
                     "pnr": preRes["PNR"] ?? "",
                     "booking": booking,
+                    "fromPage": "passport",
                   },
                 );
               }
               if (context.mounted) context.loaderOverlay.hide();
             },
-            icon: Text('Pre-Booking'.tr),
-            label: const Icon(Icons.arrow_forward),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConsts.secondaryColor,
+              foregroundColor: AppConsts.primaryColor,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontSize: AppConsts.normal,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            label: Text('Pre-Booking'.tr),
           ),
         ],
       ),

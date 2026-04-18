@@ -88,9 +88,18 @@ class MoreFlightDetailPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.only(left: 16, right: 16, bottom: 32, top: 15),
           decoration: BoxDecoration(
-            color: cs.surfaceContainer,
-            boxShadow: [BoxShadow(color: cs.shadow.withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2))],
-            borderRadius: BorderRadius.circular(12),
+            color: cs.surfaceContainerHighest,
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withValues(alpha: 0.18),
+                blurRadius: 12,
+                offset: const Offset(0, -3),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
           ),
           child: BottomSection(offer: offer, fareRules: fareRules, showContinueButton: showContinueButton, parent: this),
         ),
@@ -122,10 +131,16 @@ class MoreFlightDetailPage extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ExpansionTile(
               initiallyExpanded: true,
-              title: Text("Other info".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(
+                "Other info".tr,
+                style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface),
+              ),
+              iconColor: cs.onSurface,
+              collapsedIconColor: cs.onSurface,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: Color(0xffe4e4e4),
+              backgroundColor: cs.surfaceContainerHighest,
+              collapsedBackgroundColor: cs.surfaceContainerHighest,
               // childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 Container(
@@ -356,16 +371,24 @@ class MoreFlightDetailPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                       decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(999)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.access_time, size: 20, color: cs.surfaceContainer),
                           const SizedBox(width: 8),
-                          Text(
-                            '${"layover in".tr} $cityName ${"for".tr} $layText',
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.surfaceContainer),
+                          Flexible(
+                            child: Text(
+                              '${"layover in".tr} $cityName ${"for".tr} $layText',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: cs.surfaceContainer,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -826,17 +849,37 @@ class _BottomSectionState extends State<BottomSection> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: widget.parent!.onBook!,
-                    icon: const Icon(Icons.flight_takeoff),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConsts.secondaryColor,
+                      foregroundColor: AppConsts.primaryColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: const Icon(Icons.flight_takeoff, size: 18),
                     label: Text("Book now".tr),
                   ),
                 ),
               if (widget.parent!.onBook != null && widget.parent!.onOtherPrices != null) ...[const SizedBox(width: 8)],
               if (widget.parent!.onOtherPrices != null) ...[
                 Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: cs.secondary, foregroundColor: cs.shadow),
+                  child: OutlinedButton.icon(
                     onPressed: widget.parent!.onOtherPrices,
-                    icon: const Icon(Icons.attach_money),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppConsts.secondaryColor,
+                      side: const BorderSide(color: AppConsts.secondaryColor, width: 1.4),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: const Icon(Icons.attach_money, size: 18),
                     label: Text("Other Prices".tr),
                   ),
                 ),

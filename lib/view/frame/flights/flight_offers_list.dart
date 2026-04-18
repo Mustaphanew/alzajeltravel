@@ -1379,10 +1379,16 @@ class _FlightFareCalendarState extends State<FlightFareCalendar> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    backgroundColor: isSelected ? const Color(0xFFe2e6f9) : cs.onPrimary,
-                    foregroundColor: cs.primary,
+                    backgroundColor: isSelected
+                        ? cs.secondary.withValues(alpha: 0.18)
+                        : cs.surfaceContainerHighest,
+                    foregroundColor: cs.onSurface,
+                    side: BorderSide(
+                      color: isSelected ? cs.secondary : cs.outlineVariant,
+                      width: isSelected ? 1.4 : 1,
+                    ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 3,
+                    elevation: 0,
                   ),
                   onPressed: () => widget.onTap?.call(index),
                   child: Column(
