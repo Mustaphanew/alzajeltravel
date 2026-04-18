@@ -80,7 +80,7 @@ class _PassportsFormsWebPageState extends State<PassportsFormsWebPage> {
 
   // ✅ header heights
   static const double _groupHeaderH = 40;
-  static const double _columnsHeaderH = 50;
+  double get _columnsHeaderH => showTextBox ? 80 : 50;
 
   bool showTextBox = true;
 
@@ -293,22 +293,45 @@ void _scrollColumnAfterScan(int col) {
     const titleStyle = TextStyle(fontWeight: FontWeight.bold);
 
     Widget title(String t) => Text(
-      t, 
-      // overflow: TextOverflow.ellipsis, 
+      t,
       style: titleStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
 
-    Widget help(String t) => Row(
-      children: [
-        Expanded(
-          child: Text(
-                t,
-                // overflow: TextOverf  low.ellipsis,
-                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-              ),
-        ),
-      ],
+    Widget help(String t) => Text(
+      t,
+      style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant, height: 1.15),
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
     );
+
+    Widget titleWithHelp(String titleText, String helpText) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final maxH = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : _columnsHeaderH;
+          return ClipRect(
+            child: SizedBox(
+              height: maxH,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  title(titleText),
+                  if (showTextBox)
+                    Expanded(
+                      child: help(helpText),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
 
     switch (col) {
       case 0:
@@ -318,14 +341,9 @@ void _scrollColumnAfterScan(int col) {
       case 2:
         return title('SURNAMES'.tr);
       case 3:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            title('Date of birth'.tr),
-            if(showTextBox)
-              help('You must specify the first year, then the month, then the day'.tr),
-          ],
+        return titleWithHelp(
+          'Date of birth'.tr,
+          'You must specify the first year, then the month, then the day'.tr,
         );
       case 4:
         return title('Sex'.tr);
@@ -336,14 +354,9 @@ void _scrollColumnAfterScan(int col) {
       case 7:
         return title('ISSUING COUNTRY'.tr);
       case 8:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            title('DATE OF EXPIRY'.tr),
-            if(showTextBox)
-              help('You must specify the first year, then the month, then the day'.tr),
-          ],
+        return titleWithHelp(
+          'DATE OF EXPIRY'.tr,
+          'You must specify the first year, then the month, then the day'.tr,
         );
       default:
         return const SizedBox.shrink();
@@ -755,7 +768,7 @@ void _scrollColumnAfterScan(int col) {
 
     TableSpan _buildRowSpan(int index) {
       if (index == 0) return const TableSpan(extent: FixedTableSpanExtent(_groupHeaderH));
-      if (index == 1) return const TableSpan(extent: FixedTableSpanExtent(_columnsHeaderH));
+      if (index == 1) return TableSpan(extent: FixedTableSpanExtent(_columnsHeaderH));
       return TableSpan(extent: FixedTableSpanExtent(_dataRowH));
     }
 

@@ -14,6 +14,7 @@ import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/widgets/country_picker.dart';
 import 'package:alzajeltravel/utils/widgets/date_dropdown_row.dart';
+import 'package:alzajeltravel/view/frame/passport/passport_scanner_page.dart';
 import 'package:jiffy/jiffy.dart';
 
 /// ===================================================================
@@ -89,7 +90,6 @@ class _PassportFormTileState extends State<PassportFormTile> {
     final cs = Theme.of(context).colorScheme;
 
     final textColor = cs.primaryFixed;
-    final buttonColor = cs.primaryContainer;
 
     PassportsFormsController passportsFormsController = Get.find();
     final lastDateInSearch = passportsFormsController.lastDateInSearch;
@@ -176,7 +176,7 @@ if (change != 0) {
                   key: ValueKey('traveler-${widget.travelerIndex}-${widget.isExpanded}'),
                   iconColor: (Get.isDarkMode) ? cs.secondary : cs.primary,
                   tilePadding: EdgeInsets.only(bottom: 0, top: 0),
-                  backgroundColor: Color(0xFFe4e4e4),
+                  backgroundColor: cs.surface,
                   collapsedBackgroundColor: Colors.transparent,
                   initiallyExpanded: widget.isExpanded,
                   shape: const Border(),
@@ -186,69 +186,105 @@ if (change != 0) {
                   // enabled: (!controller.isFullData && widget.index == 0),
                   enabled: false, 
                   onExpansionChanged: widget.onExpansionChanged,
-                  title: Container(
-                    // margin: EdgeInsets.only(bottom: 12, top: 6, left: 8, right: 8),
-                    padding: EdgeInsets.only(top: 12, bottom: 16),
-                    decoration: (widget.isExpanded == false)? BoxDecoration(
-                    // color: cs.onInverseSurface,
-                  
-                      // borderRadius: BorderRadius.circular(12),
-                      
-                      // boxShadow: [
-                      //   BoxShadow(
-                      //     color: cs.outlineVariant.withOpacity(0.9),
-                      //     blurRadius: 4,
-                      //     offset: const Offset(0, 4), 
-                      //   ),
-                      // ],
-              
-              
-              
-                    ) : null,
-                    child: Column(
-                      children: [
-                        Row(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ===== Navy header banner (Traveler X: Adult + Edit/Scan) =====
+                      Container(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: 14, end: 8, top: 10, bottom: 10,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: AppConsts.primaryColor,
+                        ),
+                        child: Row(
                           children: [
-                            // Padding(
-                            //   padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
-                            //   child: Icon(Icons.person, color: textColor),
-                            // ),
+                            const Icon(
+                              Icons.person_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                             const SizedBox(width: 8),
-                            // عنوان المسافر + اسمه إن وُجد
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg, color: textColor),
-                                        ),
-                                      ),
-                                      if (!widget.isExpanded && (controller.isFullData || widget.index == 0))
-                                        IconButton(
-                                          tooltip: 'Edit'.tr,
-                                          onPressed: () {
-                                            // passportsFormsController.onTileExpansionChanged(widget.travelerIndex - 1, true);
-                                            passportsFormsController.onTileExpansionChangedByTag(widget.tag, true);
-                                          },
-                                          icon: Icon(
-                                            Icons.edit, 
-                                            color: Colors.blue[800],
+                              child: Text(
+                                '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppConsts.lg,
+                                  color: Colors.white,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                            if (!widget.isExpanded && (controller.isFullData || widget.index == 0))
+                              IconButton(
+                                tooltip: 'Edit'.tr,
+                                onPressed: () {
+                                  passportsFormsController
+                                      .onTileExpansionChangedByTag(widget.tag, true);
+                                },
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: AppConsts.secondaryColor,
+                                ),
+                              ),
+                            if (widget.isExpanded)
+                              Padding(
+                                padding: const EdgeInsetsDirectional.only(end: 4),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(8),
+                                  onTap: () async {
+                                    final PassportModel? result = await Get.to<PassportModel>(
+                                      () => const PassportScannerPage(),
+                                    );
+                                    if (result != null) {
+                                      controller.applyModel(result);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppConsts.secondaryColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Scan'.tr,
+                                          style: const TextStyle(
+                                            fontSize: AppConsts.normal,
+                                            color: AppConsts.primaryColor,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                    ],
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.document_scanner_outlined,
+                                          color: AppConsts.primaryColor,
+                                          size: 20,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                            
-                            
-                                  if(widget.isExpanded == false)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // ===== Collapsed summary content =====
+                      if (widget.isExpanded == false)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                                       
                                         if (fullName.isNotEmpty)
                                           Row(
@@ -257,32 +293,38 @@ if (change != 0) {
                                               Padding(
                                                 padding: const EdgeInsets.only(top: 2),
                                                 child: Icon(
-                                                  FontAwesomeIcons.solidUser, 
-                                                  color: Color(0xFF438559), 
+                                                  FontAwesomeIcons.solidUser,
+                                                  color: Color(0xFF438559),
                                                   size: 18,
                                                 ),
                                               ),
-                                              const SizedBox(width: 4,),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "Full name".tr,
-                                                    style: TextStyle(
-                                                      fontSize: AppConsts.normal,
-                                                      color: textColor,
-                                                      fontWeight: FontWeight.bold,
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "Full name".tr,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: AppConsts.normal,
+                                                        color: textColor,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    fullName,
-                                                    style: TextStyle(
-                                                      fontSize: AppConsts.normal,
-                                                      color: textColor,
+                                                    Text(
+                                                      fullName,
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: AppConsts.normal,
+                                                        color: textColor,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: 6,),
-                                                ],
+                                                    const SizedBox(height: 6),
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -293,31 +335,37 @@ if (change != 0) {
                                               Padding(
                                                 padding: const EdgeInsets.only(top: 3),
                                                 child: Icon(
-                                                  FontAwesomeIcons.solidIdCard, 
-                                                  color: Color(0xffc74649), 
+                                                  FontAwesomeIcons.solidIdCard,
+                                                  color: Color(0xffc74649),
                                                   size: 18,
                                                 ),
                                               ),
-                                              const SizedBox(width: 4,),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "Document number".tr,
-                                                    style: TextStyle(
-                                                      fontSize: AppConsts.normal,
-                                                      color: textColor,
-                                                      fontWeight: FontWeight.bold,
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "Document number".tr,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: AppConsts.normal,
+                                                        color: textColor,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    documentNumber,
-                                                    style: TextStyle(
-                                                      fontSize: AppConsts.normal,
-                                                      color: textColor,
+                                                    Text(
+                                                      documentNumber,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: AppConsts.normal,
+                                                        color: textColor,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -334,165 +382,67 @@ if (change != 0) {
                                             children: [
                                               // Left column: DOB + Nationality
                                               Expanded(
-                                                flex: 3,
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    const SizedBox(height: 6,),
+                                                    const SizedBox(height: 6),
                                                     if (dob.isNotEmpty)
-                                                      Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Icon(Icons.calendar_month, color: Color(0xffd5632a), size: 20),
-                                                          const SizedBox(width: 4),
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                'Date of birth'.tr,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                dob,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
+                                                      _summaryInfoRow(
+                                                        icon: Icons.calendar_month,
+                                                        iconColor: const Color(0xffd5632a),
+                                                        label: 'Date of birth'.tr,
+                                                        value: dob,
+                                                        textColor: textColor,
                                                       ),
-                                          
+
                                                     if (dob.isNotEmpty && nationality != null) const SizedBox(height: 6),
-                                          
+
                                                     if (nationality != null)
-                                                      Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Icon(
-                                                            Icons.language, 
-                                                            color: Color(0xff436df4), 
-                                                            size: 20,
-                                                          ),
-                                                          const SizedBox(width: 4),
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                'Nationality'.tr,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                              ),
-                                                              Row(
-                                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                                children: [
-                                                                  Text(
-                                                                    nationality.name[widget.lang],
-                                                                    style: TextStyle(
-                                                                      fontSize: AppConsts.normal,
-                                                                      color: textColor,
-                                                                    ),
-                                                                  ),
-                                                                  const SizedBox(width: 8),
-                                                                  CountryFlag.fromCountryCode(
-                                                                    nationality.alpha2,
-                                                                    theme: (!kIsWeb)? EmojiTheme(size: 16): ImageTheme(height: 16, width: 22),
-                                                                  )
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
+                                                      _summaryInfoRow(
+                                                        icon: Icons.language,
+                                                        iconColor: const Color(0xff436df4),
+                                                        label: 'Nationality'.tr,
+                                                        value: nationality.name[widget.lang] ?? '',
+                                                        trailing: CountryFlag.fromCountryCode(
+                                                          nationality.alpha2,
+                                                          theme: (!kIsWeb) ? EmojiTheme(size: 16) : ImageTheme(height: 16, width: 22),
+                                                        ),
+                                                        textColor: textColor,
                                                       ),
                                                   ],
                                                 ),
                                               ),
-                                          
-                                              Expanded(child: const VerticalDivider()),
-                                          
+
+                                              const VerticalDivider(width: 16, thickness: 1),
+
                                               // Right column: Expiry + Issuing country
                                               Expanded(
-                                                flex: 3,
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    const SizedBox(height: 6,),
+                                                    const SizedBox(height: 6),
                                                     if (expiryDate.isNotEmpty)
-                                                      Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Icon(Icons.calendar_month, color: Color(0xffd5632a), size: 20),
-                                                          const SizedBox(width: 4),
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                'Date of expiry'.tr,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                expiryDate,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
+                                                      _summaryInfoRow(
+                                                        icon: Icons.calendar_month,
+                                                        iconColor: const Color(0xffd5632a),
+                                                        label: 'Date of expiry'.tr,
+                                                        value: expiryDate,
+                                                        textColor: textColor,
                                                       ),
-                                          
+
                                                     if (expiryDate.isNotEmpty && issuingCountry != null) const SizedBox(height: 6),
-                                          
+
                                                     if (issuingCountry != null)
-                                                      Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Icon(Icons.language, color: Color(0xff436df4), size: 20),
-                                                          const SizedBox(width: 4),
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                'Issuing country'.tr,
-                                                                style: TextStyle(
-                                                                  fontSize: AppConsts.normal,
-                                                                  color: textColor,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                              ),
-                                                              Row(
-                                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                                children: [
-                                                                  Text(
-                                                                    issuingCountry.name[widget.lang],
-                                                                    style: TextStyle(
-                                                                      fontSize: AppConsts.normal,
-                                                                      color: textColor,
-                                                                    ),
-                                                                  ),
-                                                                  const SizedBox(width: 8),
-                                                                  CountryFlag.fromCountryCode(
-                                                                    issuingCountry.alpha2,
-                                                                    theme: (!kIsWeb)? EmojiTheme(size: 16): ImageTheme(height: 16, width: 22),
-                                                                  )
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
+                                                      _summaryInfoRow(
+                                                        icon: Icons.language,
+                                                        iconColor: const Color(0xff436df4),
+                                                        label: 'Issuing country'.tr,
+                                                        value: issuingCountry.name[widget.lang] ?? '',
+                                                        trailing: CountryFlag.fromCountryCode(
+                                                          issuingCountry.alpha2,
+                                                          theme: (!kIsWeb) ? EmojiTheme(size: 16) : ImageTheme(height: 16, width: 22),
+                                                        ),
+                                                        textColor: textColor,
                                                       ),
                                                   ],
                                                 ),
@@ -504,74 +454,15 @@ if (change != 0) {
                                       ],
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
-                        
-                            // زر مسح بيانات هذا المسافر فقط
-                            // InkWell(
-                            //   onTap: controller.clearAll,
-                            //   child: Container(
-                            //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            //     decoration: BoxDecoration(
-                            //       borderRadius: BorderRadius.circular(6),
-                            //       border: Border.all(color: cs.error, width: 1),
-                            //     ),
-                            //     child: Row(
-                            //       children: [
-                            //         Text('Clear data'.tr, style: const TextStyle(fontSize: AppConsts.sm)),
-                            //         const SizedBox(width: 4),
-                            //         Icon(Icons.clear_all, color: cs.error, size: 20),
-                            //       ],
-                            //     ),
-                            //   ),
-                            // ),
-                            const SizedBox(width: 0),
-                        
-                            // زر مسح MRZ (يفتح الكاميرا)
-                            if (widget.isExpanded)
-                              Padding(
-                                padding: const EdgeInsetsDirectional.only(end: 12),
-                                child: InkWell(
-                                  // onTap: () async {
-                                  //   // final PassportModel? result = await Get.to<PassportModel>(() => const CameraScanPassport());
-                                  //   // if (result != null) {
-                                  //   //   controller.applyModel(result);
-                                  //   // }
-                                  // },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: buttonColor, width: 1),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          'Scan'.tr,
-                                          style: TextStyle(fontSize: AppConsts.normal, color: buttonColor),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(Icons.document_scanner_outlined, color: buttonColor, size: 24),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                        
-                          ],
-                        ),
-                    
-                      ], 
-                    ),
+                    ],
                   ),
                   // childrenPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  children: [      
+                  children: [
                     Form(
                       key: controller.formKey,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        color: cs.onPrimary,
+                        color: cs.surface,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -580,7 +471,7 @@ if (change != 0) {
                                       
                             Row(
                               children: [
-                                Icon(CupertinoIcons.person_circle, color: Colors.blue[800]),
+                                Icon(CupertinoIcons.person_circle, color: cs.secondary),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.only(start: 4),
                                   child: Text(
@@ -588,6 +479,7 @@ if (change != 0) {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: AppConsts.lg,
+                                      color: cs.onSurface,
                                     ),
                                   ),
                                 ),
@@ -707,7 +599,7 @@ if (change != 0) {
                                         
                             Row(
                               children: [
-                                Icon(CupertinoIcons.doc_circle, color: Color(0xffd5632a)),
+                                const Icon(CupertinoIcons.doc_circle, color: Color(0xffd5632a)),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.only(start: 4),
                                   child: Text(
@@ -715,6 +607,7 @@ if (change != 0) {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: AppConsts.lg,
+                                      color: cs.onSurface,
                                     ),
                                   ),
                                 ),
@@ -828,45 +721,41 @@ if (change != 0) {
                             // ),
                             
                             const SizedBox(height: 8),
-                            // زر "Next" للانتقال إلى الفورم التالي (إن وجد)
-                            if (widget.onNext != null)
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(top: 4),
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    // تحقق من صحة هذا الفورم فقط
-                                    final formState = controller.formKey.currentState;
-                                    if (formState == null) return;
-                                        
-                                    if (formState.validate()) {
-                                      // لو كل شيء صحيح → استدعِ onNext
+                            // زر "Next" / "Save" — نفس ستايل شريط "Save and continue" (ذهبي + نص كحلي)
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  final formState = controller.formKey.currentState;
+                                  if (formState == null) return;
+                                  if (formState.validate()) {
+                                    if (widget.onNext != null) {
                                       widget.onNext!();
-                                    }
-                                  },
-                                  icon: Text('Next'.tr),
-                                  label: const Icon(Icons.arrow_forward),
-                                ),
-                              ),
-                            if (widget.onNext == null)
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(top: 4),
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    // تحقق من صحة هذا الفورم فقط
-                                    final formState = controller.formKey.currentState;
-                                    if (formState == null) return;
-                                        
-                                    if (formState.validate()) {
-                                      // لو كل شيء صحيح → استدعِ onNext
+                                    } else if (widget.onSave != null) {
                                       widget.onSave!();
                                     }
-                                  },
-                                  icon: Text('Save'.tr),
-                                  label: const Icon(Icons.done),
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppConsts.secondaryColor,
+                                  foregroundColor: AppConsts.primaryColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                                icon: Icon(
+                                  widget.onNext != null ? Icons.arrow_forward_rounded : Icons.done_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(widget.onNext != null ? 'Next'.tr : 'Save'.tr),
                               ),
+                            ),
                                         
                             const SizedBox(height: 8),
                           ],
@@ -880,6 +769,65 @@ if (change != 0) {
           ),
         );
       },
+    );
+  }
+
+  /// صف معلومات في بطاقة الملخّص — أيقونة + (عنوان/قيمة) يتكيّف مع النصوص الطويلة
+  /// والترجمات المختلفة دون أن يسبّب overflow.
+  Widget _summaryInfoRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color textColor,
+    Widget? trailing,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: AppConsts.normal,
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      value,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: AppConsts.normal,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 6),
+                    trailing,
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

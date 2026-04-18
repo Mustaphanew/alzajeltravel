@@ -95,6 +95,9 @@ void _scrollToTravelerTag(String tag) {
         // نضبط عدد الـ keys بحسب عدد المسافرين
         _ensureTileKeysForAll(formsController.travelers); // لضمان وجود keys لكل tags
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final scaffoldBg = isDark ? cs.surface : const Color(0xFFFAF6F1);
+
         return PopScope(
 
           canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
@@ -107,7 +110,7 @@ void _scrollToTravelerTag(String tag) {
             );
 
             if (ok && context.mounted) {
-              Navigator.of(context).pop(result); 
+              Navigator.of(context).pop(result);
               // أو فقط pop() إذا ما تحتاج result
             }
           },
@@ -116,12 +119,32 @@ void _scrollToTravelerTag(String tag) {
           child: SafeArea(
             top: false,
             child: Scaffold(
-              appBar: AppBar(title: Text('Travelers data'.tr)),
+              backgroundColor: scaffoldBg,
+              appBar: AppBar(
+                title: Text(
+                  'Travelers data'.tr,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontSize: AppConsts.xlg,
+                  ),
+                ),
+                backgroundColor: AppConsts.primaryColor,
+                foregroundColor: Colors.white,
+                iconTheme: const IconThemeData(color: Colors.white),
+                titleTextStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: AppConsts.xlg,
+                ),
+                elevation: 0,
+                centerTitle: true,
+              ),
               body: SafeArea(
                 child: Column(
                   children: [
                     // _buildHeaderRow(cs, formsController),
-            
+
                     Expanded(
                       child: SingleChildScrollView(
                         controller: _scrollController,
@@ -174,65 +197,18 @@ for (int index = 0; index < travelers.length; index++) ...[
   ),
 ],
             
-                            // const Divider(),
-            
-                            // 👉 فورم بيانات الاتصال في النهاية
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                              height: 20,
-                              child: Opacity(
-                                opacity: 0.5,
-                                child: ContactInformationForm(controller: formsController)),
-                            ), 
-                            SizedBox(height: 36),
-                          ], 
-                        ),
-                      ),
-                    ),
-            
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      width: double.infinity,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainer,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue[800]!,
-                            offset: const Offset(0, 6),
-                            blurRadius: 12,
-                          ),
-                        ],
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text("Total flight".tr),
-                                Text(AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                              ],
+                            // فورم بيانات الاتصال — مخفي بصريًا لكنه يبقى في شجرة الـ widgets
+                            // حتى يظل الكنترولر وformKey مهيّأَين ويُحفظا مع باقي البيانات
+                            Offstage(
+                              offstage: true,
+                              child: ContactInformationForm(controller: formsController),
                             ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () async { 
-                              context.loaderOverlay.show(
-                                progress: "Passenger data is being saved".tr
-                              );
-                              await formsController.saveAll();
-                              if(context.mounted) context.loaderOverlay.hide();
-                            },
-                            child: Text("Save and continue".tr),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+
+                    _buildBottomBar(context, cs, formsController),
                   ],
                 ),
               ),
@@ -240,6 +216,98 @@ for (int index = 0; index < travelers.length; index++) ...[
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBottomBar(
+    BuildContext context,
+    ColorScheme cs,
+    PassportsFormsController formsController,
+  ) {
+    final priceText = AppFuns.priceWithCoin(
+      formsController.totalFlight,
+      formsController.currency,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppConsts.primaryColor,
+            AppConsts.primaryColor.withValues(alpha: 0.92),
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConsts.primaryColor.withValues(alpha: 0.25),
+            offset: const Offset(0, -4),
+            blurRadius: 14,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Total flight".tr,
+                  style: TextStyle(
+                    fontSize: AppConsts.sm,
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  priceText,
+                  style: const TextStyle(
+                    color: AppConsts.secondaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: AppConsts.xxlg,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () async {
+              context.loaderOverlay.show(
+                progress: "Passenger data is being saved".tr,
+              );
+              await formsController.saveAll();
+              if (context.mounted) context.loaderOverlay.hide();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConsts.secondaryColor,
+              foregroundColor: AppConsts.primaryColor,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontSize: AppConsts.normal,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            label: Text("Save and continue".tr),
+          ),
+        ],
+      ),
     );
   }
 
