@@ -573,6 +573,8 @@ Map<String, String> ar = {
   'Packages': 'الباقات',
   'Visa': 'التأشيرة',
 
+  "Services": "الخدمات",
+
   "Show more": "عرض المزيد",
 
   "Latest operations": "العمليات الأخيرة",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class SettingsController extends GetxController {
@@ -11,15 +12,28 @@ class SettingsController extends GetxController {
   String currency = 'USD';
 
   // تغييرات الحالة
-  void setLanguage(Locale l) {
+  Future<void> setLanguage(Locale l) async {
     locale = l;
-    Get.updateLocale(l);
-    if(l == Get.deviceLocale) {
+
+    // ❶ تحديث المتغيّرات الساكنة أوّلاً — بعض الواجهات تقرأها مباشرةً.
+    AppVars.appLocale = l;
+    AppVars.lang = l.languageCode;
+
+    // ❷ تحميل لغة Jiffy **قبل** تحديث locale التطبيق، حتى تكون جاهزة
+    // حين تُعاد بناء الواجهات المعتمدة على `Jiffy.fromNow()` مباشرةً.
+    // (الترتيب المعكوس يترك الواجهات تعرض اللغة القديمة حتى إعادة بناء لاحقة.)
+    await Jiffy.setLocale(l.languageCode);
+
+    if (l == Get.deviceLocale) {
       AppVars.getStorage.remove("lang");
-    } 
-    else {
+    } else {
       AppVars.getStorage.write("lang", l.languageCode);
     }
+
+    // ❸ تحديث لغة GetMaterialApp — يُعيد بناء الشجرة بأكملها.
+    // في هذه اللحظة تكون AppVars.lang وJiffy.locale كلاهما محدَّثَين.
+    await Get.updateLocale(l);
+
     update();
   }
 

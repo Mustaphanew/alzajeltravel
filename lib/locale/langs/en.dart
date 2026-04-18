@@ -171,5 +171,14 @@ Map<String, String> en = {
   "flight.booking.void": "Void booking",
   "flight.booking.void_ticket": "Void ticket",
   "flight.reports": "Reports",
-  "flight.trip.read": "View trips"
+  "flight.trip.read": "View trips",
+
+  // Home services
+  "Services": "Services",
+  "Flightss": "Flights",
+  "HOTELS": "Hotels",
+  "Cars": "Cars",
+  "Train": "Trains",
+  "Packages": "Packages",
+  "Visa": "Visa",
 };

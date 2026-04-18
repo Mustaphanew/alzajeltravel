@@ -63,7 +63,12 @@ final TravelersController travelersController =
         ? ProfileModel.fromJson(Map<String, dynamic>.from(raw))
         : null;
 
-    Jiffy.setLocale(AppVars.lang ?? 'en');
+    // ضبط لغة Jiffy بشكل غير متزامن ثمّ إعادة بناء الواجهات التي تعتمد على
+    // النصوص النسبية (مثل "قبل ساعة"). بدون await قد يظهر النصّ بالإنجليزية
+    // لأنّ اللغة لم تُحمَّل بعد.
+    Jiffy.setLocale(AppVars.lang ?? 'en').then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
