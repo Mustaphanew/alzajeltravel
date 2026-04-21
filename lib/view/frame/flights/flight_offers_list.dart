@@ -1,6 +1,5 @@
 // lib/view/frame/flights/flight_offers_list.dart
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:alzajeltravel/controller/flight/filter_offers_controller.dart';
 import 'package:alzajeltravel/controller/flight/flight_detail_controller.dart';
@@ -357,6 +356,18 @@ class _FlightOffersListState extends State<FlightOffersList> {
         child: Scaffold(
           appBar: AppBar(
             titleSpacing: 0,
+            backgroundColor: AppConsts.primaryColor,
+            foregroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            shape: Border(
+              bottom: BorderSide(
+                color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+                width: 1,
+              ),
+            ),
             title: Row(
               children: [
                 Expanded(
@@ -368,14 +379,35 @@ class _FlightOffersListState extends State<FlightOffersList> {
                       initialValue: _quickOptionFromState(filterState),
                       icon: const SizedBox.shrink(),
                       iconSize: 0,
+                      isExpanded: true,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       isDense: true,
-                      style: TextStyle(fontFamily: AppConsts.font, color: cs.primaryFixed),
+                      dropdownColor: AppConsts.primaryColor,
+                      style: TextStyle(
+                        fontFamily: AppConsts.font,
+                        color: AppConsts.secondaryColor,
+                        fontWeight: FontWeight.w700,
+                      ),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsetsDirectional.only(start: 8),
                         filled: false,
                         hintText: 'Select option'.tr,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        hintStyle: TextStyle(
+                          color: AppConsts.secondaryColor.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                         isDense: true,
                       ),
                       items: <DropdownMenuItem<OfferQuickOption>>[
@@ -383,31 +415,50 @@ class _FlightOffersListState extends State<FlightOffersList> {
                           value: OfferQuickOption.none,
                           child: Text(
                             'Smart filtering'.tr + " ...",
-                            style: TextStyle(fontSize: AppConsts.lg, color: cs.tertiary),
+                            style: TextStyle(
+                              fontSize: AppConsts.lg,
+                              color: AppConsts.secondaryColor,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         DropdownMenuItem(
                           value: OfferQuickOption.priceLow,
-                          child: Text(OfferQuickOption.priceLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          child: Text(
+                            OfferQuickOption.priceLow.label.tr,
+                            style: TextStyle(fontSize: AppConsts.lg, color: Colors.white),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: OfferQuickOption.travelTimeLow,
-                          child: Text(OfferQuickOption.travelTimeLow.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                          child: Text(
+                            OfferQuickOption.travelTimeLow.label.tr,
+                            style: TextStyle(fontSize: AppConsts.lg, color: Colors.white),
+                          ),
                         ),
                         if (availableStops.contains(0))
                           DropdownMenuItem(
                             value: OfferQuickOption.stops0,
-                            child: Text(OfferQuickOption.stops0.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                            child: Text(
+                              OfferQuickOption.stops0.label.tr,
+                              style: TextStyle(fontSize: AppConsts.lg, color: Colors.white),
+                            ),
                           ),
                         if (availableStops.contains(1))
                           DropdownMenuItem(
                             value: OfferQuickOption.stops1,
-                            child: Text(OfferQuickOption.stops1.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                            child: Text(
+                              OfferQuickOption.stops1.label.tr,
+                              style: TextStyle(fontSize: AppConsts.lg, color: Colors.white),
+                            ),
                           ),
                         if (availableStops.contains(2))
                           DropdownMenuItem(
                             value: OfferQuickOption.stops2,
-                            child: Text(OfferQuickOption.stops2.label.tr, style: TextStyle(fontSize: AppConsts.lg)),
+                            child: Text(
+                              OfferQuickOption.stops2.label.tr,
+                              style: TextStyle(fontSize: AppConsts.lg, color: Colors.white),
+                            ),
                           ),
                       ],
                       onChanged: (v) async {
@@ -451,11 +502,27 @@ class _FlightOffersListState extends State<FlightOffersList> {
               SizedBox(
                 height: 40,
                 child: OutlinedButton.icon(
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-                  icon: const Icon(Icons.filter_alt_outlined),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppConsts.secondaryColor,
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: AppConsts.secondaryColor.withValues(alpha: 0.9),
+                      width: 1.4,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(
+                    Icons.filter_alt_outlined,
+                    color: AppConsts.secondaryColor,
+                  ),
                   label: Text(
                     'Sort & Filter'.tr + (isFilter ? ' (${filterState.countFiltersActive})' : ''),
-                    style: TextStyle(fontSize: AppConsts.lg),
+                    style: TextStyle(
+                      fontSize: AppConsts.lg,
+                      color: AppConsts.secondaryColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   onPressed: () async {
                     try {
@@ -478,144 +545,194 @@ class _FlightOffersListState extends State<FlightOffersList> {
           ),
           body: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade400)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ExpansionTile(
-                        controller: expansionController,
-                        title: Text(
-                          (isExpanded) ? "Hide edit Search".tr : "Edit Search".tr,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: AppConsts.font,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+              Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                // نصوص وأسطح متناسقة مع الثيم الليلي فقط، بقية الأحوال تبقى كما هي
+                final Color editTitleColor = isDark
+                    ? AppConsts.secondaryColor
+                    : (cs.onSurface);
+                final Color richTextColor = isDark ? Colors.white : cs.shadow;
+                final Color chipBg = isDark
+                    ? AppConsts.secondaryColor.withValues(alpha: 0.14)
+                    : const Color(0xfff7f0de);
+                final Color chipTextColor = isDark ? AppConsts.secondaryColor : cs.shadow;
+                final Color dotColor = isDark
+                    ? AppConsts.secondaryColor.withValues(alpha: 0.7)
+                    : const Color(0xff9ea1a9);
+                final BorderSide bottomSide = BorderSide(
+                  color: isDark
+                      ? AppConsts.secondaryColor.withValues(alpha: 0.28)
+                      : Colors.grey.shade400,
+                );
+                final Decoration? darkDecoration = isDark
+                    ? BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: AlignmentDirectional.centerEnd,
+                          end: AlignmentDirectional.centerStart,
+                          colors: [
+                            AppConsts.primaryColor.withValues(alpha: 0.55),
+                            AppConsts.secondaryColor.withValues(alpha: 0.12),
+                          ],
                         ),
+                      )
+                    : null;
+
+                final innerRow = Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    const Icon(FontAwesomeIcons.route,
+                        color: Color.fromARGB(255, 211, 163, 60), size: 24),
+                    Expanded(
+                      child: Column(
                         children: [
-                          GradientBgContainer(
-                            width: double.infinity,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 8),
-                                const Icon(FontAwesomeIcons.route,
-                                    color: Color.fromARGB(255, 211, 163, 60), size: 24),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                        child: RichText(
-                                          textAlign: TextAlign.center,
-                                          text: TextSpan(
-                                            style: TextStyle(
-                                              fontFamily: AppConsts.font,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: cs.shadow,
-                                            ),
-                                            children: [
-                                              TextSpan(
-                                                text: AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] +
-                                                    " (${searchInputs.from})" +
-                                                    ", " +
-                                                    AirportRepo.searchByCode(searchInputs.from).body[AppVars.lang],
-                                              ),
-                                              WidgetSpan(
-                                                alignment: PlaceholderAlignment.middle,
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(left: 4, right: 4),
-                                                  child: Icon(
-                                                    (searchInputs.journeyEnum == JourneyType.roundTrip)
-                                                        ? Icons.sync_alt
-                                                        : Icons.arrow_forward,
-                                                    size: 20,
-                                                    color: cs.shadow,
-                                                  ),
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: AirportRepo.searchByCode(searchInputs.to).name[AppVars.lang] +
-                                                    " (${searchInputs.to})" +
-                                                    ", " +
-                                                    AirportRepo.searchByCode(searchInputs.to).body[AppVars.lang],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xfff7f0de),
-                                          borderRadius: BorderRadius.circular(99),
-                                        ),
-                                        child: RichText(
-                                          text: TextSpan(
-                                            style: TextStyle(
-                                              fontFamily: AppConsts.font,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: cs.shadow,
-                                            ),
-                                            children: [
-                                              TextSpan(text: formatDateStr(searchInputs.departureDate)),
-                                              WidgetSpan(
-                                                alignment: PlaceholderAlignment.middle,
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(left: 4, right: 4, top: 2),
-                                                  width: 6,
-                                                  height: 6,
-                                                  decoration: const BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Color(0xff9ea1a9),
-                                                  ),
-                                                ),
-                                              ),
-                                              TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
-                                              if (searchInputs.chd > 0)
-                                                TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
-                                              if (searchInputs.inf > 0)
-                                                TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
-                                              WidgetSpan(
-                                                alignment: PlaceholderAlignment.middle,
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(left: 4, right: 4, top: 2),
-                                                  width: 6,
-                                                  height: 6,
-                                                  decoration: const BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Color(0xff9ea1a9),
-                                                  ),
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: " (${AppFuns.cabinNameFromBookingClass(searchInputs.cabin)})",
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                    ],
-                                  ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontFamily: AppConsts.font,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: richTextColor,
                                 ),
-                              ],
+                                children: [
+                                  TextSpan(
+                                    text: AirportRepo.searchByCode(searchInputs.from).name[AppVars.lang] +
+                                        " (${searchInputs.from})" +
+                                        ", " +
+                                        AirportRepo.searchByCode(searchInputs.from).body[AppVars.lang],
+                                  ),
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 4, right: 4),
+                                      child: Icon(
+                                        (searchInputs.journeyEnum == JourneyType.roundTrip)
+                                            ? Icons.sync_alt
+                                            : Icons.arrow_forward,
+                                        size: 20,
+                                        color: richTextColor,
+                                      ),
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: AirportRepo.searchByCode(searchInputs.to).name[AppVars.lang] +
+                                        " (${searchInputs.to})" +
+                                        ", " +
+                                        AirportRepo.searchByCode(searchInputs.to).body[AppVars.lang],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: chipBg,
+                              borderRadius: BorderRadius.circular(99),
+                              border: isDark
+                                  ? Border.all(
+                                      color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+                                      width: 1,
+                                    )
+                                  : null,
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontFamily: AppConsts.font,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: chipTextColor,
+                                ),
+                                children: [
+                                  TextSpan(text: formatDateStr(searchInputs.departureDate)),
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 4, right: 4, top: 2),
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: dotColor,
+                                      ),
+                                    ),
+                                  ),
+                                  TextSpan(text: "${searchInputs.adt} " + "Adult".tr),
+                                  if (searchInputs.chd > 0)
+                                    TextSpan(text: ", ${searchInputs.chd} " + "Child".tr),
+                                  if (searchInputs.inf > 0)
+                                    TextSpan(text: ", ${searchInputs.inf} " + "Infant".tr),
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 4, right: 4, top: 2),
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: dotColor,
+                                      ),
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: " (${AppFuns.cabinNameFromBookingClass(searchInputs.cabin)})",
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                         ],
                       ),
                     ),
                   ],
-                ),
-              ),
+                );
+
+                final Widget innerContent = isDark
+                    ? Container(
+                        width: double.infinity,
+                        decoration: darkDecoration,
+                        child: innerRow,
+                      )
+                    : GradientBgContainer(
+                        width: double.infinity,
+                        child: innerRow,
+                      );
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: bottomSide),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ExpansionTile(
+                          controller: expansionController,
+                          iconColor: isDark ? AppConsts.secondaryColor : null,
+                          collapsedIconColor: isDark ? AppConsts.secondaryColor : null,
+                          title: Text(
+                            (isExpanded) ? "Hide edit Search".tr : "Edit Search".tr,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppConsts.font,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: editTitleColor,
+                            ),
+                          ),
+                          children: [innerContent],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
 
               if (isExpanded) ...[
                 Expanded(
@@ -803,11 +920,24 @@ class FlightOfferCard extends StatelessWidget {
 
     final String airlineNamesText = secondaryName == null ? primaryName : '$primaryName, $secondaryName';
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final detailsAccent =
+        isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
 
     return GestureDetector(
       onTap: () {},
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        // ليلي فقط: لوحة أغمق قليلاً لتمييز الكرت عن الخلفية + حد ذهبي أوضح
+        color: isDark ? const Color(0xFF121A38) : cs.surfaceContainerHighest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.52 : 0.42),
+            width: isDark ? 1.15 : 1,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Column(
@@ -839,7 +969,10 @@ class FlightOfferCard extends StatelessWidget {
                             children: [
                               Text(
                                 airlineNamesText,
-                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white.withValues(alpha: 0.95) : null,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -851,6 +984,7 @@ class FlightOfferCard extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                     fontSize: AppConsts.sm,
                                     overflow: TextOverflow.ellipsis,
+                                    color: isDark ? cs.onSurfaceVariant : null,
                                   ),
                                   maxLines: 2,
                                 ),
@@ -866,15 +1000,24 @@ class FlightOfferCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.blue[900]!.withOpacity(0.08),
+                        color: AppConsts.secondaryColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                          width: 1.1,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
                             AppFuns.priceWithCoin(offer.totalAmount, offer.currency),
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppConsts.secondaryColor,
+                              letterSpacing: 0.2,
+                            ),
                           ),
                         ],
                       ),
@@ -893,17 +1036,97 @@ class FlightOfferCard extends StatelessWidget {
               ),
 
               if (offer.isRoundTrip && offer.inbound != null) ...[
-                const SizedBox(height: 8),
-                GradientBgContainer(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(bottom: 3),
-                  borderRadius: BorderRadius.circular(99),
-                  alignment: Alignment.center, 
-                  child: Text(
-                    "Return".tr,
-                  ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppConsts.secondaryColor.withValues(alpha: 0),
+                              AppConsts.secondaryColor.withValues(alpha: 0.55),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF1B2A57),
+                                  AppConsts.primaryColor,
+                                ]
+                              : [
+                                  AppConsts.secondaryColor
+                                      .withValues(alpha: 0.16),
+                                  AppConsts.secondaryColor
+                                      .withValues(alpha: 0.08),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: AppConsts.secondaryColor
+                              .withValues(alpha: 0.6),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppConsts.secondaryColor
+                                .withValues(alpha: isDark ? 0.18 : 0.12),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.flight_land_rounded,
+                            size: 14,
+                            color: AppConsts.secondaryColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Return".tr,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.4,
+                              color: isDark
+                                  ? AppConsts.secondaryColor
+                                  : AppConsts.primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppConsts.secondaryColor.withValues(alpha: 0.55),
+                              AppConsts.secondaryColor.withValues(alpha: 0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 _LegRow(
                   leg: offer.inbound!,
                   type: 'return'.tr,
@@ -914,7 +1137,11 @@ class FlightOfferCard extends StatelessWidget {
               ],
 
               const SizedBox(height: 10),
-              const Divider(),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark ? cs.outlineVariant.withValues(alpha: 0.35) : null,
+              ),
               const SizedBox(height: 6),
 
               Row(
@@ -930,7 +1157,7 @@ class FlightOfferCard extends StatelessWidget {
                             '${offer.seatsRemaining} ${'Seats left'.tr}',
                             style: theme.textTheme.bodySmall!.copyWith(
                               fontSize: 12,
-                              color: Colors.red[800],
+                              color: cs.error,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -945,7 +1172,7 @@ class FlightOfferCard extends StatelessWidget {
                           Icon(
                             Icons.luggage,
                             size: 18,
-                            color: (offer.baggageInfo != null) ? Colors.blue[900]!.withOpacity(0.8) : Colors.red,
+                            color: (offer.baggageInfo != null) ? AppConsts.primaryColor : cs.error,
                           ),
                           const SizedBox(width: 2),
                           Text(
@@ -953,7 +1180,7 @@ class FlightOfferCard extends StatelessWidget {
                             style: theme.textTheme.bodySmall!.copyWith(
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
-                              color: (offer.baggageInfo == null) ? Colors.red : cs.primaryFixed,
+                              color: (offer.baggageInfo == null) ? cs.error : AppConsts.secondaryColor,
                             ),
                           ),
                         ],
@@ -1012,9 +1239,18 @@ class FlightOfferCard extends StatelessWidget {
                 child: SizedBox(
                   height: 40,
                   child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 0)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                      foregroundColor: detailsAccent,
+                      side: BorderSide(
+                        color: AppConsts.secondaryColor.withValues(alpha: 0.85),
+                        width: 1.25,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     onPressed: onDetails,
-                    icon: const Icon(Icons.info),
+                    icon: const Icon(Icons.info_outline, size: 20),
                     label: Text('View flight details'.tr),
                   ),
                 ),
@@ -1097,8 +1333,7 @@ class _LegRow extends StatelessWidget {
 
     final bool isArabic = AppVars.lang == 'ar';
     final cs = Theme.of(context).colorScheme;
-
-    final double planeAngle = isArabic ? -math.pi / 2 : math.pi / 2;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1132,7 +1367,10 @@ class _LegRow extends StatelessWidget {
                   children: [
                     Text(
                       legNamesText,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white.withValues(alpha: 0.95) : null,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1143,6 +1381,7 @@ class _LegRow extends StatelessWidget {
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                           overflow: TextOverflow.ellipsis,
+                          color: isDark ? cs.onSurfaceVariant : null,
                         ),
                         maxLines: 2,
                       ),
@@ -1163,26 +1402,51 @@ class _LegRow extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(depDate, style: theme.textTheme.bodySmall),
+                Text(
+                  depDate,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? Colors.white.withValues(alpha: 0.72) : null,
+                  ),
+                ),
                 Row(
                   children: [
                     if (AppVars.lang == 'en') ...[
-                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        justDepTime,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
+                        ),
+                      ),
                       const SizedBox(width: 2),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           periodDepTime,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : null,
+                          ),
                         ),
                       ),
                     ] else ...[
-                      Text(justDepTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        justDepTime,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           periodDepTime,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : null,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -1190,9 +1454,22 @@ class _LegRow extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(leg.fromCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  leg.fromCode,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : null,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(fromName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
+                Text(
+                  fromName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? cs.onSurfaceVariant : null,
+                  ),
+                ),
               ],
             ),
 
@@ -1206,7 +1483,11 @@ class _LegRow extends StatelessWidget {
                     child: Text(
                       AppFuns.formatHourMinuteSecond(leg.totalDurationText),
                       textAlign: TextAlign.start,
-                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: isDark ? Colors.white.withValues(alpha: 0.9) : null,
+                      ),
                     ),
                   ),
                   Row(
@@ -1215,7 +1496,10 @@ class _LegRow extends StatelessWidget {
                         margin: const EdgeInsets.only(top: 6),
                         height: 12,
                         width: 12,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: cs.primaryFixed),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppConsts.secondaryColor,
+                        ),
                       ),
                       Expanded(
                         child: Padding(padding: const EdgeInsets.only(top: 6), child: DividerLine()),
@@ -1227,14 +1511,22 @@ class _LegRow extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsetsDirectional.only(end: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFFf7efe9), borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.14 : 0.18),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                          width: 1.1,
+                        ),
+                      ),
                       child: Text(
                         stopsText,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF9c5627),
-                          fontWeight: FontWeight.bold,
+                          color: AppConsts.secondaryColor,
+                          fontWeight: FontWeight.w800,
                           fontSize: 13,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
@@ -1248,27 +1540,52 @@ class _LegRow extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(arrDate, style: theme.textTheme.bodySmall),
+                Text(
+                  arrDate,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? Colors.white.withValues(alpha: 0.72) : null,
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (AppVars.lang == 'en') ...[
-                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        justArrTime,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
+                        ),
+                      ),
                       const SizedBox(width: 2),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           periodArrTime,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : null,
+                          ),
                         ),
                       ),
                     ] else ...[
-                      Text(justArrTime, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        justArrTime,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           periodArrTime,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : null,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -1276,14 +1593,22 @@ class _LegRow extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(leg.toCode, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  leg.toCode,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : null,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   toName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
-                  style: theme.textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? cs.onSurfaceVariant : null,
+                  ),
                 ),
               ],
             ),
@@ -1415,12 +1740,21 @@ class _FlightFareCalendarState extends State<FlightFareCalendar> {
                         children: [
                           Text(
                             "117",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF4fa054)),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: AppConsts.secondaryColor,
+                              letterSpacing: 0.2,
+                            ),
                           ),
                           SizedBox(width: 4),
                           Text(
                             "USD",
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF687489)),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppConsts.secondaryColor,
+                            ),
                           ),
                         ],
                       ),

@@ -111,61 +111,120 @@ void initState() {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color cardBg = isDark ? const Color(0xFF121A38) : Colors.white;
+    final Color tabBarBg = isDark
+        ? const Color(0xFF0E1530)
+        : AppConsts.primaryColor.withValues(alpha: 0.12);
 
     return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
     
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Material(
-                color: AppConsts.primaryColor.withValues(alpha: 0.4),
-                child: SizedBox(
-                  height: 50,
-                  child: TabBar(
-                    controller: _tabController,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerHeight: 0,
-                    dividerColor: Colors.transparent,
-                    padding: EdgeInsets.zero,
-                    indicator: BoxDecoration(color: AppConsts.primaryColor),
-                    labelColor: cs.secondary,
-                    unselectedLabelColor: cs.onPrimary,
-                    unselectedLabelStyle: TextStyle(
-                      fontSize: AppConsts.normal,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: AppConsts.font,
+            // ───── Tab bar ─────
+            Container(
+              decoration: BoxDecoration(
+                color: tabBarBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppConsts.secondaryColor.withValues(
+                    alpha: isDark ? 0.35 : 0.28,
+                  ),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConsts.primaryColor.withValues(
+                      alpha: isDark ? 0.35 : 0.08,
                     ),
-                    labelStyle: TextStyle(
-                      fontSize: AppConsts.normal,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppConsts.font,
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                height: 48,
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerHeight: 0,
+                  dividerColor: Colors.transparent,
+                  padding: const EdgeInsets.all(4),
+                  indicator: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppConsts.primaryColor,
+                        Color(0xFF1B2F6F),
+                      ],
                     ),
-                    tabs: [
-                      Tab(text: "One Way".tr),
-                      Tab(text: "Round Trip".tr),
-                      Tab(text: "Multi City".tr),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppConsts.primaryColor.withValues(alpha: 0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
                     ],
                   ),
+                  labelColor: AppConsts.secondaryColor,
+                  unselectedLabelColor:
+                      isDark ? Colors.white70 : AppConsts.primaryColor,
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: AppConsts.normal,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppConsts.font,
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: AppConsts.normal,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: AppConsts.font,
+                    letterSpacing: 0.3,
+                  ),
+                  tabs: [
+                    Tab(text: "One Way".tr),
+                    Tab(text: "Round Trip".tr),
+                    Tab(text: "Multi City".tr),
+                  ],
                 ),
               ),
             ),
-    
-            const SizedBox(height: 16),
-    
+
+            const SizedBox(height: 14),
+
+            // ───── Form card ─────
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
+                  color: cardBg,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
                   ),
+                  border: Border.all(
+                    color: AppConsts.secondaryColor.withValues(
+                      alpha: isDark ? 0.35 : 0.22,
+                    ),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConsts.primaryColor.withValues(
+                        alpha: isDark ? 0.30 : 0.08,
+                      ),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
+                clipBehavior: Clip.antiAlias,
                 child: TabBarView(
                   controller: _tabController,
                   physics: const NeverScrollableScrollPhysics(),
@@ -224,9 +283,31 @@ void initState() {
                       }
                     },
     
+                    icon: ctrl.isRequesting
+                        ? null
+                        : const Icon(
+                            Icons.search_rounded,
+                            color: AppConsts.secondaryColor,
+                            size: 18,
+                          ),
                     label: ctrl.isRequesting
-                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator())
-                        : Text("Search Flight".tr),
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppConsts.secondaryColor),
+                            ),
+                          )
+                        : Text(
+                            "Search Flight".tr,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                   );
     
     

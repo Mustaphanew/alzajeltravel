@@ -1,3 +1,4 @@
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -308,55 +309,187 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
       rangeTo ??= _todayOnly();
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cs = theme.colorScheme;
 
-          // ✅ Status (required)
-          DropdownButtonFormField<BookingStatus>(
-            value: selectedStatus,
-            decoration: InputDecoration(labelText: 'Status'.tr),
-            hint: Text('Select status'.tr),
-            items: statusOptions
-                .map((o) => DropdownMenuItem(value: o.status, child: Text(o.label.tr)))
-                .toList(),
-            onChanged: (v) {
-              setState(() {
-                selectedStatus = v;
-                _resetToDefaults();
-              });
-            },
-          ),
+    final Color fieldFill = isDark ? const Color(0xFF0E1530) : Colors.white;
+    final Color fieldBorder =
+        AppConsts.secondaryColor.withValues(alpha: isDark ? 0.35 : 0.30);
+    final Color fieldFocused =
+        AppConsts.secondaryColor.withValues(alpha: 0.85);
+    final Color labelColor = AppConsts.secondaryColor;
+    final Color valueColor = cs.onSurface;
 
-          const SizedBox(height: 12),
+    final InputDecorationTheme decorationTheme = InputDecorationTheme(
+      filled: true,
+      fillColor: fieldFill,
+      isDense: true,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      labelStyle: TextStyle(
+        color: labelColor,
+        fontWeight: FontWeight.w700,
+        fontSize: AppConsts.sm,
+        letterSpacing: 0.2,
+      ),
+      floatingLabelStyle: TextStyle(
+        color: labelColor,
+        fontWeight: FontWeight.w800,
+        fontSize: AppConsts.sm,
+      ),
+      hintStyle: TextStyle(
+        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: fieldBorder, width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: fieldBorder, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: fieldFocused, width: 1.4),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: fieldBorder.withValues(alpha: 0.5)),
+      ),
+    );
 
-          // ✅ Filter by date (fixed to Created at)
-          // DropdownButtonFormField<ReportDateField>(
-          //   value: ReportDateField.createdAt,
-          //   decoration: InputDecoration(labelText: 'Filter by date'.tr),
-          //   items: [
-          //     DropdownMenuItem(
-          //       value: ReportDateField.createdAt,
-          //       child: Text(_dateFieldLabel()),
-          //     ),
-          //   ],
-          //   onChanged: null, // disabled (createdAt only)
-          // ),
+    final TextStyle itemStyle = TextStyle(
+      color: valueColor,
+      fontSize: AppConsts.normal,
+      fontWeight: FontWeight.w600,
+    );
 
+    Widget statusDot(BookingStatus? s) {
+      Color c;
+      switch (s) {
+        case BookingStatus.confirmed:
+          c = const Color(0xFF16A34A);
+          break;
+        case BookingStatus.preBooking:
+          c = const Color(0xFFF59E0B);
+          break;
+        case BookingStatus.canceled:
+        case BookingStatus.expiry:
+          c = const Color(0xFFC62828);
+          break;
+        case BookingStatus.voided:
+        case BookingStatus.voide:
+          c = const Color(0xFFE53935);
+          break;
+        case BookingStatus.all:
+          c = AppConsts.secondaryColor;
+          break;
+        default:
+          c = cs.onSurfaceVariant;
+      }
+      return Container(
+        width: 9,
+        height: 9,
+        decoration: BoxDecoration(
+          color: c,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: c.withValues(alpha: 0.6), blurRadius: 5),
+          ],
+        ),
+      );
+    }
 
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: decorationTheme,
+        canvasColor: isDark ? const Color(0xFF0E1530) : Colors.white,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
+        child: Column(
+          children: [
+            const SizedBox(height: 4),
 
+            // ── Status ─────────────────────────────────────────
+            DropdownButtonFormField<BookingStatus>(
+              value: selectedStatus,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: AppConsts.secondaryColor),
+              dropdownColor: isDark ? const Color(0xFF121A38) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              style: itemStyle,
+              decoration: InputDecoration(
+                labelText: 'Status'.tr,
+                prefixIcon: const Icon(Icons.tune_rounded,
+                    size: 18, color: AppConsts.secondaryColor),
+              ),
+              hint: Text('Select status'.tr),
+              selectedItemBuilder: (context) => statusOptions
+                  .map(
+                    (o) => Row(
+                      children: [
+                        statusDot(o.status),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            o.label.tr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: itemStyle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .toList(),
+              items: statusOptions
+                  .map(
+                    (o) => DropdownMenuItem(
+                      value: o.status,
+                      child: Row(
+                        children: [
+                          statusDot(o.status),
+                          const SizedBox(width: 10),
+                          Text(o.label.tr, style: itemStyle),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                setState(() {
+                  selectedStatus = v;
+                  _resetToDefaults();
+                });
+              },
+            ),
 
-          const SizedBox(height: 12),
-          if(selectedStatus != BookingStatus.preBooking)
-            ...[
-                        // Period
+            const SizedBox(height: 14),
+
+            if (selectedStatus != BookingStatus.preBooking) ...[
+              // ── Period ───────────────────────────────────────
               DropdownButtonFormField<ReportPeriod>(
                 value: period,
-                decoration: InputDecoration(labelText: 'Period'.tr),
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                    color: AppConsts.secondaryColor),
+                dropdownColor:
+                    isDark ? const Color(0xFF121A38) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                style: itemStyle,
+                decoration: InputDecoration(
+                  labelText: 'Period'.tr,
+                  prefixIcon: const Icon(Icons.filter_list_rounded,
+                      size: 18, color: AppConsts.secondaryColor),
+                ),
                 items: ReportPeriod.values
-                    .map((p) => DropdownMenuItem(value: p, child: Text(_periodLabel(p))))
+                    .map((p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(_periodLabel(p), style: itemStyle),
+                        ))
                     .toList(),
                 onChanged: (v) {
                   if (v == null) return;
@@ -367,9 +500,10 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                 },
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              if (period == ReportPeriod.withinDay || period == ReportPeriod.untilDay) ...[
+              if (period == ReportPeriod.withinDay ||
+                  period == ReportPeriod.untilDay) ...[
                 _DatePickerField(
                   label: 'Select date'.tr,
                   value: _formatPickedDate(singleDate),
@@ -383,11 +517,29 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         value: selectedYear,
-                        decoration: InputDecoration(labelText: 'Year'.tr),
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                            color: AppConsts.secondaryColor),
+                        dropdownColor: isDark
+                            ? const Color(0xFF121A38)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        style: itemStyle,
+                        decoration: InputDecoration(
+                          labelText: 'Year'.tr,
+                          prefixIcon: const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                              color: AppConsts.secondaryColor),
+                        ),
                         items: years
                             .map((y) => DropdownMenuItem<int>(
                                   value: y,
-                                  child: Text(AppFuns.replaceArabicNumbers(y.toString())),
+                                  child: Text(
+                                    AppFuns.replaceArabicNumbers(
+                                        y.toString()),
+                                    style: itemStyle,
+                                  ),
                                 ))
                             .toList(),
                         onChanged: (v) {
@@ -403,11 +555,26 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         value: selectedMonth,
-                        decoration: InputDecoration(labelText: 'Month'.tr),
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                            color: AppConsts.secondaryColor),
+                        dropdownColor: isDark
+                            ? const Color(0xFF121A38)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        style: itemStyle,
+                        decoration: InputDecoration(
+                          labelText: 'Month'.tr,
+                          prefixIcon: const Icon(
+                              Icons.event_note_rounded,
+                              size: 18,
+                              color: AppConsts.secondaryColor),
+                        ),
                         items: months
                             .map((m) => DropdownMenuItem<int>(
                                   value: m,
-                                  child: Text(_monthName(m)),
+                                  child: Text(_monthName(m),
+                                      style: itemStyle),
                                 ))
                             .toList(),
                         onChanged: (v) {
@@ -434,30 +601,31 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                 ),
               ],
 
-              const SizedBox(height: 12),
-
-              // Global search (ignored by API for now)
-              // TextFormField(
-              //   controller: keywordCtrl,
-              //   textInputAction: TextInputAction.search,
-              //   decoration: InputDecoration(
-              //     labelText: 'Global search'.tr,
-              //     hintText: 'Type keyword...'.tr,
-              //   ),
-              //   onFieldSubmitted: (_) => _onSearchPressed(),
-              // ),
-              const SizedBox(height: 16),
-
+              const SizedBox(height: 18),
             ],
 
-          SizedBox(
-            width: double.infinity,
-            child: CustomButton(
-              onPressed: selectedStatus == null ? null : _onSearchPressed,
-              label: Text('Search'.tr),
+            SizedBox(
+              width: double.infinity,
+              child: CustomButton(
+                onPressed:
+                    selectedStatus == null ? null : _onSearchPressed,
+                icon: const Icon(
+                  Icons.search_rounded,
+                  color: AppConsts.secondaryColor,
+                  size: 18,
+                ),
+                label: Text(
+                  'Search'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -476,11 +644,36 @@ class _DatePickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: InputDecorator(
-        decoration: InputDecoration(labelText: label),
-        child: Text(value),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(
+            Icons.calendar_month_rounded,
+            size: 18,
+            color: AppConsts.secondaryColor,
+          ),
+          suffixIcon: const Icon(
+            Icons.edit_calendar_rounded,
+            size: 18,
+            color: AppConsts.secondaryColor,
+          ),
+        ),
+        child: Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: AppConsts.normal,
+            letterSpacing: 0.2,
+          ),
+        ),
       ),
     );
   }

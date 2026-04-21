@@ -57,7 +57,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           return EmptyData();
         }
         return Container(
-          color: cs.surfaceContainer,
+          color: Colors.transparent,
           padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -90,7 +90,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                   final brand = _brandFor(item.url.toString());
 
                   return Material(
-                    color: cs.surfaceContainerHighest,
+                    color: isDark
+                        ? const Color(0xFF0E1530)
+                        : cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
@@ -101,16 +103,15 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDark
-                                ? cs.outlineVariant
-                                : cs.outline.withValues(alpha: 0.25),
+                            color: AppConsts.secondaryColor
+                                .withValues(alpha: isDark ? 0.28 : 0.22),
                             width: 1,
                           ),
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              brand.color.withValues(alpha: isDark ? 0.08 : 0.05),
+                              brand.color.withValues(alpha: isDark ? 0.10 : 0.06),
                               Colors.transparent,
                             ],
                           ),

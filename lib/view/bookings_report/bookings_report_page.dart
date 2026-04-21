@@ -80,7 +80,15 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final String statusLabel = (parentState?.status == BookingStatus.all)
+        ? 'All'.tr
+        : (parentState?.status?.toJson() ?? '').tr;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0B1430) : const Color(0xFFFAF6F1),
       appBar: AppBar(
         title: Text(
           'Bookings Report'.tr,
@@ -93,6 +101,7 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
         ),
         backgroundColor: AppConsts.primaryColor,
         foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(
           color: Colors.white,
@@ -100,48 +109,107 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
           fontSize: AppConsts.xlg,
         ),
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
+        shape: Border(
+          bottom: BorderSide(
+            color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+            width: 1,
+          ),
+        ),
       ),
       body: Column(
         children: [
-          ExpansionTile(
-            controller: _filterTileController,
-            initiallyExpanded: false,
-            maintainState: true,
-
-            // show status
-            title: Text(
-              'Search and Filter'.tr +
-                  ' (' +
-                  ((parentState?.status == BookingStatus.all) ? 'All'.tr : (parentState?.status?.toJson() ?? '').tr) +
-                  ')',
-            ),
-
-            // collapsedBackgroundColor:
-            //     (parentState == null || parentState!.applied == false)
-            //         ? Colors.transparent
-            //         : AppConsts.primaryColor.withValues(alpha: 0.5),
-            onExpansionChanged: (expanded) {
-              AppFuns.hideKeyboard();
-              if (!expanded) setState(() {});
-            },
-            children: [
-              SearchAndFilter(
-                tileController: _filterTileController,
-                onSearch: (state) async {
-                  parentState = state;
-                  setState(() {});
-
-                  if (state.status == null) return;
-
-                  context.loaderOverlay.show();
-                  await c.search(status: state.status!, dateFrom: state.dateFrom, dateTo: state.dateTo, fullDetails: 0);
-                  if (context.mounted) context.loaderOverlay.hide();
-                },
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF121A38) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.35 : 0.28),
+                width: 1,
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppConsts.primaryColor.withValues(alpha: isDark ? 0.30 : 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                controller: _filterTileController,
+                initiallyExpanded: false,
+                maintainState: true,
+                tilePadding: const EdgeInsetsDirectional.only(start: 16, end: 12),
+                iconColor: AppConsts.secondaryColor,
+                collapsedIconColor: AppConsts.secondaryColor,
+                shape: const RoundedRectangleBorder(),
+                collapsedShape: const RoundedRectangleBorder(),
+                backgroundColor: Colors.transparent,
+                collapsedBackgroundColor: Colors.transparent,
+                title: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: AppConsts.secondaryColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: AppConsts.lg,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface,
+                            letterSpacing: 0.2,
+                          ),
+                          children: [
+                            TextSpan(text: 'Search and Filter'.tr + ' '),
+                            TextSpan(
+                              text: '($statusLabel)',
+                              style: const TextStyle(
+                                color: AppConsts.secondaryColor,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                onExpansionChanged: (expanded) {
+                  AppFuns.hideKeyboard();
+                  if (!expanded) setState(() {});
+                },
+                children: [
+                  SearchAndFilter(
+                    tileController: _filterTileController,
+                    onSearch: (state) async {
+                      parentState = state;
+                      setState(() {});
+
+                      if (state.status == null) return;
+
+                      context.loaderOverlay.show();
+                      await c.search(status: state.status!, dateFrom: state.dateFrom, dateTo: state.dateTo, fullDetails: 0);
+                      if (context.mounted) context.loaderOverlay.hide();
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
-          const Divider(),
           const Expanded(child: _BookingsReportList()),
         ],
       ),

@@ -37,23 +37,46 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return GetBuilder<ProfileController>(
       builder: (c) {
 
         return Scaffold(
-          appBar: AppBar(title: Text('Profile Account'.tr), titleSpacing: 15),
+          backgroundColor: isDark
+              ? const Color(0xFF0B1430)
+              : const Color(0xFFFAF6F1),
+          appBar: AppBar(
+            title: Text(
+              'Profile Account'.tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: AppConsts.xlg,
+                letterSpacing: 0.3,
+              ),
+            ),
+            titleSpacing: 15,
+            backgroundColor: AppConsts.primaryColor,
+            foregroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            shape: Border(
+              bottom: BorderSide(
+                color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+          ),
 
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(0),
               child: Column(
                 children: [
-                  //  const SizedBox(height: 20),
-                  // ProfileBalanceCharts(profile: widget.data),
-                  Divider(height: 0, thickness: 2),
-
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // Form(
                   //   key: c.formKey,

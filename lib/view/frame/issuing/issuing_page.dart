@@ -112,6 +112,10 @@ class _IssuingPageState extends State<IssuingPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // لون لوحة أزرار Outlined في الليلي — نفس عائلة البطاقات (بدل الأسود الافتراضي)
+    final Color darkOutlineButtonFill = const Color(0xFF121A38);
+
     return PopScope(
       canPop: false, // نمنع الرجوع تلقائيًا ونقرر نحن بعد التأكيد
       onPopInvokedWithResult: (didPop, result) async {
@@ -133,29 +137,44 @@ class _IssuingPageState extends State<IssuingPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
+          // ليلي فقط: خلفية كحلية أعمق لإبراز البطاقات والحدود الذهبية (النهاري دون تغيير)
           backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? cs.surface
+              ? const Color(0xFF0B1430)
               : const Color(0xFFFAF6F1),
           appBar: AppBar(
             title: Text(
               "Issuing".tr,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : AppConsts.primaryColor,
                 fontWeight: FontWeight.w700,
                 fontSize: AppConsts.xlg,
                 letterSpacing: 0.3,
               ),
             ),
-            backgroundColor: AppConsts.primaryColor,
-            foregroundColor: Colors.white,
-            iconTheme: const IconThemeData(color: Colors.white),
-            titleTextStyle: const TextStyle(
-              color: Colors.white,
+            backgroundColor: isDark
+                ? AppConsts.primaryColor
+                : const Color(0xFFFAF6F1),
+            foregroundColor:
+                isDark ? Colors.white : AppConsts.primaryColor,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            iconTheme: IconThemeData(
+              color: isDark ? Colors.white : AppConsts.primaryColor,
+            ),
+            titleTextStyle: TextStyle(
+              color: isDark ? Colors.white : AppConsts.primaryColor,
               fontWeight: FontWeight.w700,
               fontSize: AppConsts.xlg,
             ),
             elevation: 0,
             centerTitle: true,
+            shape: Border(
+              bottom: BorderSide(
+                color: AppConsts.secondaryColor
+                    .withValues(alpha: isDark ? 0.45 : 0.35),
+                width: 1,
+              ),
+            ),
             actions: [
               if (widget.booking.status == BookingStatus.confirmed)
                 Padding(
@@ -223,7 +242,7 @@ class _IssuingPageState extends State<IssuingPage> {
                             Expanded(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  final dialog = await CustomDialog.success(
+                                  final dialog = await CustomDialog.confirm(
                                     context,
                                     title: 'Confirm Booking'.tr,
                                     desc:
@@ -235,6 +254,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                   );
                                   if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
+                                  bool confirmed = false;
                                   try {
                                     final res = await travelersReviewController.confirmBooking(booking.id);
                                     if (res != null) {
@@ -244,12 +264,22 @@ class _IssuingPageState extends State<IssuingPage> {
                                       }
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
+                                      confirmed = true;
                                     }
                                   } catch (e) {
                                     Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
+                                  if (confirmed && context.mounted) {
+                                    await CustomDialog.success(
+                                      context,
+                                      title: 'Booking Confirmed'.tr,
+                                      desc: 'Your booking has been confirmed successfully'.tr,
+                                      btnOkText: 'Ok'.tr,
+                                      showCancel: false,
+                                    );
+                                  }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppConsts.secondaryColor,
@@ -295,6 +325,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                 },
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: cs.error,
+                                  backgroundColor: isDark ? darkOutlineButtonFill : Colors.transparent,
                                   side: BorderSide(color: cs.error, width: 1.3),
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -337,6 +368,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                 },
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: cs.error,
+                                  backgroundColor: isDark ? darkOutlineButtonFill : Colors.transparent,
                                   side: BorderSide(color: cs.error, width: 1.3),
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -355,19 +387,24 @@ class _IssuingPageState extends State<IssuingPage> {
                       if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
                         const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: cs.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(18),
+                            color: isDark
+                                ? const Color(0xFF121A38)
+                                : Colors.white,
                             border: Border.all(
-                              color: AppConsts.secondaryColor.withValues(alpha: 0.45),
-                              width: 1.3,
+                              color: AppConsts.secondaryColor
+                                  .withValues(alpha: isDark ? 0.45 : 0.35),
+                              width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppConsts.secondaryColor.withValues(alpha: 0.10),
-                                blurRadius: 10,
+                                color: AppConsts.primaryColor.withValues(
+                                  alpha: isDark ? 0.30 : 0.08,
+                                ),
+                                blurRadius: 14,
                                 offset: const Offset(0, 4),
                               ),
                             ],
@@ -377,18 +414,19 @@ class _IssuingPageState extends State<IssuingPage> {
                               Row(
                                 children: [
                                   Container(
-                                    width: 32,
-                                    height: 32,
+                                    width: 34,
+                                    height: 34,
+                                    alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      gradient: RadialGradient(
-                                        colors: [
-                                          AppConsts.secondaryColor.withValues(alpha: 0.22),
-                                          AppConsts.secondaryColor.withValues(alpha: 0.0),
-                                        ],
+                                      color: AppConsts.secondaryColor
+                                          .withValues(alpha: 0.16),
+                                      border: Border.all(
+                                        color: AppConsts.secondaryColor
+                                            .withValues(alpha: 0.55),
+                                        width: 1,
                                       ),
                                     ),
-                                    alignment: Alignment.center,
                                     child: const Icon(
                                       Icons.access_time_filled_rounded,
                                       color: AppConsts.secondaryColor,
@@ -396,23 +434,46 @@ class _IssuingPageState extends State<IssuingPage> {
                                     ),
                                   ),
                                   const SizedBox(width: 10),
+                                  Container(
+                                    width: 4,
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      color: AppConsts.secondaryColor,
+                                      borderRadius:
+                                          BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   Text(
                                     "Time Left".tr,
                                     style: TextStyle(
                                       fontSize: AppConsts.lg,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w800,
                                       color: cs.onSurface,
+                                      letterSpacing: 0.2,
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              Divider(
+                              Container(
                                 height: 1,
-                                thickness: 1,
-                                color: cs.outlineVariant.withValues(alpha: 0.4),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 2),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppConsts.secondaryColor
+                                          .withValues(alpha: 0),
+                                      AppConsts.secondaryColor
+                                          .withValues(alpha: 0.45),
+                                      AppConsts.secondaryColor
+                                          .withValues(alpha: 0),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               TimeRemaining(
                                 timeLimit: timeLimit,
                                 createdAt: widget.booking.createdOn,
@@ -751,39 +812,43 @@ class StatusCard extends StatelessWidget {
   final ColorScheme cs;
   final String bookingStatus;
 
-  ({Color color, IconData icon}) _visuals() {
-    if (bookingStatus == BookingStatus.confirmed.name) {
-      return (color: const Color(0xFF2E7D32), icon: Icons.check_circle_rounded);
+  ({Color color, IconData icon}) _visuals(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // مقارنة مرنة (بدون حساسيّة لحالة الأحرف/المسافات) حتى لا يفشل الشرط لو جاء "Confirmed" أو فيه فراغ
+    final s = bookingStatus.trim().toLowerCase();
+
+    bool matches(BookingStatus status) => s == status.name.toLowerCase();
+
+    // مؤكّد: أخضر واضح في الثيمين
+    if (matches(BookingStatus.confirmed) || s == 'confirm' || s == 'issued' || s == 'ok') {
+      return (
+        color: isDark ? const Color(0xFF2FB96A) : const Color(0xFF16A34A),
+        icon: Icons.check_circle_rounded,
+      );
     }
-    if (bookingStatus == BookingStatus.preBooking.name ||
-        bookingStatus == BookingStatus.pending.name) {
+    if (matches(BookingStatus.preBooking) || matches(BookingStatus.pending) || s == 'pre-book') {
       return (color: const Color(0xFFF59E0B), icon: Icons.schedule_rounded);
     }
-    if (bookingStatus == BookingStatus.canceled.name ||
-        bookingStatus == BookingStatus.expiry.name) {
+    if (matches(BookingStatus.canceled) || matches(BookingStatus.expiry) || s == 'cancelled') {
       return (color: const Color(0xFFC62828), icon: Icons.cancel_rounded);
     }
-    if (bookingStatus == BookingStatus.voided.name ||
-        bookingStatus == BookingStatus.voide.name) {
-      return (color: const Color(0xFF8E24AA), icon: Icons.block_rounded);
+    // Void: أحمر صريح وموحَّد في الثيمين (نفس أحمر اللايت)
+    if (matches(BookingStatus.voided) || matches(BookingStatus.voide) || s == 'void') {
+      return (
+        color: const Color(0xFFC62828),
+        icon: Icons.block_rounded,
+      );
     }
     return (color: const Color(0xFF78909C), icon: Icons.help_outline_rounded);
   }
 
   @override
   Widget build(BuildContext context) {
-    final v = _visuals();
+    final v = _visuals(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            v.color,
-            v.color.withValues(alpha: 0.85),
-          ],
-        ),
+        color: v.color,
         boxShadow: [
           BoxShadow(
             color: v.color.withValues(alpha: 0.30),
@@ -881,12 +946,16 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        // ليلي: لوحة أوضح قليلاً من الخلفية + حد ذهبي خفيف
+        color: isDark ? const Color(0xFF121A38) : cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.45),
+          color: isDark
+              ? AppConsts.secondaryColor.withValues(alpha: 0.38)
+              : cs.outlineVariant.withValues(alpha: 0.45),
           width: 1,
         ),
       ),
@@ -1010,14 +1079,17 @@ class _TravelerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasTicket = ticketNumber != null && ticketNumber!.isNotEmpty && ticketNumber != 'N/A';
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        color: isDark ? const Color(0xFF121A38) : cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.45),
+          color: isDark
+              ? AppConsts.secondaryColor.withValues(alpha: 0.38)
+              : cs.outlineVariant.withValues(alpha: 0.45),
           width: 1,
         ),
       ),

@@ -14,8 +14,6 @@ class AirlineIncludeDropDown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return GetBuilder<AirlineController>(
       builder: (controller) {
         return DropdownSearch<AirlineModel>.multiSelection(
@@ -39,12 +37,15 @@ class AirlineIncludeDropDown extends StatelessWidget {
 
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              contentPadding: const EdgeInsetsDirectional.only(start: 4, end: 4, top: 12, bottom: 12),
               labelText: 'Included Airlines'.tr,
-              // labelStyle: TextStyle(fontSize: 16),
               hintText: 'Select Airlines'.tr,
-              // hintStyle: TextStyle(fontSize: 16),
-              border: OutlineInputBorder(),
+              prefixIcon: const Icon(
+                Icons.airlines_rounded,
+                color: AppConsts.secondaryColor,
+                size: 20,
+              ),
+              border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
           ),
@@ -57,10 +58,29 @@ class AirlineIncludeDropDown extends StatelessWidget {
               runSpacing: 4,
               children: selected.map((e) {
                 return InputChip(
-                  // label: Text('${e.code} — ${e.name[AppVars.lang]}', 
-                  label: Text('${e.code}', 
-                  style: TextStyle(fontSize: 12)),
-                  deleteIcon: const Icon(Icons.clear, size: 12),
+                  label: Text(
+                    e.code,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppConsts.secondaryColor,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  backgroundColor:
+                      AppConsts.secondaryColor.withValues(alpha: 0.12),
+                  side: BorderSide(
+                    color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  deleteIcon: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: AppConsts.secondaryColor,
+                  ),
                   onDeleted: () => controller.removeInclude(e),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -71,14 +91,7 @@ class AirlineIncludeDropDown extends StatelessWidget {
 
           popupProps: PopupPropsMultiSelection.dialog(
             showSearchBox: true,
-            searchFieldProps: TextFieldProps(
-              decoration: InputDecoration(
-                hintText: 'Search'.tr + ' ...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-            ),
+            searchFieldProps: _airlineSearchFieldProps(context),
             cacheItems: true,
             disableFilter: false,
             searchDelay: const Duration(milliseconds: 150),
@@ -88,117 +101,33 @@ class AirlineIncludeDropDown extends StatelessWidget {
             disabledItemFn: (item) => controller.inExclude(item),
 
             // الهيدر
-            title: Material(
-              color: cs.primary,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 16, bottom: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Included Airlines'.tr,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onPrimary),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: cs.onPrimary),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            title: _AirlineDialogTitle(text: 'Included Airlines'.tr),
 
-            showSelectedItems: true, // ← المهم عشان isSelected يصير true عند الاختيار
-            // عنصر القائمة (نبه بصرياً عند التعطيل)
-            itemBuilder: (context, item, isDisabled, isSelected) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Opacity(
-                    opacity: isDisabled ? 0.45 : 1,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      leading: Container(width: 60, height: 60, child: CacheImg(AppFuns.airlineImgURL(item.code))),
-                      dense: false,
-                      tileColor: Colors.transparent,
-                      title: Text('${item.name[AppVars.lang]}', overflow: TextOverflow.ellipsis, maxLines: 2),
-                      titleAlignment: ListTileTitleAlignment.center,
-                      subtitle: Row(
-                        children: [
-                          CountryFlag.fromCountryCode('${item.countryCode}', theme: ImageTheme(width: 18, height: 12)),
-                          SizedBox(width: 8),
-                          if (item.note != null)
-                            Expanded(
-                              child: Text(
-                                "${item.note}",
-                                style: TextStyle(fontSize: AppConsts.sm),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                              ),
-                            ),
-                        ],
-                      ),
-                      trailing: Checkbox(
-                        value: isSelected, 
-                        onChanged: (v) {}, 
-                        fillColor: MaterialStateProperty.resolveWith((states) {
-                          if (states.contains(MaterialState.selected)) {
-                            if(Get.isDarkMode) {
-                              return cs.secondary;
-                            }
-                          }
-                        }),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 0),
-                ],
-              );
-            },
+            showSelectedItems: true,
+            containerBuilder: (context, child) =>
+                _AirlineDialogContainer(child: child),
+            itemBuilder: (context, item, isDisabled, isSelected) =>
+                _AirlineListItem(
+              item: item,
+              isDisabled: isDisabled,
+              isSelected: isSelected,
+            ),
 
             checkBoxBuilder: (context, item, isDisabled, isSelected) {
-              return Visibility(visible: true, child: SizedBox.shrink());
+              return const SizedBox.shrink();
             },
 
-            listViewProps: const ListViewProps(shrinkWrap: true, padding: EdgeInsets.zero),
+            listViewProps: const ListViewProps(
+                shrinkWrap: true, padding: EdgeInsets.zero),
 
-            dialogProps: const DialogProps(
-              clipBehavior: Clip.antiAlias,
-              insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              shape: OutlineInputBorder(
-                borderSide: BorderSide(width: 0),
-                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-                gapPadding: 0,
-              ),
-            ),
+            dialogProps: _airlineDialogProps(context),
 
-            validationBuilder: (context, selected) => Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest,
-                boxShadow: [BoxShadow(color: cs.outlineVariant.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, -2))],
-                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-              ),
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Cancel'.tr),
-                  ),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      controller.setInclude(selected);
-                      Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.check),
-                    label: Text('OK'.tr),
-                  ),
-                ],
-              ),
+            validationBuilder: (context, selected) => _AirlineDialogActions(
+              onCancel: () => Navigator.of(context).pop(),
+              onConfirm: () {
+                controller.setInclude(selected);
+                Navigator.of(context).pop();
+              },
             ),
           ),
 
@@ -219,8 +148,6 @@ class AirlineExcludeDropDown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return GetBuilder<AirlineController>(
       builder: (controller) {
         return DropdownSearch<AirlineModel>.multiSelection(
@@ -243,12 +170,15 @@ class AirlineExcludeDropDown extends StatelessWidget {
 
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              contentPadding: const EdgeInsetsDirectional.only(start: 4, end: 4, top: 12, bottom: 12),
               labelText: 'Excluded Airlines'.tr,
               hintText: 'Select Airlines'.tr,
-              // labelStyle: TextStyle(fontSize: 14),
-              // hintStyle: TextStyle(fontSize: 14),
-              border: OutlineInputBorder(),
+              prefixIcon: const Icon(
+                Icons.airline_stops_rounded,
+                color: AppConsts.secondaryColor,
+                size: 20,
+              ),
+              border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
           ),
@@ -260,10 +190,29 @@ class AirlineExcludeDropDown extends StatelessWidget {
               runSpacing: 4,
               children: selected.map((e) {
                 return InputChip(
-                  // label: Text('${e.code} — ${e.name[AppVars.lang]}', 
-                  label: Text('${e.code}', 
-                  style: TextStyle(fontSize: 12)),
-                  deleteIcon: const Icon(Icons.clear, size: 12),
+                  label: Text(
+                    e.code,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppConsts.secondaryColor,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  backgroundColor:
+                      AppConsts.secondaryColor.withValues(alpha: 0.12),
+                  side: BorderSide(
+                    color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  deleteIcon: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: AppConsts.secondaryColor,
+                  ),
                   onDeleted: () => controller.removeExclude(e),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -275,14 +224,7 @@ class AirlineExcludeDropDown extends StatelessWidget {
           popupProps: PopupPropsMultiSelection.dialog(
             showSearchBox: true,
             showSelectedItems: true,
-            searchFieldProps: TextFieldProps(
-              decoration: InputDecoration(
-                hintText: 'Search'.tr + ' ...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-            ),
+            searchFieldProps: _airlineSearchFieldProps(context),
             cacheItems: true,
             disableFilter: false,
             searchDelay: const Duration(milliseconds: 150),
@@ -291,63 +233,16 @@ class AirlineExcludeDropDown extends StatelessWidget {
             // ❗ تعطيل أي عنصر موجود في "المسموح"
             disabledItemFn: (item) => controller.inInclude(item),
 
-            title: Material(
-              color: cs.primary,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 16, bottom: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Airlines Excluded'.tr,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onPrimary),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: cs.onPrimary),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-              ),
+            title: _AirlineDialogTitle(text: 'Airlines Excluded'.tr),
+
+            containerBuilder: (context, child) =>
+                _AirlineDialogContainer(child: child),
+            itemBuilder: (context, item, isDisabled, isSelected) =>
+                _AirlineListItem(
+              item: item,
+              isDisabled: isDisabled,
+              isSelected: isSelected,
             ),
-
-            itemBuilder: (context, item, isDisabled, isSelected) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Opacity(
-                    opacity: isDisabled ? 0.45 : 1,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      leading: Container(width: 60, height: 60, child: CacheImg(AppFuns.airlineImgURL(item.code))),
-                      dense: false,
-                      tileColor: Colors.transparent,
-                      title: Text('${item.name[AppVars.lang]}', overflow: TextOverflow.ellipsis),
-                      titleAlignment: ListTileTitleAlignment.center,
-                      subtitle: Row(
-                        children: [
-                          CountryFlag.fromCountryCode('${item.countryCode}', theme: ImageTheme(width: 18, height: 12)),
-                          SizedBox(width: 8),
-                          if (item.note != null)
-                            Expanded(
-                              child: Text(
-                                "${item.note}",
-                                style: TextStyle(fontSize: AppConsts.sm),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                              ),
-                            ),
-                        ],
-                      ),
-
-                      trailing: Checkbox(value: isSelected, onChanged: (v) {}),
-                    ),
-                  ),
-                  const Divider(height: 0),
-                ],
-              );
-            },
 
             checkBoxBuilder: (context, item, isDisabled, isSelected) {
               return const SizedBox.shrink();
@@ -355,37 +250,14 @@ class AirlineExcludeDropDown extends StatelessWidget {
 
             listViewProps: const ListViewProps(shrinkWrap: true),
 
-            dialogProps: const DialogProps(
-              clipBehavior: Clip.antiAlias,
-              insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              shape: OutlineInputBorder(
-                borderSide: BorderSide(width: 0),
-                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-                gapPadding: 0,
-              ),
-            ),
+            dialogProps: _airlineDialogProps(context),
 
-            validationBuilder: (context, selected) => Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest,
-                boxShadow: [BoxShadow(color: cs.outlineVariant.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, -2))],
-                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-              ),
-              child: Row(
-                children: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Cancel'.tr)),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      controller.setExclude(selected);
-                      Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.check),
-                    label: Text('OK'.tr),
-                  ),
-                ],
-              ),
+            validationBuilder: (context, selected) => _AirlineDialogActions(
+              onCancel: () => Navigator.of(context).pop(),
+              onConfirm: () {
+                controller.setExclude(selected);
+                Navigator.of(context).pop();
+              },
             ),
           ),
 
@@ -396,6 +268,381 @@ class AirlineExcludeDropDown extends StatelessWidget {
           // validator: (vals) => (vals == null || vals.isEmpty) ? 'Please select at least one item' : null,
         );
       },
+    );
+  }
+}
+
+// ================================================================
+// Airline dialog helpers — shared navy/gold styling for both
+// Include & Exclude airline pickers, in light and dark themes.
+// ================================================================
+
+DialogProps _airlineDialogProps(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return DialogProps(
+    clipBehavior: Clip.antiAlias,
+    insetPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    backgroundColor:
+        isDark ? const Color(0xFF0B1430) : Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: BorderSide(
+        color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+        width: 1,
+      ),
+    ),
+  );
+}
+
+TextFieldProps _airlineSearchFieldProps(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return TextFieldProps(
+    cursorColor: AppConsts.secondaryColor,
+    style: TextStyle(
+      color: isDark ? Colors.white : AppConsts.primaryColor,
+      fontWeight: FontWeight.w600,
+    ),
+    decoration: InputDecoration(
+      hintText: '${'Search'.tr} ...',
+      hintStyle: TextStyle(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.5)
+            : AppConsts.primaryColor.withValues(alpha: 0.45),
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: const Icon(
+        Icons.search_rounded,
+        color: AppConsts.secondaryColor,
+        size: 20,
+      ),
+      filled: true,
+      fillColor: isDark
+          ? const Color(0xFF0E1530)
+          : Colors.white,
+      isDense: true,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+          width: 1,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppConsts.secondaryColor.withValues(alpha: 0.9),
+          width: 1.4,
+        ),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  );
+}
+
+class _AirlineDialogContainer extends StatelessWidget {
+  final Widget child;
+  const _AirlineDialogContainer({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      color: isDark ? const Color(0xFF0B1430) : Colors.white,
+      child: child,
+    );
+  }
+}
+
+class _AirlineDialogTitle extends StatelessWidget {
+  final String text;
+  const _AirlineDialogTitle({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppConsts.primaryColor,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: AppConsts.secondaryColor.withValues(alpha: 0.5),
+              width: 1,
+            ),
+          ),
+        ),
+        padding: const EdgeInsetsDirectional.only(
+            start: 16, end: 8, top: 14, bottom: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                color: AppConsts.secondaryColor,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: AppConsts.secondaryColor,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AirlineListItem extends StatelessWidget {
+  final AirlineModel item;
+  final bool isDisabled;
+  final bool isSelected;
+
+  const _AirlineListItem({
+    required this.item,
+    required this.isDisabled,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+
+    final Color tileBg = isSelected
+        ? AppConsts.secondaryColor.withValues(alpha: isDark ? 0.1 : 0.12)
+        : Colors.transparent;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Opacity(
+          opacity: isDisabled ? 0.45 : 1,
+          child: Container(
+            color: tileBg,
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : AppConsts.primaryColor.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color:
+                        AppConsts.secondaryColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: CacheImg(AppFuns.airlineImgURL(item.code)),
+              ),
+              title: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '${item.name[AppVars.lang]}',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      style: TextStyle(
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppConsts.secondaryColor.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color:
+                            AppConsts.secondaryColor.withValues(alpha: 0.55),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      item.code,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppConsts.secondaryColor,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    CountryFlag.fromCountryCode(
+                      '${item.countryCode}',
+                      theme: const ImageTheme(width: 18, height: 12),
+                    ),
+                    const SizedBox(width: 8),
+                    if (item.note != null)
+                      Expanded(
+                        child: Text(
+                          '${item.note}',
+                          style: TextStyle(
+                            fontSize: AppConsts.sm,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              trailing: _AirlineCheckbox(isSelected: isSelected),
+            ),
+          ),
+        ),
+        Container(
+          height: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          color: AppConsts.secondaryColor.withValues(alpha: 0.12),
+        ),
+      ],
+    );
+  }
+}
+
+class _AirlineCheckbox extends StatelessWidget {
+  final bool isSelected;
+  const _AirlineCheckbox({required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppConsts.secondaryColor
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: AppConsts.secondaryColor.withValues(
+              alpha: isSelected ? 1 : 0.55),
+          width: 1.4,
+        ),
+      ),
+      child: isSelected
+          ? const Icon(
+              Icons.check_rounded,
+              size: 16,
+              color: AppConsts.primaryColor,
+            )
+          : null,
+    );
+  }
+}
+
+class _AirlineDialogActions extends StatelessWidget {
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _AirlineDialogActions({
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0E1530) : const Color(0xFFFAF6F1),
+        border: Border(
+          top: BorderSide(
+            color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: AppConsts.secondaryColor,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: onCancel,
+            icon: const Icon(Icons.close_rounded, size: 18),
+            label: Text('Cancel'.tr),
+          ),
+          const Spacer(),
+          ElevatedButton.icon(
+            onPressed: onConfirm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConsts.primaryColor,
+              foregroundColor: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: AppConsts.secondaryColor.withValues(alpha: 0.7),
+                  width: 1.2,
+                ),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+            icon: const Icon(
+              Icons.check_circle_rounded,
+              color: AppConsts.secondaryColor,
+              size: 18,
+            ),
+            label: Text('OK'.tr),
+          ),
+        ],
+      ),
     );
   }
 }

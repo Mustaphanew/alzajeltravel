@@ -87,9 +87,16 @@ class _PassportFormTileState extends State<PassportFormTile> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
 
-    final textColor = cs.primaryFixed;
+    /// على الخلفية الفاتحة `primaryFixed` أبيض في الثيم — كان يخفي التسميات والقيم.
+    final summaryTextColor = cs.onSurface;
+    /// في النهاري `onSurfaceVariant` باهت على الخلفية البيضاء — نقرّب لون التسمية من `onSurface`.
+    final Color summaryLabelForeground = isLight
+        ? Color.lerp(cs.onSurfaceVariant, cs.onSurface, 0.78)!
+        : summaryTextColor;
 
     PassportsFormsController passportsFormsController = Get.find();
     final lastDateInSearch = passportsFormsController.lastDateInSearch;
@@ -176,7 +183,7 @@ if (change != 0) {
                   key: ValueKey('traveler-${widget.travelerIndex}-${widget.isExpanded}'),
                   iconColor: (Get.isDarkMode) ? cs.secondary : cs.primary,
                   tilePadding: EdgeInsets.only(bottom: 0, top: 0),
-                  backgroundColor: cs.surface,
+                  backgroundColor: isLight ? cs.surfaceContainerHighest : cs.surface,
                   collapsedBackgroundColor: Colors.transparent,
                   initiallyExpanded: widget.isExpanded,
                   shape: const Border(),
@@ -190,19 +197,26 @@ if (change != 0) {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ===== Navy header banner (Traveler X: Adult + Edit/Scan) =====
+                      // ===== رأس الكرت: كحلي في الليل، حاوية فاتحة متناغمة مع الثيم النهاري =====
                       Container(
                         padding: const EdgeInsetsDirectional.only(
                           start: 14, end: 8, top: 10, bottom: 10,
                         ),
-                        decoration: const BoxDecoration(
-                          color: AppConsts.primaryColor,
+                        decoration: BoxDecoration(
+                          color: isLight ? cs.primaryContainer : AppConsts.primaryColor,
+                          border: isLight
+                              ? Border(
+                                  bottom: BorderSide(
+                                    color: cs.outline.withValues(alpha: 0.45),
+                                  ),
+                                )
+                              : null,
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.person_rounded,
-                              color: Colors.white,
+                              color: isLight ? cs.primary : Colors.white,
                               size: 22,
                             ),
                             const SizedBox(width: 8),
@@ -211,10 +225,10 @@ if (change != 0) {
                                 '${'Traveler'.tr} ${widget.travelerIndex}: ${widget.ageGroupLabel}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: AppConsts.lg,
-                                  color: Colors.white,
+                                  color: isLight ? cs.onPrimaryFixed : Colors.white,
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -281,7 +295,12 @@ if (change != 0) {
                       // ===== Collapsed summary content =====
                       if (widget.isExpanded == false)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                          padding: EdgeInsets.fromLTRB(
+                            isLight ? 16 : 14,
+                            isLight ? 14 : 12,
+                            isLight ? 16 : 14,
+                            isLight ? 16 : 14,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -309,7 +328,7 @@ if (change != 0) {
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
                                                         fontSize: AppConsts.normal,
-                                                        color: textColor,
+                                                        color: summaryLabelForeground,
                                                         fontWeight: FontWeight.bold,
                                                       ),
                                                     ),
@@ -319,7 +338,7 @@ if (change != 0) {
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
                                                         fontSize: AppConsts.normal,
-                                                        color: textColor,
+                                                        color: summaryTextColor,
                                                       ),
                                                     ),
                                                     const SizedBox(height: 6),
@@ -328,6 +347,11 @@ if (change != 0) {
                                               ),
                                             ],
                                           ),
+                                        if (isLight &&
+                                            fullName.isNotEmpty &&
+                                            documentNumber != null &&
+                                            documentNumber.isNotEmpty)
+                                          const SizedBox(height: 8),
                                         if (documentNumber != null && documentNumber.isNotEmpty)
                                           Row(
                                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +375,7 @@ if (change != 0) {
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
                                                         fontSize: AppConsts.normal,
-                                                        color: textColor,
+                                                        color: summaryLabelForeground,
                                                         fontWeight: FontWeight.bold,
                                                       ),
                                                     ),
@@ -361,7 +385,7 @@ if (change != 0) {
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
                                                         fontSize: AppConsts.normal,
-                                                        color: textColor,
+                                                        color: summaryTextColor,
                                                       ),
                                                     ),
                                                   ],
@@ -370,16 +394,21 @@ if (change != 0) {
                                             ],
                                           ),
                             
-                                        if(dob.isNotEmpty) ...[
-                                          const SizedBox(height: 6,),
-                                          Divider(),
-                                          const SizedBox(height: 0,),   
+                                        if (dob.isNotEmpty) ...[
+                                          SizedBox(height: isLight ? 10 : 6),
+                                          Divider(
+                                            height: 1,
+                                            thickness: 1,
+                                            color: cs.outlineVariant,
+                                          ),
+                                          const SizedBox(height: 0),
                                         ],
-                            
-                                        if(dob.isNotEmpty) IntrinsicHeight(
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
+
+                                        if (dob.isNotEmpty)
+                                          IntrinsicHeight(
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
                                               // Left column: DOB + Nationality
                                               Expanded(
                                                 child: Column(
@@ -392,7 +421,8 @@ if (change != 0) {
                                                         iconColor: const Color(0xffd5632a),
                                                         label: 'Date of birth'.tr,
                                                         value: dob,
-                                                        textColor: textColor,
+                                                        textColor: summaryTextColor,
+                                                        labelColor: isLight ? summaryLabelForeground : null,
                                                       ),
 
                                                     if (dob.isNotEmpty && nationality != null) const SizedBox(height: 6),
@@ -407,13 +437,19 @@ if (change != 0) {
                                                           nationality.alpha2,
                                                           theme: (!kIsWeb) ? EmojiTheme(size: 16) : ImageTheme(height: 16, width: 22),
                                                         ),
-                                                        textColor: textColor,
+                                                        textColor: summaryTextColor,
+                                                        labelColor: isLight ? summaryLabelForeground : null,
                                                       ),
                                                   ],
                                                 ),
                                               ),
 
-                                              const VerticalDivider(width: 16, thickness: 1),
+                                              VerticalDivider(
+                                                width: 1,
+                                                thickness: 1,
+                                                color: cs.outline.withValues(alpha: isLight ? 0.65 : 0.45),
+                                              ),
+                                              const SizedBox(width: 12),
 
                                               // Right column: Expiry + Issuing country
                                               Expanded(
@@ -427,7 +463,8 @@ if (change != 0) {
                                                         iconColor: const Color(0xffd5632a),
                                                         label: 'Date of expiry'.tr,
                                                         value: expiryDate,
-                                                        textColor: textColor,
+                                                        textColor: summaryTextColor,
+                                                        labelColor: isLight ? summaryLabelForeground : null,
                                                       ),
 
                                                     if (expiryDate.isNotEmpty && issuingCountry != null) const SizedBox(height: 6),
@@ -442,15 +479,16 @@ if (change != 0) {
                                                           issuingCountry.alpha2,
                                                           theme: (!kIsWeb) ? EmojiTheme(size: 16) : ImageTheme(height: 16, width: 22),
                                                         ),
-                                                        textColor: textColor,
+                                                        textColor: summaryTextColor,
+                                                        labelColor: isLight ? summaryLabelForeground : null,
                                                       ),
                                                   ],
                                                 ),
                                               ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                            
+
                                       ],
                                       ),
                                     ),
@@ -780,8 +818,10 @@ if (change != 0) {
     required String label,
     required String value,
     required Color textColor,
+    Color? labelColor,
     Widget? trailing,
   }) {
+    final Color resolvedLabelColor = labelColor ?? textColor;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -800,7 +840,7 @@ if (change != 0) {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: AppConsts.normal,
-                  color: textColor,
+                  color: resolvedLabelColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),

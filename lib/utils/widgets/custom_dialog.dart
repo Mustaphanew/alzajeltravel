@@ -4,7 +4,57 @@ import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 
 class CustomDialog {
-  static Future<DismissType?> success(BuildContext context, {required String title, required String desc, String? btnOkText}) async {
+  /// Confirmation dialog with no header icon (used as a question before committing an action).
+  /// After the user presses OK, the caller may show [CustomDialog.success] / [CustomDialog.error] to
+  /// reflect the final outcome.
+  static Future<DismissType?> confirm(
+    BuildContext context, {
+    required String title,
+    required String desc,
+    String? btnOkText,
+    String? btnCancelText,
+    Color? btnOkColor,
+  }) async {
+    final cs = Theme.of(context).colorScheme;
+    final Color okColor = btnOkColor ?? const Color(0xff00ca71);
+    final DismissType? dialog = await AwesomeDialog(
+      context: context,
+      reverseBtnOrder: true,
+      dialogType: DialogType.noHeader,
+      animType: AnimType.scale,
+      title: title,
+      desc: desc,
+      btnOk: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: okColor),
+        onPressed: () {
+          Navigator.of(context).pop(DismissType.btnOk);
+        },
+        child: Text(btnOkText ?? 'Ok'.tr),
+      ),
+      btnCancel: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: cs.error,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: cs.error),
+          ),
+        ),
+        onPressed: () {
+          Navigator.of(context).pop(DismissType.btnCancel);
+        },
+        child: Text(btnCancelText ?? 'Close'.tr),
+      ),
+    ).show();
+    return dialog;
+  }
+
+  static Future<DismissType?> success(
+    BuildContext context, {
+    required String title,
+    required String desc,
+    String? btnOkText,
+    bool showCancel = true,
+  }) async {
     final cs = Theme.of(context).colorScheme;
     final DismissType? dialog = await AwesomeDialog(
       context: context,
@@ -18,21 +68,23 @@ class CustomDialog {
         onPressed: () {
           Navigator.of(context).pop(DismissType.btnOk);
         },
-        child: Text(btnOkText ?? 'Ok'.tr), 
+        child: Text(btnOkText ?? 'Ok'.tr),
       ),
-      btnCancel: TextButton(
-        style: TextButton.styleFrom(
-          foregroundColor: cs.error,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: cs.error),
-          ),
-        ),
-        onPressed: () {
-          Navigator.of(context).pop(DismissType.btnCancel);
-        },
-        child: Text('Close'.tr),
-      ),
+      btnCancel: showCancel
+          ? TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: cs.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: cs.error),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(DismissType.btnCancel);
+              },
+              child: Text('Close'.tr),
+            )
+          : null,
     ).show();
     return dialog;
   }

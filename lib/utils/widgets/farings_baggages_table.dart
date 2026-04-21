@@ -1,4 +1,5 @@
 // farings_baggages_table.dart
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -23,9 +24,13 @@ class FaringsBaggagesTable extends StatelessWidget {
     // لو ما في بيانات نرجّع كرت صغير بسيط
     if (data.isEmpty) {
       return Card(
-        color: cs.surfaceContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 1,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        color: cs.surfaceContainerHighest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppConsts.secondaryColor.withValues(alpha: 0.4)),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Text('No data'.tr, style: theme.textTheme.bodyMedium),
@@ -56,9 +61,14 @@ class FaringsBaggagesTable extends StatelessWidget {
     }
 
     return Card(
-      color: cs.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      color: cs.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppConsts.secondaryColor.withValues(alpha: 0.42), width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -67,12 +77,12 @@ class FaringsBaggagesTable extends StatelessWidget {
             if (title != null) ...[
               Text(title!, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Divider(color: cs.outline.withOpacity(0.4), height: 16, thickness: 0.7),
+              Divider(color: cs.outline.withValues(alpha: 0.4), height: 16, thickness: 0.7),
             ],
 
             // الجدول نفسه — header بهوية Navy + Gold
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               child: DataTable(
                 horizontalMargin: 12,
                 columnSpacing: 32,

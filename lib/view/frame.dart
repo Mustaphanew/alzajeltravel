@@ -105,10 +105,32 @@ final TravelersController travelersController =
     return [
       Home2(persistentTabController: frameController.persistentTabController),
       Scaffold(
+        backgroundColor: AppFuns.isDark(context)
+            ? const Color(0xFF0B1430)
+            : const Color(0xFFFAF6F1),
         appBar: AppBar(
           elevation: 0,
-          title: Text("Search Flight".tr),
+          scrolledUnderElevation: 0,
+          backgroundColor: AppConsts.primaryColor,
+          foregroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            "Search Flight".tr,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: AppConsts.xlg,
+              letterSpacing: 0.3,
+            ),
+          ),
           centerTitle: true,
+          shape: Border(
+            bottom: BorderSide(
+              color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
         ),
         body: SearchFlight(),
       ),
@@ -120,85 +142,73 @@ final TravelersController travelersController =
     ];
   }
 
-  // ✅ عناصر الأيقونات
+  // ✅ عناصر الأيقونات — نهاري: شارة كحلية + محتوى أبيض | ليلي: شارة ذهبية + محتوى كحلي (وضع القراءة السليم)
   List<PersistentBottomNavBarItem> navBarsItems() {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    final Color activeColorPrimary = cs.primaryContainer;
-    final Color activeTextColorPrimary = cs.onInverseSurface;
-    const Color inactiveColorPrimary = Colors.grey;
+    final Color activeBg = isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
+    final Color activeFg = isDark ? AppConsts.primaryColor : Colors.white;
+    final Color inactiveFg = cs.onSurfaceVariant;
+
+    final navLabelStyle = TextStyle(
+      fontFamily: AppConsts.font,
+      fontWeight: FontWeight.w600,
+      fontSize: AppConsts.normal,
+    );
 
     return [
       PersistentBottomNavBarItem(
         icon: SvgPicture.asset(
-          (AppFuns.isDark(context)) ? AppConsts.logo2 : AppConsts.logo3,
+          AppFuns.isDark(context) ? AppConsts.logo2 : AppConsts.logo3,
           width: 24,
           height: 24,
+          colorFilter: ColorFilter.mode(activeFg, BlendMode.srcIn),
         ),
         inactiveIcon: SvgPicture.asset(
           AppConsts.logoBlack,
           width: 24,
           height: 24,
-          color: Colors.grey,
+          colorFilter: ColorFilter.mode(inactiveFg, BlendMode.srcIn),
         ),
         title: ("   ${'Home'.tr}"),
-        textStyle: TextStyle(
-          fontFamily: AppConsts.font,
-          fontWeight: FontWeight.normal,
-          fontSize: AppConsts.lg,
-        ),
-        activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: inactiveColorPrimary,
-        activeColorSecondary: activeTextColorPrimary,
+        textStyle: navLabelStyle,
+        activeColorPrimary: activeBg,
+        inactiveColorPrimary: inactiveFg,
+        activeColorSecondary: activeFg,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.search_outlined),
         title: (" ${'Search'.tr}"),
-        textStyle: TextStyle(
-          fontFamily: AppConsts.font,
-          fontWeight: FontWeight.normal,
-          fontSize: AppConsts.lg,
-        ),
-        activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: inactiveColorPrimary,
-        activeColorSecondary: activeTextColorPrimary,
+        textStyle: navLabelStyle,
+        activeColorPrimary: activeBg,
+        inactiveColorPrimary: inactiveFg,
+        activeColorSecondary: activeFg,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.flight_takeoff_outlined),
         title: (" ${'Bookings'.tr}"),
-        textStyle: TextStyle(
-          fontFamily: AppConsts.font,
-          fontWeight: FontWeight.normal,
-          fontSize: AppConsts.lg,
-        ),
-        activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: inactiveColorPrimary,
-        activeColorSecondary: activeTextColorPrimary,
+        textStyle: navLabelStyle,
+        activeColorPrimary: activeBg,
+        inactiveColorPrimary: inactiveFg,
+        activeColorSecondary: activeFg,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.person),
         title: (" ${'Account'.tr}"),
-        textStyle: TextStyle(
-          fontFamily: AppConsts.font,
-          fontWeight: FontWeight.normal,
-          fontSize: AppConsts.lg,
-        ),
-        activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: inactiveColorPrimary,
-        activeColorSecondary: activeTextColorPrimary,
+        textStyle: navLabelStyle,
+        activeColorPrimary: activeBg,
+        inactiveColorPrimary: inactiveFg,
+        activeColorSecondary: activeFg,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.settings),
         title: (" ${'Settings'.tr}"),
-        textStyle: TextStyle(
-          fontFamily: AppConsts.font,
-          fontWeight: FontWeight.normal,
-          fontSize: AppConsts.lg,
-        ),
-        activeColorPrimary: activeColorPrimary,
-        inactiveColorPrimary: inactiveColorPrimary,
-        activeColorSecondary: activeTextColorPrimary,
+        textStyle: navLabelStyle,
+        activeColorPrimary: activeBg,
+        inactiveColorPrimary: inactiveFg,
+        activeColorSecondary: activeFg,
       ),
     ];
   }
@@ -222,69 +232,89 @@ final TravelersController travelersController =
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SafeArea(
-      bottom: true,
-      top: false,
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
+    // لون يتناسق مع هوية التطبيق بدل الأسود خلف شريط التنقل السفلي للنظام
+    final Color systemNavBarColor =
+        isDark ? const Color(0xFF0B1430) : const Color(0xFFFAF6F1);
 
-          // ✅ لو أنت في أي تبويب غير Home2 -> رجعك لـ Home2
-          if (frameController.persistentTabController.index != 0) {
-            frameController.persistentTabController.jumpToTab(0);
-            return;
-          }
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: systemNavBarColor,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarDividerColor: systemNavBarColor,
+      ),
+      child: SafeArea(
+        bottom: true,
+        top: false,
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
 
-          // ✅ أنت في Home2 -> تأكيد خروج (مع منع التكرار)
-          if (_isExitDialogOpen) return;
-          _isExitDialogOpen = true;
-
-          try {
-            final ok = await AppFuns.confirmExit(
-              title: "Exit".tr,
-              message: "Are you sure you want to exit?".tr,
-            );
-
-            if (ok) {
-              exitAppSafely();
+            // ✅ لو أنت في أي تبويب غير Home2 -> رجعك لـ Home2
+            if (frameController.persistentTabController.index != 0) {
+              frameController.persistentTabController.jumpToTab(0);
+              return;
             }
-          } finally {
-            _isExitDialogOpen = false;
-          }
-        },
-        child: Scaffold(
-          drawer: MyDrawer(
-            persistentTabController: frameController.persistentTabController,
-          ),
-          body: PersistentTabView(
-            context,
-            backgroundColor: cs.surfaceContainerHighest,
-            controller: frameController.persistentTabController,
-            screens: _buildScreens(),
-            items: navBarsItems(),
-            confineToSafeArea: true,
 
-            onWillPop: null,
+            // ✅ أنت في Home2 -> تأكيد خروج (مع منع التكرار)
+            if (_isExitDialogOpen) return;
+            _isExitDialogOpen = true;
 
-           // ✅ مهم: نخلي PopScope هو اللي يتحكم بالرجوع
-            handleAndroidBackButtonPress: false,
+            try {
+              final ok = await AppFuns.confirmExit(
+                title: "Exit".tr,
+                message: "Are you sure you want to exit?".tr,
+              );
 
-            resizeToAvoidBottomInset: true,
-            stateManagement: true,
-            hideNavigationBarWhenKeyboardAppears: true,
-            navBarHeight: 70,
-            decoration: NavBarDecoration(
-              borderRadius: BorderRadius.circular(0.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 4,
-                ),
-              ],
+              if (ok) {
+                exitAppSafely();
+              }
+            } finally {
+              _isExitDialogOpen = false;
+            }
+          },
+          child: Scaffold(
+            backgroundColor: systemNavBarColor,
+            drawer: MyDrawer(
+              persistentTabController: frameController.persistentTabController,
             ),
-            navBarStyle: NavBarStyle.style10,
+            body: PersistentTabView(
+              context,
+              backgroundColor: systemNavBarColor,
+              controller: frameController.persistentTabController,
+              screens: _buildScreens(),
+              items: navBarsItems(),
+              confineToSafeArea: true,
+
+              onWillPop: null,
+
+             // ✅ مهم: نخلي PopScope هو اللي يتحكم بالرجوع
+              handleAndroidBackButtonPress: false,
+
+              resizeToAvoidBottomInset: true,
+              stateManagement: true,
+              hideNavigationBarWhenKeyboardAppears: true,
+              navBarHeight: 70,
+              decoration: NavBarDecoration(
+                borderRadius: BorderRadius.circular(0.0),
+                colorBehindNavBar: systemNavBarColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? AppConsts.primaryColor.withValues(alpha: 0.45)
+                        : Colors.black.withValues(alpha: 0.07),
+                    blurRadius: 14,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              navBarStyle: NavBarStyle.style10,
+            ),
           ),
         ),
       ),

@@ -80,6 +80,19 @@ class CacheImg extends StatelessWidget {
 
   CacheImg(this.url, {super.key, this.boxFit = BoxFit.cover, this.sizeCircleLoading = 30, this.imgWidth});
 
+  static bool _isSvgUrl(String u) {
+    if (u.isEmpty) return false;
+    final noQuery = u.toLowerCase().split('?').first;
+    return noQuery.endsWith('.svg');
+  }
+
+  BoxFit get _svgBoxFit {
+    if (boxFit == null || boxFit == BoxFit.cover) {
+      return BoxFit.contain;
+    }
+    return boxFit!;
+  }
+
   @override
   Widget build(BuildContext context) {
     // print("url: $url");
@@ -90,8 +103,66 @@ class CacheImg extends StatelessWidget {
     if (url.contains("http")) {
       imageUrl = url;
     } else {
-      imageUrl = "$url";
+      imageUrl = url;
     }
+    if (imageUrl.isEmpty) {
+      return SvgPicture.asset(
+        AppConsts.logoBlack,
+        colorFilter: ColorFilter.mode(
+          Colors.grey[500]!,
+          BlendMode.srcIn,
+        ),
+      );
+    }
+    if (_isSvgUrl(imageUrl)) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final wFromI = imgWidth == null ? null : (imgWidth! as num).toDouble();
+          final double? w;
+          final double? h;
+          if (wFromI != null) {
+            w = wFromI;
+            h = wFromI;
+          } else {
+            w = (constraints.hasBoundedWidth && constraints.maxWidth.isFinite)
+                ? constraints.maxWidth
+                : 48.0;
+            h = (constraints.hasBoundedHeight && constraints.maxHeight.isFinite)
+                ? constraints.maxHeight
+                : w;
+          }
+          return SvgPicture.network(
+            imageUrl,
+            width: w,
+            height: h,
+            fit: _svgBoxFit,
+            allowDrawingOutsideViewBox: true,
+            placeholderBuilder: (c) {
+              return Container(
+                padding: const EdgeInsets.all(4),
+                child: Center(
+                  child: SizedBox(
+                    height: sizeCircleLoading,
+                    width: sizeCircleLoading,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (c, o, s) {
+              return SvgPicture.asset(
+                AppConsts.logoBlack,
+                colorFilter: ColorFilter.mode(
+                  Colors.grey[500]!,
+                  BlendMode.srcIn,
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: boxFit,
@@ -115,7 +186,13 @@ class CacheImg extends StatelessWidget {
         );
       },
       errorWidget: (context, url, error) {
-        return SvgPicture.asset(AppConsts.logoBlack, color: Colors.grey[500]);
+        return SvgPicture.asset(
+          AppConsts.logoBlack,
+          colorFilter: ColorFilter.mode(
+            Colors.grey[500]!,
+            BlendMode.srcIn,
+          ),
+        );
       },
     );
   }
@@ -229,7 +306,11 @@ class DividerLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return DottedLine(lineThickness: 1.6, dashGapLength: 8, dashLength: 8, dashColor: cs.primaryFixed);
+    return DottedLine(
+      lineThickness: 1.6,
+      dashGapLength: 8,
+      dashLength: 8,
+      dashColor: AppConsts.secondaryColor.withValues(alpha: 0.85),
+    );
   }
 }

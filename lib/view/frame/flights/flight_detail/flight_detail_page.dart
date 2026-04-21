@@ -459,18 +459,40 @@ class FareRuleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final titleColor = isDark ? Colors.white : AppConsts.primaryColor;
+    final bodyColor =
+        isDark ? Colors.white.withValues(alpha: 0.88) : cs.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        title: Text(rule.category.tr, style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-        childrenPadding: const EdgeInsets.only(bottom: 8),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 8),
+        iconColor: AppConsts.secondaryColor,
+        collapsedIconColor: AppConsts.secondaryColor,
+        title: Text(
+          rule.category.tr,
+          style: textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: titleColor,
+            letterSpacing: 0.15,
+          ),
+        ),
+        childrenPadding: const EdgeInsets.only(bottom: 12, left: 8, right: 8),
         children: [
           Align(
-            alignment: Alignment.centerLeft,
-            child: Text(rule.rule, style: textTheme.bodyMedium),
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              rule.rule,
+              style: textTheme.bodyMedium?.copyWith(
+                color: bodyColor,
+                height: 1.4,
+              ),
+            ),
           ),
         ],
       ),

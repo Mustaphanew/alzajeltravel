@@ -3,7 +3,6 @@ import 'package:alzajeltravel/model/flight/flight_segment_model.dart';
 import 'package:alzajeltravel/repo/airline_repo.dart';
 import 'package:alzajeltravel/repo/airport_repo.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
-import 'package:alzajeltravel/utils/widgets/gradient_bg_container.dart';
 import 'package:alzajeltravel/view/frame/flights/flight_detail/flight_detail_page.dart';
 import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:flutter/material.dart';
@@ -56,11 +55,25 @@ class MoreFlightDetailPage extends StatelessWidget {
       return detailBody(context, theme, cs, offer, legs, timeFormat, dateFormat);
     }
 
+    final isLight = theme.brightness == Brightness.light;
+
     return SafeArea(
       bottom: true,
       top: false,
       child: Scaffold(
-        appBar: AppBar(title: Text('Flight details'.tr), centerTitle: true),
+        // نهاري: خلفية كريمية كالمرجع | ليلي: سطح الثيم الداكن
+        backgroundColor: isLight ? const Color(0xFFFDFBF7) : cs.surface,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: AppConsts.primaryColor,
+          foregroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            'Flight details'.tr,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ),
         body: detailBodyAndBottomSection(context, theme, cs, offer, legs, timeFormat, dateFormat),
       ),
     );
@@ -86,14 +99,21 @@ class MoreFlightDetailPage extends StatelessWidget {
         ),
 
         Container(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 32, top: 15),
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 14, top: 12),
           decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppConsts.primaryColor,
+                Color.lerp(AppConsts.primaryColor, const Color(0xFF1a3278), 0.4)!,
+              ],
+            ),
             boxShadow: [
               BoxShadow(
-                color: cs.shadow.withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, -3),
+                color: AppConsts.primaryColor.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
               ),
             ],
             borderRadius: const BorderRadius.only(
@@ -116,6 +136,8 @@ class MoreFlightDetailPage extends StatelessWidget {
     DateFormat timeFormat,
     DateFormat dateFormat,
   ) {
+    final isLight = theme.brightness == Brightness.light;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -126,39 +148,65 @@ class MoreFlightDetailPage extends StatelessWidget {
         const SizedBox(height: 8),
 
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ExpansionTile(
-              initiallyExpanded: true,
-              title: Text(
-                "Other info".tr,
-                style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface),
+            elevation: 0,
+            surfaceTintColor: Colors.transparent,
+            color: isLight ? Colors.white : cs.surfaceContainerHighest,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: AppConsts.secondaryColor.withValues(alpha: isLight ? 0.42 : 0.55),
+                width: 1.1,
               ),
-              iconColor: cs.onSurface,
-              collapsedIconColor: cs.onSurface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: cs.surfaceContainerHighest,
-              collapsedBackgroundColor: cs.surfaceContainerHighest,
-              // childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Theme.of(context).cardTheme.color,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 8),
-                      _InfoRow(label: "Baggage".tr + " (${"Adult".tr})", value: "10" + " " + "kg".tr),
-                      const SizedBox(height: 12),
-                      _InfoRow(label: "Exchange fee".tr, value: AppFuns.priceWithCoin(20, "USD")),
-                      const SizedBox(height: 12),
-                      _InfoRow(label: "Cancelation fee".tr, value: AppFuns.priceWithCoin(10, "USD")),
-                    ],
+            ),
+            child: Theme(
+              data: theme.copyWith(dividerColor: cs.outlineVariant.withValues(alpha: 0.35)),
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                childrenPadding: EdgeInsets.zero,
+                iconColor: AppConsts.secondaryColor,
+                collapsedIconColor: AppConsts.secondaryColor,
+                shape: const RoundedRectangleBorder(),
+                collapsedShape: const RoundedRectangleBorder(),
+                backgroundColor: Colors.transparent,
+                collapsedBackgroundColor: Colors.transparent,
+                title: Text(
+                  "Other info".tr,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isLight ? AppConsts.primaryColor : Colors.white,
+                    letterSpacing: 0.2,
                   ),
                 ),
-              ],
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white
+                          : Color.lerp(cs.surfaceContainerHighest, cs.surface, 0.45)!,
+                      border: Border(
+                        top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.35)),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 12),
+                        _InfoRow(label: "Baggage".tr + " (${"Adult".tr})", value: "10" + " " + "kg".tr),
+                        const SizedBox(height: 14),
+                        _InfoRow(label: "Exchange fee".tr, value: AppFuns.priceWithCoin(20, "USD")),
+                        const SizedBox(height: 14),
+                        _InfoRow(label: "Cancelation fee".tr, value: AppFuns.priceWithCoin(10, "USD")),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -167,15 +215,40 @@ class MoreFlightDetailPage extends StatelessWidget {
 
         if (fareRules.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: Text("Fare rules".tr, style: const TextStyle(fontWeight: FontWeight.w600)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                children: fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              color: isLight ? Colors.white : cs.surfaceContainerHighest,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: AppConsts.secondaryColor.withValues(alpha: isLight ? 0.42 : 0.55),
+                  width: 1.1,
+                ),
+              ),
+              child: Theme(
+                data: theme.copyWith(dividerColor: cs.outlineVariant.withValues(alpha: 0.35)),
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  iconColor: AppConsts.secondaryColor,
+                  collapsedIconColor: AppConsts.secondaryColor,
+                  shape: const RoundedRectangleBorder(),
+                  collapsedShape: const RoundedRectangleBorder(),
+                  backgroundColor: Colors.transparent,
+                  collapsedBackgroundColor: Colors.transparent,
+                  title: Text(
+                    "Fare rules".tr,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isLight ? AppConsts.primaryColor : Colors.white,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  children: fareRules.map((rule) => FareRuleTile(rule: rule)).toList(),
+                ),
               ),
             ),
           ),
@@ -266,22 +339,40 @@ class MoreFlightDetailPage extends StatelessWidget {
   }) {
     final segments = leg.segments;
 
+    final isLight = theme.brightness == Brightness.light;
+
     return Card(
-      // color: cs.error,
-      elevation: 3,
-      margin: EdgeInsets.symmetric(horizontal: 8),
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      color: isLight ? Colors.white : cs.surfaceContainerHighest,
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: AppConsts.secondaryColor.withValues(alpha: isLight ? 0.42 : 0.55),
+          width: 1.1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GradientBgContainer(
-            padding: const EdgeInsets.all(8.0),
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+          Container(
             width: double.infinity,
             height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             alignment: AlignmentDirectional.centerStart,
+            decoration: const BoxDecoration(
+              color: AppConsts.primaryColor,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+            ),
             child: Text(
               pathTitle,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: AppConsts.lg),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: AppConsts.lg,
+                color: Colors.white,
+              ),
             ),
           ),
 
@@ -365,6 +456,9 @@ class MoreFlightDetailPage extends StatelessWidget {
 
               final cityName = AirportRepo.searchByCode(nextSeg.fromCode).name[AppVars.lang];
 
+              final isDark = theme.brightness == Brightness.dark;
+              final Color layoverText =
+                  isDark ? Colors.white : AppConsts.primaryColor;
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                 child: Column(
@@ -372,11 +466,22 @@ class MoreFlightDetailPage extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(999)),
+                      decoration: BoxDecoration(
+                        color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.14 : 0.16),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                          width: 1.1,
+                        ),
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.access_time, size: 20, color: cs.surfaceContainer),
+                          const Icon(
+                            Icons.access_time,
+                            size: 20,
+                            color: AppConsts.secondaryColor,
+                          ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -385,8 +490,9 @@ class MoreFlightDetailPage extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: cs.surfaceContainer,
+                                fontWeight: FontWeight.w700,
+                                color: layoverText,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ),
@@ -412,11 +518,40 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // نهاري: تسمية رمادية + قيمة كحلية | ليلي: تسمية رمادية فاتحة + قيمة ذهبية (كالمرجع)
+    final labelColor = cs.onSurfaceVariant;
+    final valueColor = isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
+
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: Text(label, style: textTheme.bodyMedium)),
-        Text(value, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Expanded(
+          child: Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: labelColor,
+              height: 1.25,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: valueColor,
+              height: 1.25,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -452,8 +587,12 @@ class SegCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryText = isDark ? Colors.white : AppConsts.primaryColor;
+    final metaStyle = theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant);
+
     return Container(
       width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -479,7 +618,11 @@ class SegCard extends StatelessWidget {
                             (AirlineRepo.searchByCode(seg.marketingAirlineCode) != null)
                                 ? AirlineRepo.searchByCode(seg.marketingAirlineCode)!.name[AppVars.lang]
                                 : "",
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: primaryText,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -490,11 +633,28 @@ class SegCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Aircraft".tr + ": " + seg.equipmentNumber),
+                        Text(
+                          "Aircraft".tr + ": " + seg.equipmentNumber,
+                          style: metaStyle,
+                        ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(color: cs.primaryContainer.withOpacity(0.1), borderRadius: BorderRadius.circular(999)),
-                          child: Text(seg.ref),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.14 : 0.18),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Text(
+                            seg.ref,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppConsts.secondaryColor,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -505,7 +665,7 @@ class SegCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 6),
-          const Divider(),
+          Divider(color: cs.outlineVariant.withValues(alpha: 0.4), height: 1),
           const SizedBox(height: 12),
 
           Row(
@@ -513,25 +673,31 @@ class SegCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Container(
-                  child: Column(
-                    children: [
-                      Text(depDate, textAlign: TextAlign.center),
-                      const SizedBox(height: 2),
-                      Text(
-                        depTime,
-                        style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.w600, height: 0),
+                child: Column(
+                  children: [
+                    Text(depDate, textAlign: TextAlign.center, style: metaStyle),
+                    const SizedBox(height: 2),
+                    Text(
+                      depTime,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: primaryText,
+                        height: 1.05,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        fromName,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.w600, height: 0),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      fromName,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: primaryText,
+                        height: 1.1,
                       ),
-                      const SizedBox(height: 4),
-                      Text(fromCode),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(fromCode, style: metaStyle),
+                  ],
                 ),
               ),
 
@@ -541,7 +707,11 @@ class SegCard extends StatelessWidget {
                   children: [
                     Text(
                       AppFuns.formatHourMinuteSecond(seg.journeyText ?? '_'),
-                      style: TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.sm, fontWeight: FontWeight.w600, height: 0),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontFamily: AppConsts.font,
+                        fontWeight: FontWeight.w600,
+                        color: primaryText,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -549,16 +719,19 @@ class SegCard extends StatelessWidget {
                         Container(
                           width: 10,
                           height: 10,
-                          decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
+                            color: AppConsts.secondaryColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         Expanded(
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              DividerLine(),
+                              const DividerLine(),
                               RotatedBox(
                                 quarterTurns: (AppVars.lang == 'en') ? 1 : -1,
-                                child: Icon(Icons.flight, color: cs.primary, size: 28),
+                                child: const Icon(Icons.flight, color: AppConsts.secondaryColor, size: 28),
                               ),
                             ],
                           ),
@@ -566,7 +739,10 @@ class SegCard extends StatelessWidget {
                         Container(
                           width: 10,
                           height: 10,
-                          decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
+                            color: AppConsts.secondaryColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ],
                     ),
@@ -574,10 +750,20 @@ class SegCard extends StatelessWidget {
                     if (segmentBaggage != null && segmentBaggage!.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(color: cs.secondaryFixed.withOpacity(0.1), borderRadius: BorderRadius.circular(999)),
+                        decoration: BoxDecoration(
+                          color: AppConsts.secondaryColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: AppConsts.secondaryColor.withValues(alpha: 0.5)),
+                        ),
                         child: Text(
                           "Baggage".tr + ": " + segmentBaggage!,
-                          style: TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.sm, fontWeight: FontWeight.w600, height: 0),
+                          style: const TextStyle(
+                            fontFamily: AppConsts.font,
+                            fontSize: AppConsts.sm,
+                            fontWeight: FontWeight.w700,
+                            height: 0,
+                            color: AppConsts.secondaryColor,
+                          ),
                         ),
                       ),
                   ],
@@ -587,20 +773,28 @@ class SegCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Text(arrDate, textAlign: TextAlign.center),
+                    Text(arrDate, textAlign: TextAlign.center, style: metaStyle),
                     const SizedBox(height: 2),
                     Text(
                       arrTime,
-                      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.w600, height: 0),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: primaryText,
+                        height: 1.05,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       toName,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.w600, height: 0),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: primaryText,
+                        height: 1.1,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(toCode),
+                    Text(toCode, style: metaStyle),
                   ],
                 ),
               ),
@@ -783,9 +977,9 @@ class _BottomSectionState extends State<BottomSection> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -793,26 +987,39 @@ class _BottomSectionState extends State<BottomSection> {
             // اليسار: السعر + ملخص
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Trip total".tr, style: textTheme.bodyMedium),
-                  const SizedBox(height: 4),
+                  Text(
+                    "Trip total".tr,
+                    style: textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     AppFuns.priceWithCoin(widget.offer.totalAmount, widget.offer.currency),
-                    style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppConsts.secondaryColor,
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  TextButton(
-                    onPressed: () {
+                  const SizedBox(height: 2),
+                  InkWell(
+                    onTap: () {
                       // BottomSheet لملخص السعر لاحقاً
                     },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        "View price summary".tr,
+                        style: TextStyle(
+                          color: AppConsts.secondaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: textTheme.bodySmall?.fontSize ?? 13,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
                     ),
-                    child: Text("View price summary".tr),
                   ),
                 ],
               ),
@@ -832,7 +1039,13 @@ class _BottomSectionState extends State<BottomSection> {
 
                     Get.to(() => PassportsFormsPage(adultsCounter: adults, childrenCounter: children, infantsInLapCounter: infantsInLap));
                   },
-                  style: ElevatedButton.styleFrom(shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 28)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConsts.secondaryColor,
+                    foregroundColor: AppConsts.primaryColor,
+                    elevation: 0,
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                  ),
                   label: const Icon(Icons.arrow_forward),
                   icon: Text("Continue".tr),
                 ),
@@ -840,7 +1053,7 @@ class _BottomSectionState extends State<BottomSection> {
           ],
         ),
 
-        const SizedBox(height: 12),
+        if (widget.parent != null && (widget.parent!.onBook != null || widget.parent!.onOtherPrices != null)) const SizedBox(height: 10),
         // ====== الأزرار ======
         if (widget.parent != null && (widget.parent!.onBook != null || widget.parent!.onOtherPrices != null))
           Row(

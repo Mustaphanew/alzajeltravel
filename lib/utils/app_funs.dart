@@ -285,7 +285,13 @@ class AppFuns {
 
   static String airlineImgURL(String code) {
     final c = code.trim().toUpperCase();
-    return "https://mustaphanew.github.io/airlines/$c.png";
+    if (c.isEmpty) {
+      return '';
+    }
+    // Google Flights–style PNG logos. Many airline SVGs on static hosts use
+    // pattern-filled rects + embedded rasters; flutter_svg often draws those
+    // as blank, while PNG always decodes in CachedNetworkImage.
+    return 'https://www.gstatic.com/flights/airline_logos/70px/$c.png';
   }
 
   static String formatBaggageWeight(String baggage) {

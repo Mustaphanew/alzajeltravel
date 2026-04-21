@@ -16,6 +16,34 @@ import 'package:alzajeltravel/view/frame/search_flight_widgets/class_type_and_tr
 import 'package:alzajeltravel/view/frame/search_flight_widgets/airport_search.dart';
 import 'package:alzajeltravel/view/frame/search_flight_widgets/swap_widget.dart';
 
+Future<T?> _showDatePickerDialog<T>({
+  required BuildContext context,
+  required Widget child,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return showDialog<T>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (context) {
+      return Dialog(
+        backgroundColor:
+            isDark ? const Color(0xFF0B1430) : Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+        clipBehavior: Clip.antiAlias,
+        elevation: 12,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+            width: 1,
+          ),
+        ),
+        child: child,
+      );
+    },
+  );
+}
+
 class FlightTab extends StatefulWidget {
   final JourneyType tmpJourneyType;
   final GlobalKey<FormState> formKey;
@@ -53,9 +81,8 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final cs = Theme.of(context).colorScheme;
-    print("widget.tmpJourneyType: ${widget.tmpJourneyType}");
-    print("searchFlightController.journeyType: ${searchFlightController.journeyType}");
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return GetBuilder<SearchFlightController>(
       builder: (controller) {
         final bool preventAddFlight = controller.forms.length >= controller.maxFlightsForms;
@@ -65,7 +92,7 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
             controller: scrollController,
             child: SingleChildScrollView(
               controller: scrollController,
-              padding: EdgeInsets.symmetric(vertical: 22),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: Container(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -125,38 +152,55 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                               ),
                             Column(
                               children: [
-                                SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 0),
-                                  width: AppConsts.sizeContext(context).width,
-                                  child: TextButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      // backgroundColor: Colors.transparent,
-                                      // foregroundColor: AppConsts.primaryColor,
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppConsts.secondaryColor,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        side: BorderSide(color: cs.outline, width: 2),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      side: BorderSide(
+                                        color: AppConsts.secondaryColor
+                                            .withValues(alpha: 0.8),
+                                        width: 1.4,
                                       ),
                                     ),
                                     onPressed: (preventAddFlight)
                                         ? null
                                         : () async {
                                             controller.addForm();
-                                            await Future.delayed(const Duration(milliseconds: 250));
+                                            await Future.delayed(
+                                                const Duration(
+                                                    milliseconds: 250));
                                             scrollController.animateTo(
-                                              scrollController.position.maxScrollExtent,
-                                              duration: const Duration(milliseconds: 500),
+                                              scrollController
+                                                  .position.maxScrollExtent,
+                                              duration: const Duration(
+                                                  milliseconds: 500),
                                               curve: Curves.fastOutSlowIn,
                                             );
                                           },
+                                    icon: const Icon(
+                                      Icons.add_circle_outline_rounded,
+                                      size: 20,
+                                      color: AppConsts.secondaryColor,
+                                    ),
                                     label: Text(
                                       "Add Flight".tr,
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.lg),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: AppConsts.normal,
+                                        color: AppConsts.secondaryColor,
+                                        letterSpacing: 0.2,
+                                      ),
                                     ),
-                                    icon: Icon(Icons.add, size: 24),
                                   ),
                                 ),
-                                SizedBox(height: 0),
                               ],
                             ),
                           ],
@@ -177,19 +221,55 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                       ),
 
                     SizedBox(height: 16),
-                    Divider(),
-                    ExpansionTile(
-                      dense: true,
-                      title: Text(
-                        "Advanced options".tr, 
-                        style: TextStyle(fontFamily: AppConsts.font, fontSize: 16),
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppConsts.secondaryColor.withValues(alpha: 0),
+                            AppConsts.secondaryColor.withValues(alpha: 0.45),
+                            AppConsts.secondaryColor.withValues(alpha: 0),
+                          ],
+                        ),
                       ),
-                      tilePadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0),
-                        // side: BorderSide(color: cs.outline, width: 2),
-                      ),
-                      childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                    ),
+                    const SizedBox(height: 4),
+                    Theme(
+                      data: theme.copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        dense: true,
+                        iconColor: AppConsts.secondaryColor,
+                        collapsedIconColor: AppConsts.secondaryColor,
+                        title: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: AppConsts.secondaryColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                "Advanced options".tr,
+                                style: TextStyle(
+                                  fontFamily: AppConsts.font,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                        shape: const RoundedRectangleBorder(),
+                        collapsedShape: const RoundedRectangleBorder(),
+                        childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                       children: [
                         const SizedBox(height: 8),
                         AirlineIncludeDropDown(), 
@@ -204,10 +284,15 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
                                 textCapitalization: TextCapitalization.characters,
                                 decoration: InputDecoration(
+                                  prefixIcon: const Icon(
+                                    Icons.confirmation_number_outlined,
+                                    color: AppConsts.secondaryColor,
+                                    size: 20,
+                                  ),
                                   labelText: "Flight No Outbound".tr,
                                   hintText: "Enter Flight No Outbound".tr,
-                                  hintStyle: TextStyle(fontSize: AppConsts.normal),
-                                  labelStyle: TextStyle(fontSize: AppConsts.normal),
+                                  hintStyle: const TextStyle(fontSize: AppConsts.normal),
+                                  labelStyle: const TextStyle(fontSize: AppConsts.normal),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -222,10 +307,15 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
                                 textCapitalization: TextCapitalization.characters,
                                 decoration: InputDecoration(
+                                  prefixIcon: const Icon(
+                                    Icons.confirmation_number_outlined,
+                                    color: AppConsts.secondaryColor,
+                                    size: 20,
+                                  ),
                                   labelText: "Flight No Return".tr,
                                   hintText: "Enter Flight No Return".tr,
-                                  hintStyle: TextStyle(fontSize: AppConsts.normal),
-                                  labelStyle: TextStyle(fontSize: AppConsts.normal),
+                                  hintStyle: const TextStyle(fontSize: AppConsts.normal),
+                                  labelStyle: const TextStyle(fontSize: AppConsts.normal),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -237,58 +327,42 @@ class _FlightTabState extends State<FlightTab> with AutomaticKeepAliveClientMixi
                         ),
                         SizedBox(height: 12),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  controller.changeNonStop();
-                                },
-                                child: Text(
-                                  "Direct flights only".tr,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ),
-                            LiteRollingPowerSwitch(
-                              value: controller.nonStop,
-                              onChanged: (value) {
-                                controller.changeNonStop();
-                              },
-                            ),
-                          ],
+                        _AdvancedToggleRow(
+                          icon: Icons.flight_takeoff_rounded,
+                          label: "Direct flights only".tr,
+                          value: controller.nonStop,
+                          onTap: controller.changeNonStop,
                         ),
 
-                        const SizedBox(height: 12),
-                        
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  controller.changeIsIncludeBaggage();
-                                },
-                                child: Text(
-                                  "Flights with baggage included only".tr,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ),
-                            LiteRollingPowerSwitch(
-                              value: controller.isIncludeBaggage,
-                              onChanged: (value) {
-                                controller.changeIsIncludeBaggage();
-                              },
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+
+                        _AdvancedToggleRow(
+                          icon: Icons.luggage_rounded,
+                          label: "Flights with baggage included only".tr,
+                          value: controller.isIncludeBaggage,
+                          onTap: controller.changeIsIncludeBaggage,
                         ),
 
 
 
                         SizedBox(height: 8),
                       ],
+                      ),
                     ),
-                    Divider(),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppConsts.secondaryColor.withValues(alpha: 0),
+                            AppConsts.secondaryColor.withValues(alpha: 0.45),
+                            AppConsts.secondaryColor.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
 
                   ],
                 ),
@@ -514,27 +588,12 @@ class DepartureWidget extends StatelessWidget {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
                           // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 0), transition: Transition.downToUp);
 
-                          await showDialog(
+                          await _showDatePickerDialog(
                             context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                contentPadding: const EdgeInsets.all(0),
-                                iconPadding: const EdgeInsets.all(0),
-                                actionsPadding: const EdgeInsets.all(0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
-                                  ),
-                                ),
-                                insetPadding: EdgeInsets.only(bottom: 60),
-                                titlePadding: const EdgeInsets.all(0),
-                                buttonPadding: const EdgeInsets.only(),
-                                content: DatePickerRangeWidget2(index: index, initialIndex: 0),
-                              );
-                            }
+                            child: DatePickerRangeWidget2(
+                                index: index, initialIndex: 0),
                           );
-                         
+
                           await controller.setTxtDepartureDates(index);
                         },
                         readOnly: true,
@@ -561,27 +620,12 @@ class DepartureWidget extends StatelessWidget {
                           // await Get.to(() => DatePickerRangeWidget(index: index), transition: Transition.downToUp);
                           // await Get.to(() => DatePickerRangeWidget2(index: index, initialIndex: 1), transition: Transition.downToUp);
 
-                          await showDialog(
+                          await _showDatePickerDialog(
                             context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                contentPadding: const EdgeInsets.all(0),
-                                iconPadding: const EdgeInsets.all(0),
-                                actionsPadding: const EdgeInsets.all(0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
-                                  ),
-                                ),
-                                insetPadding: EdgeInsets.only(bottom: 60),
-                                titlePadding: const EdgeInsets.all(0),
-                                buttonPadding: const EdgeInsets.only(),
-                                content: DatePickerRangeWidget2(index: index, initialIndex: 1),
-                              );
-                            }
+                            child: DatePickerRangeWidget2(
+                                index: index, initialIndex: 1),
                           );
-                          
+
                           await controller.setTxtDepartureDates(index);
                         },
                         readOnly: true,
@@ -614,25 +658,9 @@ class DepartureWidget extends StatelessWidget {
                   // await Get.to(() => DatePickerSingleWidget(index: index), transition: Transition.downToUp);
                   // await Get.to(() => DatePickerSingleWidget2(index: index), transition: Transition.downToUp);
 
-                  await showDialog(
+                  await _showDatePickerDialog(
                     context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        contentPadding: const EdgeInsets.all(0),
-                        iconPadding: const EdgeInsets.all(0),
-                        actionsPadding: const EdgeInsets.all(0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(8),
-                            bottomRight: Radius.circular(8),
-                          ),
-                        ),
-                        insetPadding: EdgeInsets.only(bottom: 60),
-                        titlePadding: const EdgeInsets.all(0),
-                        buttonPadding: const EdgeInsets.only(),
-                        content: DatePickerSingleWidget2(index: index),
-                      );
-                    }
+                    child: DatePickerSingleWidget2(index: index),
                   );
 
                   await controller.setTxtDepartureDates(index);
@@ -679,14 +707,13 @@ class LiteRollingPowerSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // اعتمدنا على ألوان الثيم (بدون ألوان ثابتة)
-    final inactiveBg = Colors.grey[400];     // عادةً أحمر
-    final activeBg = cs.primary.withOpacity(0.9);     // حسب ثيمك
-    final knobBg = cs.onError;       // غالبًا أبيض (مناسب لدائرة المؤشر)
-    final activeText = cs.onPrimary; // لون النص على primary
-    final inactiveText = cs.onError; // لون النص على error
+    // Active = ذهبي (هوية التطبيق) / Inactive = كحلي ناعم متناسق
+    final Color activeBg = AppConsts.secondaryColor;
+    final Color inactiveBg = isDark
+        ? AppConsts.primaryColor.withValues(alpha: 0.45)
+        : AppConsts.primaryColor.withValues(alpha: 0.22);
 
     final w = width ?? (height * 2.0);
 
@@ -699,7 +726,7 @@ class LiteRollingPowerSwitch extends StatelessWidget {
 
         padding: const EdgeInsets.symmetric(horizontal: 4),
 
-        height: height, 
+        height: height,
         spacing: 0,
         borderWidth: 0,
 
@@ -709,7 +736,7 @@ class LiteRollingPowerSwitch extends StatelessWidget {
 
         style: ToggleStyle(
           borderColor: Colors.transparent,
-          indicatorColor: knobBg,
+          indicatorColor: Colors.white,
           borderRadius: BorderRadius.circular(height),
           indicatorBorderRadius: BorderRadius.circular(height),
         ),
@@ -724,26 +751,91 @@ class LiteRollingPowerSwitch extends StatelessWidget {
 
         onChanged: onChanged,
 
-        // أيقونة الباور داخل الدائرة (اللون يطابق الخلفية)
         iconBuilder: (v) => Icon(
-          v? FontAwesomeIcons.solidCircleCheck : FontAwesomeIcons.solidCircleXmark,
+          v
+              ? FontAwesomeIcons.solidCircleCheck
+              : FontAwesomeIcons.solidCircleXmark,
           size: 18,
-          color: v ? activeBg : inactiveBg, 
+          color: v ? activeBg : inactiveBg,
         ),
-
-        // textDirection: TextDirection.ltr,
-        // النص داخل الكبسولة
-        // textBuilder: (v) => Text(
-        //   (v ? 'aa'.tr : 'ii'.tr),
-        //   style: TextStyle(
-        //     fontFamily: AppConsts.font,
-        //     fontWeight: FontWeight.w600,
-        //     fontSize: 14,
-        //     color: v ? activeText : inactiveText,
-        //   ),
-        // ),
       ),
-      
+    );
+  }
+}
+
+class _AdvancedToggleRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final VoidCallback onTap;
+
+  const _AdvancedToggleRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+
+    final Color bg = value
+        ? AppConsts.secondaryColor.withValues(alpha: isDark ? 0.12 : 0.14)
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : AppConsts.primaryColor.withValues(alpha: 0.04));
+    final Color borderColor = value
+        ? AppConsts.secondaryColor.withValues(alpha: 0.55)
+        : AppConsts.primaryColor.withValues(alpha: isDark ? 0.25 : 0.18);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppConsts.secondaryColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+                  width: 1,
+                ),
+              ),
+              child: Icon(icon,
+                  size: 18, color: AppConsts.secondaryColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            LiteRollingPowerSwitch(
+              value: value,
+              onChanged: (_) => onTap(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

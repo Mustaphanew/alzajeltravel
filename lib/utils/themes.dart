@@ -2,39 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 
 class Themes {
+  /// فصل لوني للوضع الفاتح: خلفية مزرّقة فاتحة، بطاقات بيضاء، نص ثانوي رمادي‑مزرّق
+  static const Color _lightSurface = Color(0xFFF2F5FB);
+  static const Color _lightOnVar = Color(0xFF5C6578);
+  static const Color _lightOutline = Color(0xFFD0D7E6);
+
+  /// فصل لوني للوضع الداكن: كحلي ليلي، بطاقات أعلى قليلاً، نص ثانوي مزرّق فاتح
+  static const Color _darkSurface = Color(0xFF0B1430);
+  static const Color _darkSurfaceContainer = Color(0xFF0E172E);
+  static const Color _darkCard = Color(0xFF141C3A);
+  static const Color _darkOnVar = Color(0xFF9BA4C0);
+  static const Color _darkOutline = Color(0xFF2F3D66);
+
   static ThemeData lightTheme(BuildContext context) {
-    // 1) ColorScheme متناغم للوضع الفاتح
+    // 1) ColorScheme متناغم للوضع الفاتح (هوية كحلي + ذهبي)
     final ColorScheme cs = ColorScheme(
       brightness: Brightness.light,
-      primary: AppConsts.primaryColor, // #132057
-      onPrimary: Colors.white, // نص أبيض فوق الكحلي
-      secondary: AppConsts.secondaryColor, // ذهبي لإبراز الحالات
-      onSecondary: const Color(0xFF1A1300), // نص داكن فوق الذهبي
-      tertiary: AppConsts.tertiaryColor.shade700,
+      primary: AppConsts.primaryColor,
+      onPrimary: Colors.white,
+      secondary: AppConsts.secondaryColor,
+      onSecondary: Color(0xFF132057),
+      tertiary: AppConsts.tertiaryColor.shade600,
       onTertiary: Colors.white,
-      primaryContainer: AppConsts.primaryColor,
-      secondaryContainer: AppConsts.secondaryColor,
-      // surface: const Color(0xFFF6F7FB), // سطح عام فاتح (خلفية شاشات)
-      surface: const Color(0xFFf7f9fc), // سطح عام فاتح (خلفية شاشات)
-      onSurface: const Color(0xFF101318),
-      surfaceContainer: Colors.white,
+      primaryContainer: const Color(0xFFE8EDFA),
+      secondaryContainer: const Color(0xFFFFF4E0),
+      surface: _lightSurface,
+      onSurface: const Color(0xFF101828),
+      surfaceContainerLowest: Colors.white,
+      surfaceContainerLow: const Color(0xFFE8EEF7),
+      surfaceContainer: const Color(0xFFE8EDF7),
+      surfaceContainerHigh: const Color(0xFFF7F9FE),
       surfaceContainerHighest: Colors.white,
-      surfaceVariant: const Color(0xFFFFFFFF), // بطاقات/حقول بلون أبيض
-      onSurfaceVariant: const Color(0xFF2D3142), // نص ثانوي رمادي داكن
-      outline: AppConsts.tertiaryColor.shade400, // حدود خفيفة
-      outlineVariant: AppConsts.tertiaryColor.shade300,
-      error: Colors.pink[800]!,
+      onSurfaceVariant: _lightOnVar,
+      outline: _lightOutline,
+      outlineVariant: const Color(0xFFE2E8F3),
+      error: Color(0xFFC62828),
       onError: Colors.white,
-      shadow: Colors.black,
-      scrim: Colors.black54,
-      inverseSurface: const Color(0xFF111520),
+      shadow: Color(0xFF132057),
+      scrim: Color(0x99000000),
+      inverseSurface: AppConsts.primaryColor,
       onInverseSurface: Colors.white,
       inversePrimary: AppConsts.secondaryColor,
-      primaryFixed: Colors.black,
-      secondaryFixed: Colors.green[800],
-      onTertiaryFixedVariant: const Color(0xFFf7f8fb),
-      surfaceContainerLow: const Color.fromARGB(255, 25, 21, 21),
-
+      // نص على خلفيات primary (شريط التطبيق الأزرق وغيره)
+      primaryFixed: Colors.white,
+      primaryFixedDim: const Color(0xFFE8EDFA),
+      onPrimaryFixed: AppConsts.primaryColor,
+      onPrimaryFixedVariant: _lightOnVar,
+      secondaryFixed: const Color(0xFFFFE8B8),
+      secondaryFixedDim: AppConsts.secondaryColor,
+      onSecondaryFixed: Color(0xFF132057),
+      onSecondaryFixedVariant: Color(0xFF3D2800),
+      tertiaryFixed: const Color(0xFFE8EDFA),
+      onTertiaryFixed: AppConsts.primaryColor,
+      onTertiaryFixedVariant: _lightOnVar,
     );
 
 
@@ -78,27 +98,27 @@ class Themes {
       // نصوص عامة
       textTheme: softTextTheme,
 
-      // AppBar بلون السطح مع نص داكن (أنيق في الوضع الفاتح)
       appBarTheme: AppBarTheme(
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w500, fontSize: 17, color: cs.onSurface),
-        iconTheme: IconThemeData(color: cs.onSurface),
-
-        // 👇 الحد السفلي (فاصل رفيع)
+        titleTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          letterSpacing: -0.2,
+          color: cs.onSurface,
+        ),
+        iconTheme: IconThemeData(color: cs.primary),
         shape: Border(
           bottom: BorderSide(
-            color: cs.outlineVariant.withOpacity(1), // رمادي شفاف
-            width: 0.7, // خط رفيع
+            color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+            width: 1,
           ),
         ),
-
         titleSpacing: 0,
-
-        // (اختياري) إلغاء تأثير التينت في M3 لو لاحظت تغيّر لون الخلفية
         surfaceTintColor: Colors.transparent,
       ),
 
@@ -106,7 +126,7 @@ class Themes {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: fieldFill,
-        hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.65)),
+        hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.65)),
         labelStyle: TextStyle(color: cs.onSurfaceVariant),
 
 
@@ -114,16 +134,13 @@ class Themes {
       if (states.contains(WidgetState.error)) {
         return TextStyle(color: cs.error);
       }
-      else if (states.contains(WidgetState.focused)) {
-        return const TextStyle(color: Color(0xffd5632a));
+      if (states.contains(WidgetState.focused)) {
+        return TextStyle(color: AppConsts.secondaryColor);
       }
-      else if (states.contains(WidgetState.disabled)) {
-        return TextStyle(color: cs.onSurface.withOpacity(0.38));
-      } 
-      else {
-        return TextStyle(color: Color(0xffd5632a));
-      } 
-      
+      if (states.contains(WidgetState.disabled)) {
+        return TextStyle(color: cs.onSurface.withValues(alpha: 0.38));
+      }
+      return TextStyle(color: AppConsts.secondaryColor);
     }),
 
         helperStyle: TextStyle(color: cs.onSurfaceVariant),
@@ -134,24 +151,24 @@ class Themes {
         border: _outline(cs.outline),
         enabledBorder: _outline(cs.outline),
         disabledBorder: _outline(cs.outlineVariant),
-        focusedBorder: _outline(Color(0xffd5632a), width: 1.4),
+        focusedBorder: _outline(AppConsts.secondaryColor, width: 1.4),
         errorBorder: _outline(cs.error),
         focusedErrorBorder: _outline(cs.error, width: 1.4),
 
         // ألوان الأيقونات حسب الحالة
         prefixIconColor: WidgetStateColor.resolveWith((states) {
             if (states.contains(WidgetState.error)) return cs.error;
-            if (states.contains(WidgetState.focused)) return const Color(0xffd5632a);
+            if (states.contains(WidgetState.focused)) return AppConsts.secondaryColor;
             if (states.contains(WidgetState.disabled)) {
-              return cs.onSurface.withOpacity(0.38);
+              return cs.onSurface.withValues(alpha: 0.38);
             }
             return cs.onSurfaceVariant;
           }),
         suffixIconColor: WidgetStateColor.resolveWith((states) {
           if (states.contains(WidgetState.error)) return cs.error;
-          if (states.contains(WidgetState.focused)) return Color(0xffd5632a);
+          if (states.contains(WidgetState.focused)) return AppConsts.secondaryColor;
           if (states.contains(WidgetState.disabled)) {
-            return cs.onSurface.withOpacity(0.38);
+            return cs.onSurface.withValues(alpha: 0.38);
           }
           return cs.onSurfaceVariant;
         }),
@@ -163,40 +180,67 @@ class Themes {
         style: ElevatedButton.styleFrom(
           foregroundColor: cs.onPrimary,
           backgroundColor: cs.primary,
-          
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: cs.primary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: cs.primary,
-          side: BorderSide(color: cs.primary.withOpacity(0.8)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide(color: cs.primary.withValues(alpha: 0.8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
 
+      sliderTheme: SliderThemeData(
+        activeTrackColor: AppConsts.secondaryColor,
+        inactiveTrackColor: cs.outline.withValues(alpha: 0.35),
+        thumbColor: AppConsts.secondaryColor,
+        overlayColor: AppConsts.secondaryColor.withValues(alpha: 0.2),
+        trackHeight: 3.5,
+        rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        selectedColor: AppConsts.secondaryColor.withValues(alpha: 0.32),
+        disabledColor: cs.outline.withValues(alpha: 0.25),
+        labelStyle: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600, fontSize: 13),
+        secondaryLabelStyle: TextStyle(color: AppConsts.primaryColor, fontWeight: FontWeight.w700),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: BorderSide(color: cs.outline.withValues(alpha: 0.45)),
+      ),
+
       // بطاقات/قوائم/فواصل
       cardTheme: CardThemeData(
-        color: cs.surfaceVariant,
-        elevation: 0.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: cs.surfaceContainerHighest,
+        elevation: 0,
+        shadowColor: cs.shadow.withValues(alpha: 0.06),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: cs.outline.withValues(alpha: 0.5)),
+        ),
         margin: EdgeInsets.zero,
       ),
-      listTileTheme: ListTileThemeData(iconColor: cs.onSurfaceVariant, textColor: cs.onSurface, tileColor: cs.surfaceVariant),
+      listTileTheme: ListTileThemeData(
+        iconColor: cs.onSurfaceVariant,
+        textColor: cs.onSurface,
+        tileColor: cs.surfaceContainerHighest,
+      ),
       dividerTheme: DividerThemeData(color: cs.outlineVariant, thickness: 1, space: 16),
 
       // القوائم المنبثقة
       popupMenuTheme: PopupMenuThemeData(
-        color: cs.surfaceVariant,
+        color: cs.surfaceContainerHighest,
         textStyle: TextStyle(color: cs.onSurface),
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -214,37 +258,45 @@ class Themes {
   }
 
   static ThemeData darkTheme(BuildContext context) {
-    // 1) لوحة الألوان الأساسية للوضع الداكن
+    // 1) لوحة الألوان للوضع الداكن: كحلي ليلي، بطاقات مرفوعة، نص ثانوي مزرّق، ذهبي للتأكيد
     final ColorScheme cs = ColorScheme(
       brightness: Brightness.dark,
       primary: AppConsts.primaryColor,
       onPrimary: Colors.white,
       secondary: AppConsts.secondaryColor,
-      primaryContainer: AppConsts.secondaryColor,
-      secondaryContainer: AppConsts.primaryColor,
-      onSecondary: const Color(0xFF1A1300), // نص داكن فوق الذهبي
-      tertiary: AppConsts.tertiaryColor.shade400, // رمادي وسيط
-      onTertiary: Colors.black,
-      surface: const Color(0xFF0F1533), // خلفية أساسية (أغمق من الـ primary)
+      onSecondary: const Color(0xFF132057),
+      tertiary: AppConsts.tertiaryColor.shade500,
+      onTertiary: Colors.white,
+      primaryContainer: const Color(0xFF1E2F64),
+      secondaryContainer: const Color(0xFF4A3800),
+      surface: _darkSurface,
       onSurface: Colors.white,
-      background: const Color(0xFF0B112B), // خلفية عامة
-      onBackground: Colors.white,
-      surfaceContainerHighest: const Color(0xFF171B34), // بطاقات/حقول
-      surfaceContainer: Colors.black,
-      onSurfaceVariant: const Color(0xCCFFFFFF), // أبيض بعتامة 80%
-      outline: AppConsts.tertiaryColor.shade700, // حدود غير ظاهرة بقوة
-      outlineVariant: AppConsts.tertiaryColor.shade800,
-      error: Colors.pink[800]!,
-      onError: Colors.black,
+      surfaceContainerLowest: const Color(0xFF060A18),
+      surfaceContainerLow: _darkSurfaceContainer,
+      surfaceContainer: const Color(0xFF0C152E),
+      surfaceContainerHigh: _darkCard,
+      surfaceContainerHighest: _darkCard,
+      onSurfaceVariant: _darkOnVar,
+      outline: _darkOutline,
+      outlineVariant: const Color(0xFF3D4D75),
+      error: const Color(0xFFFFB4AB),
+      onError: const Color(0xFF690005),
       shadow: Colors.black,
-      scrim: Colors.black54,
-      inverseSurface: const Color(0xFFEDEFF9),
-      onInverseSurface: const Color(0xFF0E1226),
+      scrim: Color(0x99000000),
+      inverseSurface: const Color(0xFFE8ECF8),
+      onInverseSurface: AppConsts.primaryColor,
       inversePrimary: AppConsts.secondaryColor,
       primaryFixed: Colors.white,
-      secondaryFixed: Colors.green[800],
-      onTertiaryFixedVariant: const Color(0xFF0E1226),
-      surfaceContainerLow: Colors.grey[300],
+      primaryFixedDim: const Color(0xFFB8C4E8),
+      onPrimaryFixed: AppConsts.primaryColor,
+      onPrimaryFixedVariant: _darkOnVar,
+      secondaryFixed: const Color(0xFFFFE082),
+      secondaryFixedDim: AppConsts.secondaryColor,
+      onSecondaryFixed: Color(0xFF132057),
+      onSecondaryFixedVariant: Color(0xFF3D2800),
+      tertiaryFixed: const Color(0xFFE8EDFA),
+      onTertiaryFixed: AppConsts.primaryColor,
+      onTertiaryFixedVariant: _darkOnVar,
     );
 
 
@@ -255,8 +307,8 @@ class Themes {
       gapPadding: 2,
     );
 
-    // 3) لون تعبئة خفيف للحقول (سطح أدكن قليلًا من surface)
-    final Color fieldFill = const Color(0xFF151A34);
+    // 3) لون تعبئة الحقول يتلاءم مع بطاقات السمة الداكنة
+    final Color fieldFill = const Color(0xFF121A38);
 
     final base = Theme.of(context).textTheme;
     final softTextTheme = base
@@ -294,32 +346,33 @@ class Themes {
       // نصوص عامة
       textTheme: softTextTheme,
 
-      // AppBar هادئ على surface (بدون استخدام primary كخلفية حتى لا تكون قاتمة جدًا)
       appBarTheme: AppBarTheme(
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w500, fontSize: 17, color: cs.onSurface),
+        titleTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          letterSpacing: -0.2,
+          color: cs.onSurface,
+        ),
         iconTheme: IconThemeData(color: cs.onSurface),
-
-        // ↓ فاصل سفلي رفيع وشفاف قليلاً
         shape: Border(
           bottom: BorderSide(
-            color: cs.outline.withOpacity(0.5), // رمادي داكن شبه شفاف
-            width: 0.5,
+            color: AppConsts.secondaryColor.withValues(alpha: 0.28),
+            width: 1,
           ),
         ),
-
-        // لتجنّب تلوين إضافي في M3
         surfaceTintColor: Colors.transparent,
       ),
       // حقول الإدخال
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: fieldFill, // خلفية خفيفة للحقول
-        hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.5)),
+        hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.55)),
         labelStyle: TextStyle(color: cs.onSurfaceVariant),
         floatingLabelStyle: TextStyle(color: cs.secondary), // إبراز اللابل عند التركيز بالذهبي
         helperStyle: TextStyle(color: cs.onSurfaceVariant),
@@ -329,25 +382,25 @@ class Themes {
         // حدود بمستويات واضحة
         border: _outline(cs.outlineVariant),
         enabledBorder: _outline(cs.outlineVariant),
-        disabledBorder: _outline(cs.outlineVariant.withOpacity(0.6)),
+        disabledBorder: _outline(cs.outlineVariant.withValues(alpha: 0.6)),
         focusedBorder: _outline(cs.secondary, width: 1.4),
         errorBorder: _outline(cs.error),
         focusedErrorBorder: _outline(cs.error, width: 1.4),
 
         // ألوان الأيقونات حسب الحالة
-        prefixIconColor: MaterialStateColor.resolveWith((states) {
-          if (states.contains(MaterialState.error)) return cs.error;
-          if (states.contains(MaterialState.focused)) return cs.secondary;
-          if (states.contains(MaterialState.disabled)) {
-            return cs.onSurface.withOpacity(0.38);
+        prefixIconColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.error)) return cs.error;
+          if (states.contains(WidgetState.focused)) return cs.secondary;
+          if (states.contains(WidgetState.disabled)) {
+            return cs.onSurface.withValues(alpha: 0.38);
           }
           return cs.onSurfaceVariant;
         }),
-        suffixIconColor: MaterialStateColor.resolveWith((states) {
-          if (states.contains(MaterialState.error)) return cs.error;
-          if (states.contains(MaterialState.focused)) return cs.secondary;
-          if (states.contains(MaterialState.disabled)) {
-            return cs.onSurface.withOpacity(0.38);
+        suffixIconColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.error)) return cs.error;
+          if (states.contains(WidgetState.focused)) return cs.secondary;
+          if (states.contains(WidgetState.disabled)) {
+            return cs.onSurface.withValues(alpha: 0.38);
           }
           return cs.onSurfaceVariant;
         }),
@@ -359,7 +412,7 @@ class Themes {
         style: ElevatedButton.styleFrom(
           foregroundColor: cs.onPrimary,
           backgroundColor: cs.primary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
@@ -373,17 +426,40 @@ class Themes {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: cs.secondary,
-          side: BorderSide(color: cs.secondary),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide(color: cs.secondary.withValues(alpha: 0.95)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
+      ),
+
+      sliderTheme: SliderThemeData(
+        activeTrackColor: AppConsts.secondaryColor,
+        inactiveTrackColor: cs.outline.withValues(alpha: 0.4),
+        thumbColor: AppConsts.secondaryColor,
+        overlayColor: AppConsts.secondaryColor.withValues(alpha: 0.22),
+        trackHeight: 3.5,
+        rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        selectedColor: AppConsts.secondaryColor.withValues(alpha: 0.38),
+        disabledColor: cs.outline.withValues(alpha: 0.25),
+        labelStyle: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600, fontSize: 13),
+        secondaryLabelStyle: const TextStyle(color: AppConsts.primaryColor, fontWeight: FontWeight.w700),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: BorderSide(color: _darkOutline.withValues(alpha: 0.9)),
       ),
 
       // بطاقة/قائمة/فواصل
       cardTheme: CardThemeData(
         color: cs.surfaceContainerHighest,
-        elevation: 0.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppConsts.secondaryColor.withValues(alpha: 0.22)),
+        ),
         margin: EdgeInsets.zero,
       ),
       listTileTheme: ListTileThemeData(iconColor: cs.onSurfaceVariant, textColor: cs.onSurface, tileColor: cs.surfaceContainerHighest),

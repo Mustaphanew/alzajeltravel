@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/search_flight_controller.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
+import 'package:alzajeltravel/view/frame/search_flight_widgets/date_picker/_date_picker_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -152,37 +153,71 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
         ? '${_monthName(_focusedDay)} ${_focusedDay.year}'
         : '$_monthPickerYear';
 
-    final iconColor = Colors.white;
-    final disabledColor = Colors.white.withOpacity(.35);
-
     return Container(
-      height: 44,
-      color: AppConsts.primaryColor,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            AppConsts.primaryColor,
+            Color(0xFF1B2A57),
+            AppConsts.primaryColor,
+          ],
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: AppConsts.secondaryColor.withValues(alpha: 0.55),
+            width: 1.2,
+          ),
+        ),
+      ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: _canPrev ? _prev : null,
-            icon: Icon(Icons.chevron_left, color: _canPrev ? iconColor : disabledColor),
+          const SizedBox(width: 10),
+          NavChevron(
+            icon: Icons.chevron_left_rounded,
+            enabled: _canPrev,
+            onTap: _prev,
           ),
           Expanded(
             child: InkWell(
               onTap: _toggleMode,
+              borderRadius: BorderRadius.circular(12),
               child: Center(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    AnimatedRotation(
+                      duration: const Duration(milliseconds: 220),
+                      turns: _mode == _PickerMode.month ? 0.5 : 0,
+                      child: const Icon(
+                        Icons.expand_more_rounded,
+                        size: 18,
+                        color: AppConsts.secondaryColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          IconButton(
-            onPressed: _canNext ? _next : null,
-            icon: Icon(Icons.chevron_right, color: _canNext ? iconColor : disabledColor),
+          NavChevron(
+            icon: Icons.chevron_right_rounded,
+            enabled: _canNext,
+            onTap: _next,
           ),
+          const SizedBox(width: 10),
         ],
       ),
     );
@@ -191,6 +226,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
   Widget _buildMonthPicker() {
     final locale = _localeTag();
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -198,16 +234,18 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
         itemCount: 12,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          mainAxisSpacing: 26,
-          crossAxisSpacing: 16,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 12,
           childAspectRatio: 2.8,
         ),
         itemBuilder: (context, index) {
           final month = index + 1;
 
           final enabled = _monthEnabled(_monthPickerYear, month);
-          final selectedMonth = (_focusedDay.year == _monthPickerYear && _focusedDay.month == month);
-          final monthLabel = DateFormat.MMMM(locale).format(DateTime(2020, month, 1));
+          final selectedMonth =
+              (_focusedDay.year == _monthPickerYear && _focusedDay.month == month);
+          final monthLabel =
+              DateFormat.MMMM(locale).format(DateTime(2020, month, 1));
 
           return InkWell(
             onTap: enabled
@@ -218,23 +256,35 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
                     });
                   }
                 : null,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(12),
             child: Container(
               alignment: Alignment.center,
-              decoration: selectedMonth
-                  ? BoxDecoration(
-                      border: Border.all(color: cs.primary, width: 1.6),
-                      borderRadius: BorderRadius.circular(999),
-                    )
-                  : null,
+              decoration: BoxDecoration(
+                color: selectedMonth
+                    ? AppConsts.secondaryColor
+                        .withValues(alpha: isDark ? 0.18 : 0.2)
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : AppConsts.primaryColor.withValues(alpha: 0.04)),
+                border: Border.all(
+                  color: selectedMonth
+                      ? AppConsts.secondaryColor.withValues(alpha: 0.85)
+                      : AppConsts.secondaryColor.withValues(alpha: 0.18),
+                  width: selectedMonth ? 1.4 : 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(
                 monthLabel,
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: selectedMonth ? FontWeight.w800 : FontWeight.w600,
                   color: !enabled
-                      ? Colors.grey.shade500
-                      : (selectedMonth ? cs.primary : cs.onSurface),
+                      ? cs.onSurface.withValues(alpha: 0.35)
+                      : (selectedMonth
+                          ? AppConsts.secondaryColor
+                          : cs.onSurface),
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -260,6 +310,7 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
     final calLastDay = DateTime(_maxDay.year, _maxDay.month + 1, 0);
 
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return TableCalendar(
       locale: _localeTag(),
@@ -279,14 +330,25 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey.shade500,
-              width: 0.5,
+              color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+              width: 1,
             ),
           ),
         ),
-        dowTextFormatter: (date, locale) => DateFormat.EEEE(locale).format(date),
-        weekdayStyle: TextStyle(color: cs.onSurface, fontSize: 13),
-        weekendStyle: TextStyle(color: cs.onSurface, fontSize: 13),
+        dowTextFormatter: (date, locale) =>
+            DateFormat.EEEE(locale).format(date),
+        weekdayStyle: TextStyle(
+          color: AppConsts.secondaryColor.withValues(alpha: 0.9),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+        weekendStyle: TextStyle(
+          color: AppConsts.secondaryColor.withValues(alpha: 0.9),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
       ),
 
       enabledDayPredicate: _dayEnabled,
@@ -294,22 +356,62 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
 
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
-        isTodayHighlighted: false,
-        disabledTextStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-        defaultTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
-        weekendTextStyle: TextStyle(color: cs.onSurface, fontSize: 16),
+        isTodayHighlighted: true,
+        todayDecoration: BoxDecoration(
+          color: AppConsts.primaryColor.withValues(alpha: isDark ? 0.35 : 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppConsts.primaryColor.withValues(alpha: 0.6),
+            width: 1,
+          ),
+        ),
+        todayTextStyle: TextStyle(
+          color: isDark ? Colors.white : AppConsts.primaryColor,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+        ),
+        disabledTextStyle: TextStyle(
+          color: cs.onSurface.withValues(alpha: 0.3),
+          fontSize: 15,
+        ),
+        defaultTextStyle: TextStyle(
+          color: cs.onSurface,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        weekendTextStyle: TextStyle(
+          color: cs.onSurface,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
 
         selectedDecoration: BoxDecoration(
-          color: AppConsts.secondaryColor,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF4C95A),
+              AppConsts.secondaryColor,
+              Color(0xFFC98C1F),
+            ],
+          ),
           shape: BoxShape.circle,
-          border: Border.all(color: AppConsts.primaryColor, width: 1.8),
+          border: Border.all(color: AppConsts.primaryColor, width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+              blurRadius: 10,
+              spreadRadius: 1,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        selectedTextStyle: TextStyle(
+        selectedTextStyle: const TextStyle(
           color: AppConsts.primaryColor,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
         ),
-        cellMargin: const EdgeInsets.all(6),
+        cellMargin: const EdgeInsets.all(4),
       ),
 
       onPageChanged: (focusedDay) {
@@ -370,58 +472,71 @@ class _DatePickerSingleWidget2State extends State<DatePickerSingleWidget2>
           _initFromFormDone = true;
         }
 
-        final cs = Theme.of(context).colorScheme;
-
         return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.45,
+          height: MediaQuery.of(context).size.height * 0.52,
           width: MediaQuery.of(context).size.width * 0.9,
           child: Column(
               children: [
-                SizedBox(
-                  height: 40,
+                Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF0D1A45),
+                        AppConsts.primaryColor,
+                      ],
+                    ),
+                    border: Border(
+                      bottom: BorderSide(
+                        color:
+                            AppConsts.secondaryColor.withValues(alpha: 0.45),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 50,
-                        child: TextButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
-                            backgroundColor: cs.secondary,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
-                          ),
-                          onPressed: () {
-                            Get.back();
-                          }, 
-                          child: Icon(
-                            Icons.close,
-                            size: 24,
-                          ),
-                        ),
-                      ),
+                      CloseRoundButton(onTap: () => Get.back()),
                       Expanded(
                         child: TabBar(
                           controller: tabController,
-                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicatorSize: TabBarIndicatorSize.label,
                           dividerColor: Colors.transparent,
                           indicatorColor: AppConsts.secondaryColor,
                           labelColor: AppConsts.secondaryColor,
-                          indicatorWeight: 5,
+                          indicatorWeight: 3,
+                          indicatorPadding:
+                              const EdgeInsets.symmetric(horizontal: -8),
                           padding: EdgeInsets.zero,
                           tabs: [
                             Tab(
-                              child: Text(
-                                "Leaving Date".tr,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.flight_takeoff_rounded,
+                                    size: 16,
+                                    color: AppConsts.secondaryColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Leaving Date".tr,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 36),
                     ],
                   ),
                 ),
