@@ -11,6 +11,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/controller/profile/profile_controller.dart';
 
+/// عند `false` يُخفى قسم «الصلاحيات» من شاشة الملف الشخصي فقط.
+/// منطق الصلاحيات في `PermissionsPage` وبقية التطبيق يبقى كما هو ويمكن إعادة العرض لاحقاً.
+const bool kShowProfilePermissionsSection = false;
+
 class ProfilePage extends StatefulWidget {
   final ProfileModel data;
   const ProfilePage({super.key, required this.data});
@@ -195,12 +199,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 20),
 
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12), 
-                    child: PermissionsPage(),
-                  ),
+                  if (kShowProfilePermissionsSection) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: const PermissionsPage(),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                  const SizedBox(height: 16),
                   Container(padding: const EdgeInsets.symmetric(horizontal: 12), child: ChangePassword()),
                 
                   const SizedBox(height: 30),
