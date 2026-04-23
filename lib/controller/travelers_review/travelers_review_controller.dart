@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/traveler_review_model.dart';
 import 'package:alzajeltravel/model/passport/traveler_review/seat_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class TravelersReviewController extends GetxController {
@@ -61,12 +62,12 @@ class TravelersReviewController extends GetxController {
       preRes = await AppVars.api.post(AppApis.preBookFlight, params: {"insert_id": insertId});
 
       if (preRes == null) {
-        Get.snackbar("Error".tr, "Could not pre-book".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Could not pre-book".tr, type: SnackType.error);
         return null;
       }
 
       if (preRes is! Map<String, dynamic>) {
-        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Invalid server response".tr, type: SnackType.error);
         return null;
       }
 
@@ -77,12 +78,12 @@ class TravelersReviewController extends GetxController {
       // لو ما رجع PNR من pre-book نوقف هنا
       if (prePnr == null || prePnr!.isEmpty) {
         final msg = preRes['messages']?['error']?.toString() ?? preRes['message']?.toString() ?? "Unknown error";
-        Get.snackbar("Error".tr, msg, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, msg, type: SnackType.error);
         return null;
       }
     } catch (e) {
       print("❌ pre-book error: $e");
-      Get.snackbar("Error".tr, "Could not pre-book".tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack("Error".tr, "Could not pre-book".tr, type: SnackType.error);
       return null;
     }
 
@@ -109,12 +110,12 @@ class TravelersReviewController extends GetxController {
       ); 
 
       if (issueRes == null) {
-        Get.snackbar("Error".tr, "Could not issue ticket".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Could not issue ticket".tr, type: SnackType.error);
         return null;
       }
 
       if (issueRes is! Map<String, dynamic>) {
-        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Invalid server response".tr, type: SnackType.error);
         return null;
       }
 
@@ -126,10 +127,10 @@ class TravelersReviewController extends GetxController {
 
       if (ticketNum != null && ticketNum.isNotEmpty) {
         // نجاح كامل: تم إصدار التذكرة
-        Get.snackbar(
+        AppFuns.showSnack(
           "Booking".tr,
           "Ticket issued successfully\nPNR: @pnr\nTicket: @ticket".trParams({"pnr": (issuePnr ?? prePnr) ?? "-", "ticket": ticketNum}),
-          snackPosition: SnackPosition.BOTTOM,
+          type: SnackType.success,
           duration: const Duration(seconds: 5),
         );
 
@@ -142,12 +143,12 @@ class TravelersReviewController extends GetxController {
       } else {
         // ما فيه TicketNum → شيء ناقص في الإصدار
         final msg = issueRes['messages']?['error']?.toString() ?? issueRes['message']?.toString() ?? "Unknown error";
-        Get.snackbar("Error".tr, msg, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, msg, type: SnackType.error);
         return null;
       }
     } catch (e) {
       print("❌ confirmBooking error: $e");
-      Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack("Error".tr, "Could not confirm booking".tr, type: SnackType.error);
       return null;
     }
   }
@@ -164,17 +165,17 @@ class TravelersReviewController extends GetxController {
         },
       );
       if (cancelPreBookingRes == null) {
-        Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Could not cancel pre-booking".tr, type: SnackType.error);
         return null;
       }
       if (cancelPreBookingRes is! Map<String, dynamic>) {
-        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Invalid server response".tr, type: SnackType.error);
         return null;
       }
       return cancelPreBookingRes;
     } catch (e) {
       print("❌ cancelPreBooking error: $e");
-      Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack("Error".tr, "Could not cancel pre-booking".tr, type: SnackType.error);
       return null;
     }
   }
@@ -192,17 +193,17 @@ class TravelersReviewController extends GetxController {
       );
       print("voidIssueRes: $voidIssueRes");
       if (voidIssueRes == null) {
-        Get.snackbar("Error".tr, "Could not void issue 1".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Could not void issue 1".tr, type: SnackType.error);
         return null;
       }
       if (voidIssueRes is! Map<String, dynamic>) {
-        Get.snackbar("Error".tr, "Invalid server response".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Invalid server response".tr, type: SnackType.error);
         return null;
       }
       return voidIssueRes;
     } catch (e) {
       print("❌ voidIssue error: $e");
-      Get.snackbar("Error".tr, "Could not void issue 2".tr, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack("Error".tr, "Could not void issue 2".tr, type: SnackType.error);
       return null;
     }
   }

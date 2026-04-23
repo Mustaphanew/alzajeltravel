@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/help_center_model.dart';
 import 'package:alzajeltravel/repo/help_center_repo.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpCenterController extends GetxController {
@@ -125,10 +126,10 @@ class HelpCenterController extends GetxController {
     final uri = _buildUri(item);
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok) Get.snackbar('Error', 'Cannot open link');
+      if (!ok) AppFuns.showSnack('Error'.tr, 'Cannot open link'.tr, type: SnackType.error);
     } catch (e) {
       if (kDebugMode) print('openItem error: $e');
-      Get.snackbar('Error', e.toString());
+      AppFuns.showSnack('Error'.tr, e.toString(), type: SnackType.error);
     }
   }
 }

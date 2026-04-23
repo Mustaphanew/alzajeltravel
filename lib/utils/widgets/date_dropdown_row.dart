@@ -328,26 +328,22 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
             widget.title,
             Row(
               children: [
-                // السنة
+                // السنة (4 أرقام → تحتاج مساحة)
                 Expanded(
-                  flex: 1,
+                  flex: 3,
                   child: _buildDropdownContainer(
                     context: context,
+                    kind: _DateDropdownKind.year,
                     value: selectedYear,
                     disabled: false,
                     label: 'Year'.tr,
                     items: years
                         .map(
-                          (y) => DropdownMenuItem<String>(
+                          (y) => _buildMenuItem(
+                            context: context,
                             value: y,
-                            child: Text(
-                              y, 
-                              style: TextStyle(
-                                color: cs.onSurface,
-                                fontFamily: AppConsts.font,
-                                fontSize: AppConsts.sm,
-                              ),
-                            ),
+                            text: y,
+                            isSelected: selectedYear == y,
                           ),
                         )
                         .toList(),
@@ -359,28 +355,24 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                     error: errorText,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
 
-                // الشهر
+                // الشهر (يحتاج أكبر مساحة لعرض الاسم مثل "10-أكتوبر")
                 Expanded(
-                  flex: 2,
+                  flex: 4,
                   child: _buildDropdownContainer(
                     context: context,
+                    kind: _DateDropdownKind.month,
                     value: selectedMonth,
                     disabled: (selectedYear == null),
                     label: 'Month'.tr,
                     items: availableMonths
                         .map(
-                          (m) => DropdownMenuItem<String>(
-                            value: m['value'],
-                            child: Text(
-                              '${int.parse(m['value'].toString())}-${m['name']!.tr}',
-                              style: TextStyle(
-                                fontFamily: AppConsts.font,
-                                color: cs.onSurface,
-                                fontSize: AppConsts.sm,
-                              ),
-                            ),
+                          (m) => _buildMenuItem(
+                            context: context,
+                            value: m['value']!,
+                            text: '${int.parse(m['value'].toString())}-${m['name']!.tr}',
+                            isSelected: selectedMonth == m['value'],
                           ),
                         )
                         .toList(),
@@ -392,28 +384,24 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                     error: errorText,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
 
-                // اليوم
+                // اليوم (رقم قصير 1..31)
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: _buildDropdownContainer(
                     context: context,
+                    kind: _DateDropdownKind.day,
                     value: selectedDay,
                     disabled: (selectedYear == null || selectedMonth == null),
                     label: 'Day'.tr,
                     items: days
                         .map(
-                          (d) => DropdownMenuItem<String>(
+                          (d) => _buildMenuItem(
+                            context: context,
                             value: d,
-                            child: Text(
-                              '${int.parse(d.toString())}', 
-                              style: TextStyle(
-                                fontFamily: AppConsts.font,
-                                color: cs.onSurface,
-                                fontSize: AppConsts.sm,
-                              ),
-                            ),
+                            text: '${int.parse(d.toString())}',
+                            isSelected: selectedDay == d,
                           ),
                         )
                         .toList(),
@@ -432,8 +420,9 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
               Text(
                 widget.helpText!,
                 style: TextStyle(
+                  fontFamily: AppConsts.font,
                   fontSize: AppConsts.sm,
-                  color: cs.onSurface.withOpacity(0.6),
+                  color: cs.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             if (errorText != null)
@@ -441,7 +430,11 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   errorText,
-                  style: TextStyle(color: cs.error, fontSize: AppConsts.sm),
+                  style: TextStyle(
+                    fontFamily: AppConsts.font,
+                    color: cs.error,
+                    fontSize: AppConsts.sm,
+                  ),
                 ),
               ),
           ],
@@ -450,8 +443,77 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     );
   }
 
+  /// بناء عنصر قائمة عصري مع تمييز العنصر المختار:
+  /// - الدارك: ذهبي على خلفية كحليّة
+  /// - اللايت: كحلي على خلفية بيضاء/هادئة
+  DropdownMenuItem<String> _buildMenuItem({
+    required BuildContext context,
+    required String value,
+    required String text,
+    required bool isSelected,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // لون التوكيد يتبع الثيم
+    final Color accent =
+        isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
+
+    final Color selectedBg = accent.withValues(alpha: isDark ? 0.20 : 0.10);
+    final Color selectedBorder = accent.withValues(alpha: isDark ? 0.65 : 0.55);
+
+    // النص العادي: في الدارك أبيض ناعم، في اللايت رمادي داكن قريب من primary لسهولة القراءة
+    final Color normalText = isDark
+        ? Colors.white.withValues(alpha: 0.88)
+        : cs.onSurface;
+
+    return DropdownMenuItem<String>(
+      value: value,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? selectedBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: isSelected
+              ? Border.all(color: selectedBorder, width: 1)
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(
+                Icons.check_circle_rounded,
+                size: 16,
+                color: accent,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppConsts.font,
+                  fontSize: AppConsts.sm,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  letterSpacing: 0.2,
+                  color: isSelected ? accent : normalText,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDropdownContainer({
     required BuildContext context,
+    required _DateDropdownKind kind,
     required String? value,
     required bool disabled,
     required String label,
@@ -460,26 +522,75 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
     required String? error,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final borderColor = (error != null)
-        ? cs.error
-        : (disabled || !widget.enabled ? cs.outline.withOpacity(0.4) : cs.outline);
+    final bool hasValue = value != null && value.isNotEmpty;
 
-    final labelColor = (error != null)
+    // لون التوكيد (accent) يختلف باختلاف الثيم:
+    // - الدارك: ذهبي يلمع على الخلفيّة الكحليّة
+    // - اللايت: كحلي يظهر بوضوح على الخلفيّة البيضاء
+    final Color accent =
+        isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
+
+    final Color borderColor = (error != null)
         ? cs.error
-        : (disabled || !widget.enabled ? cs.onSurface.withOpacity(0.4) : cs.onSurface);
+        : (disabled || !widget.enabled
+            ? cs.outline.withValues(alpha: 0.30)
+            : (hasValue
+                ? accent.withValues(alpha: 0.85)
+                : cs.outline.withValues(alpha: 0.50)));
+
+    final Color labelColor = (error != null)
+        ? cs.error
+        : (disabled || !widget.enabled
+            ? cs.onSurface.withValues(alpha: 0.4)
+            : (hasValue
+                ? accent
+                : cs.onSurface.withValues(alpha: 0.75)));
+
+    // خلفية قائمة المنبثقة: كحلية عميقة في الدارك، بيضاء جدًا فاتحة بلمسة كحلية في اللايت.
+    final Color menuBg = isDark
+        ? const Color(0xFF0F1A3F)
+        : const Color(0xFFFAFBFF);
+
+    final Color fillColor = disabled || !widget.enabled
+        ? cs.surfaceContainerHighest.withValues(alpha: 0.35)
+        : (isDark
+            ? cs.surface.withValues(alpha: 0.55)
+            : Colors.white);
 
     return DropdownButtonFormField<String>(
       value: value,
       iconSize: 0,
       validator: (_) => null, // الفاليديشن الحقيقي في FormField الخارجي
-      padding: EdgeInsets.only(top: 0),
+      padding: EdgeInsets.zero,
+      dropdownColor: menuBg,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 10,
+      menuMaxHeight: 360,
       decoration: InputDecoration(
-        contentPadding: const EdgeInsetsDirectional.only(start: 8),
+        isDense: true,
+        filled: true,
+        fillColor: fillColor,
+        contentPadding: const EdgeInsetsDirectional.only(
+          start: 8,
+          end: 4,
+          top: 10,
+          bottom: 10,
+        ),
         labelText: label,
         labelStyle: TextStyle(
+          fontFamily: AppConsts.font,
           color: labelColor,
           fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
+        floatingLabelStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          color: accent,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -487,24 +598,93 @@ class _DateDropdownRowState extends State<DateDropdownRow> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(width: 1, color: borderColor),
+          borderSide: BorderSide(
+            width: hasValue ? 1.3 : 1,
+            color: borderColor,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(width: 1, color: borderColor),
+          borderSide: BorderSide(
+            width: 1.5,
+            color: accent,
+          ),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(width: 1, color: borderColor),
         ),
+        errorStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          color: cs.error,
+          fontSize: AppConsts.sm,
+        ),
       ),
       isExpanded: true,
-      icon: const Icon(Icons.arrow_drop_down),
-      style: TextStyle(
-        fontSize: 12,
+      icon: Padding(
+        padding: const EdgeInsetsDirectional.only(end: 2),
+        child: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          size: 16,
+          color: disabled || !widget.enabled
+              ? cs.onSurface.withValues(alpha: 0.35)
+              : accent,
+        ),
       ),
-      onChanged: (widget.enabled)? (disabled ? null : onChanged) : null,
+      style: TextStyle(
+        fontFamily: AppConsts.font,
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: cs.onSurface,
+      ),
+      selectedItemBuilder: (ctx) => items
+          .map(
+            (it) => Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 2, end: 2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    _selectedTextFor(kind, it.value ?? ''),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppConsts.font,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: accent,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+      onChanged: (widget.enabled) ? (disabled ? null : onChanged) : null,
       items: items,
     );
   }
+
+  /// صياغة نص العنصر المختار داخل الحقل بحسب نوع الحقل (سنة/شهر/يوم).
+  String _selectedTextFor(_DateDropdownKind kind, String value) {
+    if (value.isEmpty) return '';
+    switch (kind) {
+      case _DateDropdownKind.year:
+        return value;
+      case _DateDropdownKind.month:
+        final m = _monthsAll.firstWhere(
+          (e) => e['value'] == value,
+          orElse: () => const {'value': '', 'name': ''},
+        );
+        final idx = int.tryParse(value) ?? 0;
+        final name = (m['name'] ?? '').toString();
+        return name.isEmpty ? idx.toString() : '$idx-${name.tr}';
+      case _DateDropdownKind.day:
+        return (int.tryParse(value) ?? 0).toString();
+    }
+  }
 }
+
+enum _DateDropdownKind { year, month, day }

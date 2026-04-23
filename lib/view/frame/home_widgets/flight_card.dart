@@ -73,9 +73,13 @@ class FlightCardVertical extends StatelessWidget {
                     const SizedBox(height: 6),
 
                     // 💰 السعر
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    Text.rich(
+                      TextSpan(
+                        style: TextStyle(
+                          fontFamily: AppConsts.font,
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
                         children: [
                           const TextSpan(text: "Starting From "),
                           TextSpan(

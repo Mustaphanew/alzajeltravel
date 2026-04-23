@@ -602,6 +602,7 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,
                       ),
@@ -621,6 +622,7 @@ class _TripTotalSectionState extends State<_TripTotalSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,
                       ),

@@ -1,5 +1,6 @@
 import 'package:alzajeltravel/view/frame/home_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:get/get.dart';
@@ -7,7 +8,161 @@ import 'package:jiffy/jiffy.dart';
 import 'app_vars.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+enum SnackType { info, success, error, warning }
+
 class AppFuns {
+  /// Modern top-positioned, theme-aware snackbar used across the app.
+  /// - Position: top
+  /// - Light/Dark adaptive colors
+  /// - Almaria font + rounded corners + subtle accent border
+  /// - Auto-detects type (success/error/warning/info) from [title] when not provided
+  static void showSnack(
+    String title,
+    String message, {
+    SnackType? type,
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    final ctx = Get.context;
+    final bool isDark =
+        ctx != null && Theme.of(ctx).brightness == Brightness.dark;
+    final SnackType t = type ?? _detectSnackType(title);
+
+    // Accent + icon per type
+    late final Color accent;
+    late final IconData iconData;
+    switch (t) {
+      case SnackType.success:
+        accent = const Color(0xFF22C55E); // green
+        iconData = Icons.check_circle_rounded;
+        break;
+      case SnackType.error:
+        accent = const Color(0xFFEF4444); // red
+        iconData = Icons.error_rounded;
+        break;
+      case SnackType.warning:
+        accent = AppConsts.secondaryColor; // gold
+        iconData = Icons.warning_amber_rounded;
+        break;
+      case SnackType.info:
+        accent = isDark ? AppConsts.secondaryColor : AppConsts.primaryColor;
+        iconData = Icons.info_rounded;
+        break;
+    }
+
+    final Color bg = isDark
+        ? const Color(0xFF182238) // deep navy tint for dark mode
+        : Colors.white;
+    final Color titleColor =
+        isDark ? Colors.white : AppConsts.primaryColor;
+    final Color messageColor = isDark
+        ? Colors.white.withValues(alpha: 0.82)
+        : AppConsts.primaryColor.withValues(alpha: 0.82);
+
+    // Close any existing snack so new ones stack cleanly
+    if (Get.isSnackbarOpen) {
+      Get.closeAllSnackbars();
+    }
+
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.TOP,
+      duration: duration,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      borderRadius: 16,
+      backgroundColor: bg,
+      borderColor: accent.withValues(alpha: 0.55),
+      borderWidth: 1.2,
+      colorText: titleColor,
+      maxWidth: 560,
+      boxShadows: [
+        BoxShadow(
+          color: Colors.black
+              .withValues(alpha: isDark ? 0.45 : 0.12),
+          blurRadius: 18,
+          offset: const Offset(0, 6),
+        ),
+      ],
+      icon: Container(
+        width: 40,
+        height: 40,
+        margin: const EdgeInsets.only(left: 6, right: 6),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.14),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: accent.withValues(alpha: 0.35),
+            width: 1,
+          ),
+        ),
+        child: Icon(iconData, color: accent, size: 22),
+      ),
+      shouldIconPulse: false,
+      titleText: Text(
+        title,
+        style: TextStyle(
+          fontFamily: AppConsts.font,
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+          color: titleColor,
+          height: 1.2,
+        ),
+      ),
+      messageText: Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          message,
+          style: TextStyle(
+            fontFamily: AppConsts.font,
+            fontWeight: FontWeight.w400,
+            fontSize: 13.5,
+            color: messageColor,
+            height: 1.35,
+          ),
+        ),
+      ),
+      forwardAnimationCurve: Curves.easeOutCubic,
+      reverseAnimationCurve: Curves.easeInCubic,
+      animationDuration: const Duration(milliseconds: 320),
+      overlayBlur: 0,
+      isDismissible: true,
+      dismissDirection: DismissDirection.horizontal,
+    );
+  }
+
+  /// Best-effort type detection based on common title keywords in AR/EN.
+  static SnackType _detectSnackType(String title) {
+    final lower = title.toLowerCase().trim();
+    const errorWords = ['error', 'failed', 'فشل', 'خطأ', 'خطا'];
+    const successWords = [
+      'success',
+      'copied',
+      'booking',
+      'نجاح',
+      'تم',
+      'نسخ'
+    ];
+    const warningWords = [
+      'validation',
+      'warning',
+      'تنبيه',
+      'تنبية',
+      'تحقق',
+      'تحذير'
+    ];
+    for (final w in errorWords) {
+      if (lower.contains(w)) return SnackType.error;
+    }
+    for (final w in warningWords) {
+      if (lower.contains(w)) return SnackType.warning;
+    }
+    for (final w in successWords) {
+      if (lower.contains(w)) return SnackType.success;
+    }
+    return SnackType.info;
+  }
+
   static void setUpRebuild() {
     AppVars.appLocale = AppVars.getStorage.read("lang") == null ? Get.deviceLocale : Locale(AppVars.getStorage.read("lang"));
     AppVars.lang = AppVars.appLocale?.languageCode;
@@ -22,39 +177,8 @@ class AppFuns {
   }
 
   static mySnackBar(String message, String id) {
-    return Get.snackbar(
-      snackPosition: SnackPosition.BOTTOM,
-      "",
-      "",
-      margin: EdgeInsets.all(15),
-      duration: Duration(seconds: 5),
-      titleText: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "تنبية!",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: AppConsts.lg),
-                ),
-                SizedBox(height: 8),
-                Text(message, style: TextStyle(height: 1.3)),
-              ],
-            ),
-          ),
-          SizedBox(width: 4),
-          TextButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppConsts.secondaryColor),
-            child: Text("التنزيلات"),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      messageText: SizedBox(height: 0, width: 0),
-      backgroundColor: Colors.white,
-    );
+    // Wrapper kept for backward compatibility; uses the unified modern snackbar.
+    return showSnack("تنبيه".tr, message, type: SnackType.warning);
   }
 
   static themeSearch(BuildContext context) {
@@ -307,6 +431,10 @@ class AppFuns {
 
   static void hideKeyboard() {
     FocusManager.instance.primaryFocus?.unfocus();
+    // استدعاء مباشر للنظام لإغلاق الكيبورد إذا بقي ظاهرًا
+    try {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    } catch (_) {}
   }
 
   static Future<void> openUrl(String url) async {
@@ -316,10 +444,7 @@ class AppFuns {
     ); 
     
     if (!ok) {
-      Get.snackbar(
-        'Error'.tr,
-        'Could not open link'.tr,
-      );
+      showSnack('Error'.tr, 'Could not open link'.tr, type: SnackType.error);
     }
   }
 

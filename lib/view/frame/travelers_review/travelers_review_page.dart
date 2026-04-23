@@ -61,6 +61,18 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
   List<Map<String, dynamic>> baggagesData = [];
 
   @override
+  void initState() {
+    super.initState();
+    // إخفاء لوحة المفاتيح تلقائيًا عند الدخول لهذه الصفحة
+    // (كانت تبقى ظاهرة من تركيز حقل الاسم في نموذج جواز السفر قبلها)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FocusManager.instance.primaryFocus?.unfocus();
+      FocusScope.of(context).unfocus();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -134,6 +146,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 foregroundColor: Colors.white,
                 iconTheme: const IconThemeData(color: Colors.white),
                 titleTextStyle: const TextStyle(
+                  fontFamily: AppConsts.font,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: AppConsts.xlg,
@@ -223,17 +236,16 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                     padding: EdgeInsets.zero,
                                     itemBuilder: (context, index) {
                                       final traveler = c.travelers[index];
-                                      return Ink(
-                                        color: cs.surfaceContainer,
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 4),
-                                            Ink(
-                                              color: cs.surface,
-                                              child: Container(
+                                      return IntrinsicHeight(
+                                        child: Container(
+                                          color: cs.surfaceContainer,
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                color: cs.surface,
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                                 child: IntrinsicWidth(
                                                   child: Column(
@@ -259,50 +271,51 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  spacing: 3,
-                                                  children: [
-                                                    FittedBox(
-                                                      fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
-                                                      alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
-                                                      child: Text(
-                                                        traveler.passport.fullName,
-                                                        style: TextStyle(
-                                                          fontSize: AppConsts.lg, // الحجم الأقصى
-                                                          fontWeight: FontWeight.bold,
+                                              Expanded(
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    spacing: 3,
+                                                    children: [
+                                                      FittedBox(
+                                                        fit: BoxFit.scaleDown, // يصغّر النص إذا ما يكفي
+                                                        alignment: AlignmentDirectional.centerStart, // يبقيه لليسار
+                                                        child: Text(
+                                                          traveler.passport.fullName,
+                                                          style: TextStyle(
+                                                            fontFamily: AppConsts.font,
+                                                            fontSize: AppConsts.lg, // الحجم الأقصى
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(title: traveler.passport.documentNumber ?? 'N/A'),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(
-                                                      title: AppFuns.replaceArabicNumbers(
-                                                        intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: traveler.passport.documentNumber ?? 'N/A'),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(
+                                                        title: AppFuns.replaceArabicNumbers(
+                                                          intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfBirth!),
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(
-                                                      title: AppFuns.replaceArabicNumbers(
-                                                        intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfExpiry!),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(
+                                                        title: AppFuns.replaceArabicNumbers(
+                                                          intl.DateFormat('dd-MM-yyyy').format(traveler.passport.dateOfExpiry!),
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(title: traveler.passport.sex?.label ?? 'N/A'),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(title: traveler.passport.nationality?.name[AppVars.lang] ?? 'N/A'),
-                                                    const Divider(thickness: 1),
-                                                    SecondTitle(title: traveler.passport.issuingCountry?.name[AppVars.lang] ?? 'N/A'),
-                                                  ],
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: traveler.passport.sex?.label ?? 'N/A'),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: traveler.passport.nationality?.name[AppVars.lang] ?? 'N/A'),
+                                                      const Divider(thickness: 1),
+                                                      SecondTitle(title: traveler.passport.issuingCountry?.name[AppVars.lang] ?? 'N/A'),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       );
                                     },
@@ -363,7 +376,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                         const Spacer(),
                                         SelectableText(
                                           AppFuns.priceWithCoin(c.summary.totalPrice, offerDetail!.offer.currency),
-                                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
+                                          style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w900, fontSize: AppConsts.lg),
                                         ),
                                       ],
                                     ),
@@ -432,10 +445,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         const SizedBox(width: 8),
                         Text(
                           '${'Traveler'.tr} ${index + 1}: ',
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppConsts.xlg),
+                          style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w600, fontSize: AppConsts.xlg),
                         ),
                         const SizedBox(width: 8),
-                        Text(ageGroupLabel, style: const TextStyle(fontSize: AppConsts.xlg)),
+                        Text(ageGroupLabel, style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.xlg)),
                         const Spacer(),
                         Text('${index + 1} / $travelersCount'),
                       ],
@@ -460,9 +473,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                   children: [
                                     Text(
                                       'Full name'.tr,
-                                      style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                                     ),
-                                    Text(p.fullName, style: const TextStyle(fontSize: AppConsts.normal)),
+                                    Text(p.fullName, style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal)),
                                   ],
                                 ),
                               ],
@@ -479,9 +492,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                   children: [
                                     Text(
                                       'Passport number'.tr,
-                                      style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                                     ),
-                                    Text(p.documentNumber ?? '_', style: const TextStyle(fontSize: AppConsts.normal)),
+                                    Text(p.documentNumber ?? '_', style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal)),
                                   ],
                                 ),
                               ],
@@ -498,10 +511,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Date of birth'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      Text('Date of birth'.tr, style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold)),
                                       Text(AppFuns.formatFullDate(p.dateOfBirth)),
                                       const SizedBox(height: 4),
-                                      Text('Nationality'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      Text('Nationality'.tr, style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold)),
                                       Text(p.nationality?.name['en'] ?? '-'),
                                     ],
                                   ),
@@ -513,10 +526,10 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('Date of expiry'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text('Date of expiry'.tr, style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold)),
                                         Text(AppFuns.formatFullDate(p.dateOfExpiry)),
                                         const SizedBox(height: 4),
-                                        Text('Issuing country'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text('Issuing country'.tr, style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold)),
                                         Text(p.issuingCountry?.name['en'] ?? '-'),
                                       ],
                                     ),
@@ -586,7 +599,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                   const SizedBox(width: 8),
                   Text(
                     'Contact'.tr,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
+                    style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold, fontSize: AppConsts.xlg),
                   ),
                 ],
               ),
@@ -613,9 +626,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         children: [
                           Text(
                             'Full name'.tr,
-                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                           ),
-                          Text(fullname, style: const TextStyle(fontSize: AppConsts.lg)),
+                          Text(fullname, style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg)),
                         ],
                       ),
                     ],
@@ -635,9 +648,9 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         children: [
                           Text(
                             'Email'.tr,
-                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                           ),
-                          Text(email.isEmpty ? '-' : email, style: const TextStyle(fontSize: AppConsts.normal)),
+                          Text(email.isEmpty ? '-' : email, style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal)),
                         ],
                       ),
                     ],
@@ -657,12 +670,12 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                         children: [
                           Text(
                             'Phone'.tr,
-                            style: const TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
                           ),
                           Text(
                             '+' + phoneLabel,
                             textDirection: TextDirection.ltr,
-                            style: const TextStyle(fontSize: AppConsts.normal),
+                            style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal),
                           ),
                         ],
                       ),
@@ -682,6 +695,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
     final currency = offerDetail?.offer.currency ?? 'USD';
 
     TextStyle breakdownStyle() => TextStyle(
+      fontFamily: AppConsts.font,
       fontSize: AppConsts.normal,
       color: Colors.white.withValues(alpha: 0.85),
     );
@@ -756,6 +770,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 Text(
                   '${'Total'.tr}: ${AppFuns.priceWithCoin(c.summary.totalPrice, currency)}',
                   style: const TextStyle(
+                    fontFamily: AppConsts.font,
                     color: AppConsts.secondaryColor,
                     fontSize: AppConsts.xxlg,
                     fontWeight: FontWeight.bold,
@@ -803,6 +818,7 @@ class _TravelersReviewPageState extends State<TravelersReviewPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               textStyle: const TextStyle(
+                fontFamily: AppConsts.font,
                 fontSize: AppConsts.normal,
                 fontWeight: FontWeight.bold,
               ),
@@ -825,7 +841,7 @@ class FirstTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: color),
+      style: TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: color),
     );
   }
 }
@@ -838,7 +854,7 @@ class SecondTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+      style: TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
     );
   }
 }

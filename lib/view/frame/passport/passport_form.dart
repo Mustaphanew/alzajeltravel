@@ -226,6 +226,7 @@ if (change != 0) {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
+                                  fontFamily: AppConsts.font,
                                   fontWeight: FontWeight.bold,
                                   fontSize: AppConsts.lg,
                                   color: isLight ? cs.onPrimaryFixed : Colors.white,
@@ -272,6 +273,7 @@ if (change != 0) {
                                         Text(
                                           'Scan'.tr,
                                           style: const TextStyle(
+                                            fontFamily: AppConsts.font,
                                             fontSize: AppConsts.normal,
                                             color: AppConsts.primaryColor,
                                             fontWeight: FontWeight.bold,
@@ -327,6 +329,7 @@ if (change != 0) {
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
+                                                        fontFamily: AppConsts.font,
                                                         fontSize: AppConsts.normal,
                                                         color: summaryLabelForeground,
                                                         fontWeight: FontWeight.bold,
@@ -337,6 +340,7 @@ if (change != 0) {
                                                       maxLines: 2,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
+                                                        fontFamily: AppConsts.font,
                                                         fontSize: AppConsts.normal,
                                                         color: summaryTextColor,
                                                       ),
@@ -374,6 +378,7 @@ if (change != 0) {
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
+                                                        fontFamily: AppConsts.font,
                                                         fontSize: AppConsts.normal,
                                                         color: summaryLabelForeground,
                                                         fontWeight: FontWeight.bold,
@@ -384,6 +389,7 @@ if (change != 0) {
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
+                                                        fontFamily: AppConsts.font,
                                                         fontSize: AppConsts.normal,
                                                         color: summaryTextColor,
                                                       ),
@@ -515,6 +521,7 @@ if (change != 0) {
                                   child: Text(
                                     "Traveler data".tr,
                                     style: TextStyle(
+                                      fontFamily: AppConsts.font,
                                       fontWeight: FontWeight.bold,
                                       fontSize: AppConsts.lg,
                                       color: cs.onSurface,
@@ -541,7 +548,6 @@ if (change != 0) {
                                   flex: 2,
                                   child: _textField(
                                     controller: controller.givenNamesCtr, 
-                                    autofocus: true,
                                     formatters: [
                                         FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z0-9 ]")),
                                         TextInputFormatter.withFunction((oldValue, newValue) {
@@ -559,7 +565,7 @@ if (change != 0) {
                                   ),
                                 ),
                                         
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                         
                                 // SURNAMES
                                 Expanded(flex: 1, child: _textField(
@@ -582,58 +588,49 @@ if (change != 0) {
                                 ),
                               ], 
                             ),
-                                        
-                                        
+
+                            const SizedBox(height: 14),
+
+                            // ======= تاريخ الميلاد (سطر كامل لوحده) =======
                             Padding(
                               padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
-                              child: Text("Date of birth".tr, textAlign: TextAlign.start,),
-                            ),
-                            IntrinsicHeight(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                        
-                                  // Date of Birth باستخدام DateDropdownRow
-                                  Expanded(
-                                    child: DateDropdownRow(
-                                      key: ValueKey('dob-${widget.tag}-${model.dateOfBirth?.toIso8601String() ?? 'empty'}'),
-                                      title: SizedBox.shrink(),
-                                      initialDate: model.dateOfBirth,
-                                      minDate: widget.minDob,
-                                      maxDate: widget.maxDob,
-                                      onDateChanged: controller.setDateOfBirth,
-                                      validator: (date) {
-                                        if (date == null) {
-                                          return 'Please select a valid date'.tr;
-                                        }
-                                        if (date.isAfter(DateTime.now())) {
-                                          return 'Date of birth cannot be in the future'.tr;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                  
-                                  const SizedBox(width: 3),
-                                  VerticalDivider(
-                                    endIndent: 12,
-                                    color: Colors.grey[400],
-                                    thickness: 1,
-                                  ),
-                                  const SizedBox(width: 3),
-                                        
-                                  
-                                  // SEX (M/F)
-                                  Container(width: 90, child: _sexDropdown(controller)),
-                                ],
+                              child: Text(
+                                "Date of birth".tr,
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  fontFamily: AppConsts.font,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: AppConsts.normal,
+                                  color: cs.onSurface.withValues(alpha: 0.85),
+                                ),
                               ),
                             ),
-                                        
-                            
-                            const SizedBox(height: 12),
+                            DateDropdownRow(
+                              key: ValueKey('dob-${widget.tag}-${model.dateOfBirth?.toIso8601String() ?? 'empty'}'),
+                              title: const SizedBox.shrink(),
+                              initialDate: model.dateOfBirth,
+                              minDate: widget.minDob,
+                              maxDate: widget.maxDob,
+                              onDateChanged: controller.setDateOfBirth,
+                              validator: (date) {
+                                if (date == null) {
+                                  return 'Please select a valid date'.tr;
+                                }
+                                if (date.isAfter(DateTime.now())) {
+                                  return 'Date of birth cannot be in the future'.tr;
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // ======= الجنس (سطر مستقل بعرض كامل) =======
+                            SizedBox(width: double.infinity, child: _sexDropdown(controller)),
+
+                            const SizedBox(height: 16),
                             Divider(),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 10),
                                         
                             Row(
                               children: [
@@ -643,6 +640,7 @@ if (change != 0) {
                                   child: Text(
                                     "Passport data".tr,
                                     style: TextStyle(
+                                      fontFamily: AppConsts.font,
                                       fontWeight: FontWeight.bold,
                                       fontSize: AppConsts.lg,
                                       color: cs.onSurface,
@@ -661,29 +659,24 @@ if (change != 0) {
                             ),
                             const SizedBox(height: 12),
                                       
+                            // ======= رقم الجواز (سطر كامل) =======
+                            _textField(
+                              controller: controller.documentNumberCtr,
+                              label: 'DOCUMENT NUMBER'.tr,
+                              formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
+                              caps: TextCapitalization.characters,
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // ======= الجنسية + بلد الإصدار =======
                             Row(
                               children: [
-                                        
-                                // Document number
-                                Expanded(
-                                  flex: 2,
-                                  child: _textField(
-                                    controller: controller.documentNumberCtr,
-                                    label: 'DOCUMENT NUMBER'.tr,
-                                    formatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]'))],
-                                    caps: TextCapitalization.characters,
-                                  ),
-                                ),
-                                        
-                                const SizedBox(width: 4),
-                                        
-                                // Nationality
                                 Expanded(
                                   child: _countryPickerField(
                                     context: context,
                                     label: 'NATIONALITY'.tr,
                                     value: _countryDisplayName(model.nationality),
-                                  
                                     onTap: () async {
                                       final CountryModel? picked = await Get.to<CountryModel>(() => const CountryPicker());
                                       if (picked != null) {
@@ -692,10 +685,7 @@ if (change != 0) {
                                     },
                                   ),
                                 ),
-                                        
-                                const SizedBox(width: 4),
-                                        
-                                // Issuing country
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: _countryPickerField(
                                     context: context,
@@ -709,56 +699,48 @@ if (change != 0) {
                                     },
                                   ),
                                 ),
-                                        
-                                        
                               ],
                             ),
+
+                            const SizedBox(height: 14),
                                         
-                                      DateDropdownRow(
-                                        key: ValueKey(
-                                          'expiry-${widget.tag}-${model.dateOfExpiry?.toIso8601String() ?? 'empty'}',
-                                        ),
-                                        title: Padding(
-                                          padding: const EdgeInsetsDirectional.only(bottom: 6, start: 4),
-                                          child: Text('DATE OF EXPIRY'.tr),
-                                        ), // نفس أسلوب DOB
-                                        initialDate: model.dateOfExpiry,
-                                      
-                                        enabled: hasStrData,
-                                      
-                                        // أقل تاريخ مسموح = اليوم (حتى ما تختار تاريخ منتهي)
-                                        minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,
-                                      
-                                        // أقصى تاريخ (عدّلها حسب احتياجك)
-                                        maxDate: Jiffy.parseFromDateTime(lastDateInSearch).add(years: 12).dateTime,
-                                      
-                                        onDateChanged: controller.setDateOfExpiry,
-                                      
-                                        validator: (date) {
-                                          if (date == null) {
-                                            return 'Please select a valid date'.tr;
-                                          }
-                                      
-                                          final now = DateTime.now();
-                                          final today = DateTime(now.year, now.month, now.day);
-                                          final picked = DateTime(date.year, date.month, date.day);
-                                      
-                                          if (picked.isBefore(today)) {
-                                            return 'Passport has already expired'.tr;
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      
-                                        
-                            // _expiryDateField(
-                            //   context: context,
-                            //   label: 'DATE OF EXPIRY'.tr,
-                            //   value: model.dateOfExpiry,
-                            //   onTap: () => controller.pickExpiryDate(context),
-                            // ),
-                            
-                            const SizedBox(height: 8),
+                            // ======= تاريخ انتهاء الجواز (سطر كامل) =======
+                            DateDropdownRow(
+                              key: ValueKey(
+                                'expiry-${widget.tag}-${model.dateOfExpiry?.toIso8601String() ?? 'empty'}',
+                              ),
+                              title: Padding(
+                                padding: const EdgeInsetsDirectional.only(bottom: 6, start: 4),
+                                child: Text(
+                                  'DATE OF EXPIRY'.tr,
+                                  style: TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: AppConsts.normal,
+                                    color: cs.onSurface.withValues(alpha: 0.85),
+                                  ),
+                                ),
+                              ),
+                              initialDate: model.dateOfExpiry,
+                              enabled: hasStrData,
+                              minDate: Jiffy.parseFromDateTime(lastDateInSearch).add(months: 6).dateTime,
+                              maxDate: Jiffy.parseFromDateTime(lastDateInSearch).add(years: 12).dateTime,
+                              onDateChanged: controller.setDateOfExpiry,
+                              validator: (date) {
+                                if (date == null) {
+                                  return 'Please select a valid date'.tr;
+                                }
+                                final now = DateTime.now();
+                                final today = DateTime(now.year, now.month, now.day);
+                                final picked = DateTime(date.year, date.month, date.day);
+                                if (picked.isBefore(today)) {
+                                  return 'Passport has already expired'.tr;
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 18),
                             // زر "Next" / "Save" — نفس ستايل شريط "Save and continue" (ذهبي + نص كحلي)
                             SizedBox(
                               width: double.infinity,
@@ -783,6 +765,7 @@ if (change != 0) {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
                                     fontSize: AppConsts.normal,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -839,6 +822,7 @@ if (change != 0) {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
+                  fontFamily: AppConsts.font,
                   fontSize: AppConsts.normal,
                   color: resolvedLabelColor,
                   fontWeight: FontWeight.bold,
@@ -853,6 +837,7 @@ if (change != 0) {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         color: textColor,
                       ),
@@ -890,12 +875,12 @@ if (change != 0) {
         maxLength: maxLen,
         inputFormatters: formatters,
         textCapitalization: caps,
-        style: const TextStyle(fontSize: AppConsts.normal),
+        style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(fontSize: AppConsts.normal),
+          labelStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal),
           hintText: hint,
-          hintStyle: const TextStyle(fontSize: AppConsts.normal),
+          hintStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.normal),
           counterText: '',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           helperText: help,
@@ -920,15 +905,15 @@ if (change != 0) {
         decoration: InputDecoration( 
           contentPadding: EdgeInsetsDirectional.only(start: 8),
           labelText: 'Sex'.tr,
-          labelStyle: const TextStyle(fontSize: 12),
-          hintStyle: const TextStyle(fontSize: 12),
+          labelStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: 12),
+          hintStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         items: Sex.values.map((s) => DropdownMenuItem(
           value: s, 
           child: Text(
             '${s.label} (${s.key.toUpperCase()})',
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontFamily: AppConsts.font, fontSize: 14),
           ))).toList(),
         onChanged: controller.setSex,
         validator: (val) {
@@ -983,13 +968,13 @@ if (change != 0) {
           contentPadding: const EdgeInsetsDirectional.only(start: 8),
           labelText: label,
           hintText: 'Select'.tr + " ...",
-          hintStyle: const TextStyle(fontSize: 14),
-          labelStyle: const TextStyle(fontSize: 14),
+          hintStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: 14),
+          labelStyle: const TextStyle(fontFamily: AppConsts.font, fontSize: 14),
           // suffixIcon: const Icon(Icons.arrow_drop_down),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
 
-        style: TextStyle(fontSize: 13, color: value.isEmpty ? cs.outline : cs.onSurface),
+        style: TextStyle(fontFamily: AppConsts.font, fontSize: 13, color: value.isEmpty ? cs.outline : cs.onSurface),
       ),
     );
   }
@@ -1025,7 +1010,7 @@ if (change != 0) {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
 
-        style: TextStyle(color: textValue.isEmpty ? cs.outline : cs.onSurface),
+        style: TextStyle(fontFamily: AppConsts.font, color: textValue.isEmpty ? cs.outline : cs.onSurface),
 
         // التحقق من صحة الحقل
         validator: (val) {

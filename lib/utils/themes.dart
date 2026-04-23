@@ -14,6 +14,47 @@ class Themes {
   static const Color _darkOnVar = Color(0xFF9BA4C0);
   static const Color _darkOutline = Color(0xFF2F3D66);
 
+  /// قائمة الخطوط الاحتياطية المستخدمة في التطبيق — تضمن ظهور نصوص صحيحة
+  /// عبر كل المنصات (Android/iOS/Web/Windows/macOS) إذا تعذّر تحميل Almaria.
+  static const List<String> fontFamilyFallback = <String>[
+    'Almaria',
+    'Almarai',
+    'Segoe UI',
+    'Roboto',
+    'Tahoma',
+    'Arial',
+    'sans-serif',
+  ];
+
+  /// بناء TextTheme موحّد يجبر الخط المستخدم في التطبيق (Almaria) على كل أنماط النصوص،
+  /// ويضيف قائمة fontFamilyFallback لتفادي خطوط النظام العشوائية عبر المنصات.
+  static TextTheme _buildTextTheme(TextTheme base, Color onSurface) {
+    TextStyle? _apply(TextStyle? s, FontWeight weight) => s?.copyWith(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: weight,
+          color: onSurface,
+        );
+
+    return base.copyWith(
+      displayLarge: _apply(base.displayLarge, FontWeight.w700),
+      displayMedium: _apply(base.displayMedium, FontWeight.w700),
+      displaySmall: _apply(base.displaySmall, FontWeight.w700),
+      headlineLarge: _apply(base.headlineLarge, FontWeight.w700),
+      headlineMedium: _apply(base.headlineMedium, FontWeight.w700),
+      headlineSmall: _apply(base.headlineSmall, FontWeight.w700),
+      titleLarge: _apply(base.titleLarge, FontWeight.w500),
+      titleMedium: _apply(base.titleMedium, FontWeight.w500),
+      titleSmall: _apply(base.titleSmall, FontWeight.w500),
+      bodyLarge: _apply(base.bodyLarge, FontWeight.w400),
+      bodyMedium: _apply(base.bodyMedium, FontWeight.w400),
+      bodySmall: _apply(base.bodySmall, FontWeight.w400),
+      labelLarge: _apply(base.labelLarge, FontWeight.w500),
+      labelMedium: _apply(base.labelMedium, FontWeight.w500),
+      labelSmall: _apply(base.labelSmall, FontWeight.w500),
+    );
+  }
+
   static ThemeData lightTheme(BuildContext context) {
     // 1) ColorScheme متناغم للوضع الفاتح (هوية كحلي + ذهبي)
     final ColorScheme cs = ColorScheme(
@@ -68,35 +109,28 @@ class Themes {
     // تعبئة الحقول بلون أبيض خفيف
     const Color fieldFill = Colors.white;
 
-    final base = Theme.of(context).textTheme;
-    final softTextTheme = base
-        .copyWith(
-          // عناوين
-          titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w500),
-          titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-          titleSmall: base.titleSmall?.copyWith(fontWeight: FontWeight.w500),
-
-          // نصوص
-          bodyLarge: base.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
-          bodyMedium: base.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
-          bodySmall: base.bodySmall?.copyWith(fontWeight: FontWeight.w400),
-
-          // تسميات/أزرار
-          labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w500),
-          labelMedium: base.labelMedium?.copyWith(fontWeight: FontWeight.w500),
-          labelSmall: base.labelSmall?.copyWith(fontWeight: FontWeight.w500),
-        )
-        .apply(fontFamily: AppConsts.font, bodyColor: cs.onSurface, displayColor: cs.onSurface);
+    // نستخدم Typography ثابت عبر المنصات (وإلا يختلف الخط الافتراضي على الويب/ويندوز)
+    final Typography typography = Typography.material2021(
+      platform: TargetPlatform.android,
+      black: Typography.blackMountainView,
+      white: Typography.whiteMountainView,
+    );
+    final TextTheme baseTextTheme = typography.black;
+    final TextTheme softTextTheme = _buildTextTheme(baseTextTheme, cs.onSurface);
+    final TextTheme primaryTextTheme = _buildTextTheme(typography.white, Colors.white);
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       fontFamily: AppConsts.font,
+      fontFamilyFallback: fontFamilyFallback,
       colorScheme: cs,
       scaffoldBackgroundColor: cs.surface,
+      typography: typography,
 
       // نصوص عامة
       textTheme: softTextTheme,
+      primaryTextTheme: primaryTextTheme,
 
       appBarTheme: AppBarTheme(
         backgroundColor: cs.surface,
@@ -106,9 +140,17 @@ class Themes {
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
           fontWeight: FontWeight.w600,
           fontSize: 18,
           letterSpacing: -0.2,
+          color: cs.onSurface,
+        ),
+        toolbarTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
           color: cs.onSurface,
         ),
         iconTheme: IconThemeData(color: cs.primary),
@@ -241,9 +283,148 @@ class Themes {
       // القوائم المنبثقة
       popupMenuTheme: PopupMenuThemeData(
         color: cs.surfaceContainerHighest,
-        textStyle: TextStyle(color: cs.onSurface),
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+        ),
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(
+            fontFamily: AppConsts.font,
+            fontFamilyFallback: fontFamilyFallback,
+            color: cs.onSurface,
+          ),
+        ),
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+
+      // Dialog — يفرض الخط على العناوين والمحتوى
+      dialogTheme: DialogThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+          fontWeight: FontWeight.w400,
+          fontSize: 15,
+          height: 1.4,
+        ),
+      ),
+
+      // SnackBar — يضمن ظهور الرسائل بخط التطبيق
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cs.inverseSurface,
+        contentTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onInverseSurface,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // BottomSheet — الخط للعناصر النصية داخل الأوراق السفلية
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+
+      // Dropdown — القوائم المنسدلة
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(cs.surfaceContainerHighest),
+        ),
+      ),
+
+      // Menu (أوامر القوائم)
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(cs.surfaceContainerHighest),
+        ),
+      ),
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStateProperty.all(
+            TextStyle(
+              fontFamily: AppConsts.font,
+              fontFamilyFallback: fontFamilyFallback,
+              color: cs.onSurface,
+            ),
+          ),
+        ),
+      ),
+
+      // TabBar — عناوين التبويبات
+      tabBarTheme: TabBarThemeData(
+        labelStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+      ),
+
+      // Tooltip
+      tooltipTheme: TooltipThemeData(
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: Colors.white,
+          fontSize: 12,
+        ),
+        decoration: BoxDecoration(
+          color: AppConsts.primaryColor.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+
+      // NavigationBar — شريط التنقل السفلي
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(
+            fontFamily: AppConsts.font,
+            fontFamilyFallback: fontFamilyFallback,
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
+
+      // SegmentedButton
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStateProperty.all(
+            TextStyle(
+              fontFamily: AppConsts.font,
+              fontFamilyFallback: fontFamilyFallback,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ),
 
       // أيقونات عامة
@@ -310,32 +491,23 @@ class Themes {
     // 3) لون تعبئة الحقول يتلاءم مع بطاقات السمة الداكنة
     final Color fieldFill = const Color(0xFF121A38);
 
-    final base = Theme.of(context).textTheme;
-    final softTextTheme = base
-        .copyWith(
-          // عناوين
-          titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w500),
-          titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-          titleSmall: base.titleSmall?.copyWith(fontWeight: FontWeight.w500),
-
-          // نصوص
-          bodyLarge: base.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
-          bodyMedium: base.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
-          bodySmall: base.bodySmall?.copyWith(fontWeight: FontWeight.w400),
-
-          // تسميات/أزرار
-          labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w500),
-          labelMedium: base.labelMedium?.copyWith(fontWeight: FontWeight.w500),
-          labelSmall: base.labelSmall?.copyWith(fontWeight: FontWeight.w500),
-        )
-        .apply(fontFamily: AppConsts.font, bodyColor: cs.onSurface, displayColor: cs.onSurface);
+    final Typography typography = Typography.material2021(
+      platform: TargetPlatform.android,
+      black: Typography.blackMountainView,
+      white: Typography.whiteMountainView,
+    );
+    final TextTheme baseTextTheme = typography.white;
+    final TextTheme softTextTheme = _buildTextTheme(baseTextTheme, cs.onSurface);
+    final TextTheme primaryTextTheme = _buildTextTheme(typography.white, Colors.white);
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       fontFamily: AppConsts.font,
+      fontFamilyFallback: fontFamilyFallback,
       colorScheme: cs,
       scaffoldBackgroundColor: cs.surface,
+      typography: typography,
 
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppConsts.secondaryColor,
@@ -345,6 +517,7 @@ class Themes {
 
       // نصوص عامة
       textTheme: softTextTheme,
+      primaryTextTheme: primaryTextTheme,
 
       appBarTheme: AppBarTheme(
         backgroundColor: cs.surface,
@@ -354,9 +527,17 @@ class Themes {
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
           fontWeight: FontWeight.w600,
           fontSize: 18,
           letterSpacing: -0.2,
+          color: cs.onSurface,
+        ),
+        toolbarTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
           color: cs.onSurface,
         ),
         iconTheme: IconThemeData(color: cs.onSurface),
@@ -468,7 +649,144 @@ class Themes {
       // قوائم منبثقة
       popupMenuTheme: PopupMenuThemeData(
         color: cs.surfaceContainerHighest,
-        textStyle: TextStyle(color: cs.onSurface),
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+        ),
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(
+            fontFamily: AppConsts.font,
+            fontFamilyFallback: fontFamilyFallback,
+            color: cs.onSurface,
+          ),
+        ),
+      ),
+
+      // Dialog
+      dialogTheme: DialogThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+          fontWeight: FontWeight.w400,
+          fontSize: 15,
+          height: 1.4,
+        ),
+      ),
+
+      // SnackBar
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cs.inverseSurface,
+        contentTextStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onInverseSurface,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // BottomSheet
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+
+      // Dropdown
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: cs.onSurface,
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(cs.surfaceContainerHighest),
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(cs.surfaceContainerHighest),
+        ),
+      ),
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStateProperty.all(
+            TextStyle(
+              fontFamily: AppConsts.font,
+              fontFamilyFallback: fontFamilyFallback,
+              color: cs.onSurface,
+            ),
+          ),
+        ),
+      ),
+
+      // TabBar
+      tabBarTheme: TabBarThemeData(
+        labelStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+      ),
+
+      // Tooltip
+      tooltipTheme: TooltipThemeData(
+        textStyle: TextStyle(
+          fontFamily: AppConsts.font,
+          fontFamilyFallback: fontFamilyFallback,
+          color: Colors.white,
+          fontSize: 12,
+        ),
+        decoration: BoxDecoration(
+          color: AppConsts.primaryColor.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+
+      // NavigationBar
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(
+            fontFamily: AppConsts.font,
+            fontFamilyFallback: fontFamilyFallback,
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
+
+      // SegmentedButton
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStateProperty.all(
+            TextStyle(
+              fontFamily: AppConsts.font,
+              fontFamilyFallback: fontFamilyFallback,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ),
 
       // أيقونات عامة

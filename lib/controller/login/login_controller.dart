@@ -166,7 +166,7 @@ class LoginController extends GetxController {
 
       AppVars.apiSessionId = response['api_session_id']?.toString();
 
-      Get.snackbar('Success'.tr, 'Login Successful'.tr);
+      AppFuns.showSnack('Success'.tr, 'Login Successful'.tr, type: SnackType.success);
 
       goToProfile(
         agent, 

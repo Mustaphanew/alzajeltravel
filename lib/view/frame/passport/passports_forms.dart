@@ -124,6 +124,7 @@ void _scrollToTravelerTag(String tag) {
                 title: Text(
                   'Travelers data'.tr,
                   style: const TextStyle(
+                    fontFamily: AppConsts.font,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                     fontSize: AppConsts.xlg,
@@ -133,6 +134,7 @@ void _scrollToTravelerTag(String tag) {
                 foregroundColor: Colors.white,
                 iconTheme: const IconThemeData(color: Colors.white),
                 titleTextStyle: const TextStyle(
+                  fontFamily: AppConsts.font,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: AppConsts.xlg,
@@ -263,6 +265,7 @@ for (int index = 0; index < travelers.length; index++) ...[
                 Text(
                   "Total flight".tr,
                   style: TextStyle(
+                    fontFamily: AppConsts.font,
                     fontSize: AppConsts.sm,
                     color: Colors.white.withValues(alpha: 0.75),
                     fontWeight: FontWeight.w500,
@@ -272,6 +275,7 @@ for (int index = 0; index < travelers.length; index++) ...[
                 Text(
                   priceText,
                   style: const TextStyle(
+                    fontFamily: AppConsts.font,
                     color: AppConsts.secondaryColor,
                     fontWeight: FontWeight.bold,
                     fontSize: AppConsts.xxlg,
@@ -299,6 +303,7 @@ for (int index = 0; index < travelers.length; index++) ...[
                 borderRadius: BorderRadius.circular(12),
               ),
               textStyle: const TextStyle(
+                fontFamily: AppConsts.font,
                 fontSize: AppConsts.normal,
                 fontWeight: FontWeight.bold,
               ),
@@ -325,7 +330,7 @@ for (int index = 0; index < travelers.length; index++) ...[
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 "Travelers data".tr,
-                style: const TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontFamily: AppConsts.font, fontSize: AppConsts.xlg, fontWeight: FontWeight.bold),
               ),
             ),
           ),

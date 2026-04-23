@@ -104,6 +104,7 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
         surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(
+          fontFamily: AppConsts.font,
           color: Colors.white,
           fontWeight: FontWeight.w700,
           fontSize: AppConsts.xlg,
@@ -163,11 +164,10 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: RichText(
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
+                      child: Text.rich(
+                        TextSpan(
                           style: TextStyle(
+                            fontFamily: AppConsts.font,
                             fontSize: AppConsts.lg,
                             fontWeight: FontWeight.w700,
                             color: cs.onSurface,
@@ -184,6 +184,8 @@ class _BookingsReportPageState extends State<BookingsReportPage> {
                             ),
                           ],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -584,7 +586,7 @@ class _ReportCardState extends State<ReportCard> {
               InkWell(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: json.encode(item.toJson())));
-                  Fluttertoast.showToast(msg: "Booking copied to clipboard".tr);
+                  AppFuns.showSnack("Copied".tr, "Booking copied to clipboard".tr, type: SnackType.success);
                 },
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(

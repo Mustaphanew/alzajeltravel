@@ -19,6 +19,7 @@ import 'package:alzajeltravel/controller/main_controller.dart';
 import 'package:alzajeltravel/locale/translation.dart';
 import 'package:alzajeltravel/model/dio_init/dio_init.dart';
 import 'package:alzajeltravel/services/notification_service.dart';
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/themes.dart';
@@ -165,6 +166,19 @@ class _MyAppState extends State<MyApp> {
 
           darkTheme: Themes.darkTheme(context),
           themeMode: AppVars.appThemeMode ?? ThemeMode.system,
+
+          // ضمان ظهور خط التطبيق (Almaria) على جميع النصوص داخل أي شاشة/Overlay/Dialog
+          // حتى للـ widgets التي لا تأخذ textTheme من الـ MaterialApp مباشرةً.
+          builder: (context, child) {
+            final base = DefaultTextStyle.of(context).style;
+            return DefaultTextStyle(
+              style: base.copyWith(
+                fontFamily: AppConsts.font,
+                fontFamilyFallback: Themes.fontFamilyFallback,
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
 
           // Translation __________________________________________
           locale: AppVars.appLocale,

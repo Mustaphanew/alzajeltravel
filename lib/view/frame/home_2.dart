@@ -136,6 +136,7 @@ class _Home2State extends State<Home2> {
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(
+          fontFamily: AppConsts.font,
           color: Colors.white,
           fontWeight: FontWeight.w700,
           fontSize: AppConsts.xlg,

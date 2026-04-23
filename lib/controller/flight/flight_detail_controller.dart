@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:alzajeltravel/model/flight/flight_offer_model.dart';
 import 'package:alzajeltravel/model/flight/revalidated_flight_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class FlightDetailApiController extends GetxController {
@@ -30,7 +31,7 @@ class FlightDetailApiController extends GetxController {
       );
 
       if (res == null) {
-        Get.snackbar("Error".tr, "Response is null".tr);
+        AppFuns.showSnack("Error".tr, "Response is null".tr, type: SnackType.error);
         return;
       }
 
@@ -51,7 +52,7 @@ class FlightDetailApiController extends GetxController {
 
     
     } catch (e) {
-      Get.snackbar("Error".tr, "Could not load flight details".tr);
+      AppFuns.showSnack("Error".tr, "Could not load flight details".tr, type: SnackType.error);
     } finally {
       isLoading.value = false;
     }

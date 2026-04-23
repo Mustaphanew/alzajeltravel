@@ -513,9 +513,14 @@ Widget _highlightedText({
     start = index + q.length;
     if (start >= text.length) break;
   }
-  return RichText(
+  return Text.rich(
+    TextSpan(
+      style: (style.fontFamily == null)
+          ? style.copyWith(fontFamily: AppConsts.font)
+          : style,
+      children: spans,
+    ),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    text: TextSpan(style: style, children: spans),
   );
 }

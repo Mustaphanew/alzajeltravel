@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:alzajeltravel/model/country_model.dart';
+import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
 class ProfileController extends GetxController {
@@ -118,12 +119,12 @@ class ProfileController extends GetxController {
       // TODO: send updated.toJson() to API with Dio
       await Future.delayed(const Duration(milliseconds: 800));
 
-      Get.snackbar('Success'.tr, 'Profile Updated Successfully'.tr);
+      AppFuns.showSnack('Success'.tr, 'Profile Updated Successfully'.tr, type: SnackType.success);
 
       // إذا تحب ترجع البيانات للصفحة السابقة:
       // Get.back(result: updated);
     } catch (_) {
-      Get.snackbar('Error'.tr, 'Profile Update Failed'.tr);
+      AppFuns.showSnack('Error'.tr, 'Profile Update Failed'.tr, type: SnackType.error);
     } finally {
       isSaving = false;
       update();

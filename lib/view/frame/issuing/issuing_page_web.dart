@@ -1,4 +1,5 @@
 // issuing_page_web.dart
+
 import 'package:alzajeltravel/controller/bookings_report/bookings_report_controller.dart';
 import 'package:alzajeltravel/model/booking_data_model.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
@@ -133,6 +134,9 @@ bookingTableData = [bookingRow];
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // لون لوحة أزرار Outlined في الليلي — نفس عائلة البطاقات (بدل الأسود الافتراضي)
+    final Color darkOutlineButtonFill = const Color(0xFF121A38);
 
 
 final travelersTableData = travelersReviewController.travelers.map((t) {
@@ -196,26 +200,56 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
       child: SafeArea(
         top: false,
         child: Scaffold(
+          backgroundColor: isDark
+              ? const Color(0xFF0B1430)
+              : const Color(0xFFFAF6F1),
           appBar: AppBar(
-            title: Text("Issuing".tr),
-            // leading: IconButton(
-            //   tooltip: "Back".tr,
-            //   icon: const Icon(Icons.arrow_back),
-            //   onPressed: () {
-            //     Get.back();
-            //   },
-            // ),
+            title: Text(
+              "Issuing".tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: AppConsts.xlg,
+                letterSpacing: 0.3,
+              ),
+            ),
+            backgroundColor: AppConsts.primaryColor,
+            foregroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              fontFamily: AppConsts.font,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: AppConsts.xlg,
+            ),
+            elevation: 0,
+            centerTitle: true,
+            shape: Border(
+              bottom: BorderSide(
+                color: AppConsts.secondaryColor
+                    .withValues(alpha: isDark ? 0.45 : 0.35),
+                width: 1,
+              ),
+            ),
             actions: [
               if (widget.booking.status == BookingStatus.confirmed)
                 Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 12),
+                  padding: const EdgeInsetsDirectional.only(end: 10),
                   child: TextButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                      minimumSize: const Size(100, 30),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppConsts.secondaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                      minimumSize: const Size(86, 34),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: cs.primaryContainer, width: 1),
+                        side: const BorderSide(color: AppConsts.secondaryColor, width: 1.3),
+                      ),
+                      textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
+                        fontSize: AppConsts.normal,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     onPressed: () {
@@ -252,7 +286,9 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
           ),
           body: Column(
             children: [
+              const SizedBox(height: 10),
               StatusCard(cs: cs, bookingStatus: bookingStatus),
+              const SizedBox(height: 4),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -263,11 +299,11 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
                       Row(
                         children: [
                           if (booking.status == BookingStatus.preBooking && !isExpired) ...[
-                            // confirm
+                            // confirm — زر CTA ذهبي مع نصّ Navy
                             Expanded(
-                              child: ElevatedButton(
+                              child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  final dialog = await CustomDialog.success(
+                                  final dialog = await CustomDialog.confirm(
                                     context,
                                     title: 'Confirm Booking'.tr,
                                     desc:
@@ -277,45 +313,55 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
                                         'will be deducted from your balance'.tr,
                                     btnOkText: 'Confirm'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
+                                  bool confirmed = false;
                                   try {
                                     final res = await travelersReviewController.confirmBooking(booking.id);
                                     if (res != null) {
-                                      // update travelers by setTicketNumber
                                       final passengers = res['passengers'] as List;
                                       for (var passenger in passengers) {
                                         travelersReviewController.setTicketNumber(passenger['passport_no'], passenger['eTicketNumber']);
                                       }
-                                      print("res['booking']['status'] ${res['booking']['status']}");
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                                      print("booking.status.name: $bookingStatus");
+                                      confirmed = true;
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                    AppFuns.showSnack("Error".tr, "Could not confirm booking".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
+                                  if (confirmed && context.mounted) {
+                                    await CustomDialog.success(
+                                      context,
+                                      title: 'Booking Confirmed'.tr,
+                                      desc: 'Your booking has been confirmed successfully'.tr,
+                                      btnOkText: 'Ok'.tr,
+                                      showCancel: false,
+                                    );
+                                  }
                                 },
-                                child: Text("Confirm Booking".tr),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppConsts.secondaryColor,
+                                  foregroundColor: AppConsts.primaryColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.check_circle_rounded, size: 18),
+                                label: Text("Confirm Booking".tr),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // cancel
+                            // cancel — زر outlined أحمر
                             Expanded(
-                              child: TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: cs.error,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(color: cs.error),
-                                  ),
-                                ),
+                              child: OutlinedButton.icon(
                                 onPressed: () async {
                                   final dialog = await CustomDialog.error(
                                     context,
@@ -323,50 +369,43 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
                                     desc: 'Are you sure you want to cancel this pre-booking?'.tr,
                                     btnOkText: 'Cancel'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
                                   try {
                                     final res = await travelersReviewController.cancelPreBooking(booking.id);
                                     if (res != null) {
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                              
-                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                          ? DateTime.parse(res['flight']['cancelled_at'])
-                                          : null;
-                                      DateTime? voidTime = res['flight']['void_time'] != null
-                                          ? DateTime.parse(res['flight']['void_time'])
-                                          : null;
-                                      cancelOn = _formatDateTime(cancelledAt);
-                                      voidOn = _formatDateTime(voidTime);
-                                      print("booking.status.name: $bookingStatus");
+                                      cancelOn = _formatDateTime(res['flight']['cancelled_at'] != null ? DateTime.parse(res['flight']['cancelled_at']) : null);
+                                      voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
-                                    print("cancelPreBooking error: $e");
+                                    AppFuns.showSnack("Error".tr, "Could not cancel pre-booking".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
                                 },
-                                child: Text("Cancel".tr),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  backgroundColor: isDark ? darkOutlineButtonFill : Colors.transparent,
+                                  side: BorderSide(color: cs.error, width: 1.3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                label: Text("Cancel".tr),
                               ),
                             ),
                           ],
                           if (booking.status == BookingStatus.confirmed && allowVoid()) ...[
-                            // void
+                            // void — زر outlined أحمر بعرض كامل
                             Expanded(
-                              child: TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: cs.error,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(color: cs.error),
-                                  ),
-                                ),
+                              child: OutlinedButton.icon(
                                 onPressed: () async {
                                   final dialog = await CustomDialog.error(
                                     context,
@@ -374,38 +413,36 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
                                     desc: 'Are you sure you want to void this issue?'.tr,
                                     btnOkText: 'Void'.tr,
                                   );
-                              
-                                  if (dialog != DismissType.btnOk) {
-                                    return;
-                                  }
-                              
+                                  if (dialog != DismissType.btnOk) return;
                                   if (context.mounted) context.loaderOverlay.show();
                                   try {
                                     final res = await travelersReviewController.voidIssue(booking.id);
                                     if (res != null) {
                                       booking = booking.copyWith(status: BookingStatus.fromJson(res['booking']['status']));
                                       bookingStatus = booking.status.name;
-                              
-                                      DateTime? cancelledAt = res['flight']['cancelled_at'] != null
-                                          ? DateTime.parse(res['flight']['cancelled_at'])
-                                          : null;
-                              
-                                      DateTime? voidTime = res['flight']['void_time'] != null
-                                          ? DateTime.parse(res['flight']['void_time'])
-                                          : null;
-                              
-                                      cancelOn = _formatDateTime(cancelledAt);
-                                      voidOn = _formatDateTime(voidTime);
-                                      print("booking.status.name: $bookingStatus");
+                                      cancelOn = _formatDateTime(res['flight']['cancelled_at'] != null ? DateTime.parse(res['flight']['cancelled_at']) : null);
+                                      voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
-                                    print("❌ voidIssue error: $e");
+                                    AppFuns.showSnack("Error".tr, "Could not void issue".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
                                 },
-                                child: Text("Void".tr),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: cs.error,
+                                  backgroundColor: isDark ? darkOutlineButtonFill : Colors.transparent,
+                                  side: BorderSide(color: cs.error, width: 1.3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontSize: AppConsts.normal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.block_rounded, size: 18),
+                                label: Text("Void".tr),
                               ),
                             ),
                           ],
@@ -413,39 +450,58 @@ final travelersTableData = travelersReviewController.travelers.map((t) {
                       ),
                       if (timeLimit != null && booking.status == BookingStatus.preBooking) ...[
                         const SizedBox(height: 12),
-                        Card(
-                          child: Container(
-                            padding: EdgeInsets.only(top: 12, bottom: 16),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              // color: cs.secondary,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(top: 12, bottom: 14),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF121A38) : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppConsts.secondaryColor.withValues(alpha: isDark ? 0.4 : 0.3),
+                              width: 1,
                             ),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        "Time Left".tr,
-                                        style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.bold),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppConsts.primaryColor.withValues(alpha: isDark ? 0.25 : 0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Time Left".tr,
+                                      style: TextStyle(
+                                        fontSize: AppConsts.lg,
+                                        fontWeight: FontWeight.w800,
+                                        color: isDark ? AppConsts.secondaryColor : AppConsts.primaryColor,
+                                        letterSpacing: 0.2,
                                       ),
-                                      Icon(Icons.access_time, color: cs.primary),
-                                    ],
-                                  ),
+                                    ),
+                                    Icon(Icons.access_time_rounded, color: AppConsts.secondaryColor),
+                                  ],
                                 ),
-                                const SizedBox(height: 8),
-                                Divider(indent: 12, endIndent: 12, thickness: 2),
-
-                                TimeRemaining(
-                                  timeLimit: timeLimit,
-                                  createdAt: widget.booking.createdOn,
-                                  expiredText: 'Expired'.tr,
-                                  showExpiredAsZeros: false,
-                                ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 8),
+                              Divider(
+                                indent: 14,
+                                endIndent: 14,
+                                thickness: 1,
+                                color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+                              ),
+                              TimeRemaining(
+                                timeLimit: timeLimit,
+                                createdAt: widget.booking.createdOn,
+                                expiredText: 'Expired'.tr,
+                                showExpiredAsZeros: false,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -727,34 +783,125 @@ class StatusCard extends StatelessWidget {
   final ColorScheme cs;
   final String bookingStatus;
 
+  ({Color color, IconData icon, bool navyBg}) _visuals() {
+    final s = bookingStatus.trim().toLowerCase();
+    bool matches(BookingStatus b) => s == b.name.toLowerCase();
+
+    // preBooking/pending: خلفية كحلية (نفس AppBar) مع عنوان/أيقونة ذهبية
+    if (matches(BookingStatus.preBooking) || matches(BookingStatus.pending) || s == 'pre-book') {
+      return (
+        color: AppConsts.primaryColor,
+        icon: Icons.schedule_rounded,
+        navyBg: true,
+      );
+    }
+    // Confirmed: أخضر
+    if (matches(BookingStatus.confirmed) || s == 'confirm') {
+      return (
+        color: const Color(0xFF2E7D32),
+        icon: Icons.check_circle_rounded,
+        navyBg: false,
+      );
+    }
+    // Void: أحمر صريح وموحَّد في الثيمين
+    if (matches(BookingStatus.voided) || matches(BookingStatus.voide) || s == 'void') {
+      return (
+        color: const Color(0xFFC62828),
+        icon: Icons.block_rounded,
+        navyBg: false,
+      );
+    }
+    // Cancel/Expiry: برتقالي تحذيري
+    if (matches(BookingStatus.canceled) || matches(BookingStatus.expiry) || s == 'cancel' || s == 'expired') {
+      return (
+        color: const Color(0xFFD84315),
+        icon: Icons.error_rounded,
+        navyBg: false,
+      );
+    }
+    // افتراضي: ذهبي مع navy نص
+    return (
+      color: AppConsts.secondaryColor,
+      icon: Icons.info_rounded,
+      navyBg: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    Color color = cs.secondary;
-    IconData icon = Icons.info;
-    if (bookingStatus == BookingStatus.preBooking.name) {
-      color = cs.secondary;
-      icon = Icons.info;
-    } else if (bookingStatus == BookingStatus.confirmed.name) {
-      color = cs.secondaryFixed;
-      icon = Icons.check_circle;
-    } else if (bookingStatus == BookingStatus.canceled.name || bookingStatus == BookingStatus.expiry.name) {
-      color = cs.tertiary;
-      icon = Icons.error;
-    } else if (bookingStatus == BookingStatus.voided.name) {
-      color = cs.error;
-      icon = Icons.error;
-    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final v = _visuals();
+
+    final Color textColor = v.navyBg ? AppConsts.secondaryColor : Colors.white;
+    final Color iconColor = v.navyBg ? AppConsts.secondaryColor : Colors.white;
+    final Color iconBgColor = v.navyBg
+        ? AppConsts.primaryColor
+        : Colors.white.withValues(alpha: 0.18);
+    final Color borderColor = v.navyBg
+        ? AppConsts.secondaryColor.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.25);
+    final Color shadowColor = v.navyBg
+        ? AppConsts.primaryColor.withValues(alpha: isDark ? 0.45 : 0.25)
+        : v.color.withValues(alpha: 0.30);
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(color: color),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: v.navyBg
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppConsts.primaryColor,
+                  Color(0xFF1B2A57),
+                  AppConsts.primaryColor,
+                ],
+              )
+            : null,
+        color: v.navyBg ? null : v.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: cs.onPrimary),
-          SizedBox(width: 12),
-          // FirstTitle(title: "Status".tr + " " + bookingStatus.tr, color: cs.onPrimary),
-          FirstTitle(title: bookingStatus.tr, color: cs.onPrimary),
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: v.navyBg
+                    ? AppConsts.secondaryColor.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: Icon(v.icon, size: 22, color: iconColor),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              bookingStatus.tr,
+              style: TextStyle(
+                fontFamily: AppConsts.font,
+                color: textColor,
+                fontSize: AppConsts.xlg,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -768,9 +915,28 @@ class FirstTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: AppConsts.xlg, fontWeight: FontWeight.bold, color: color),
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppConsts.secondaryColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: AppConsts.xlg,
+            fontWeight: FontWeight.bold,
+            color: color ?? cs.onSurface,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
     );
   }
 }

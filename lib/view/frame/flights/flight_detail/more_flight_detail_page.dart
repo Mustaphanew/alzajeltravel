@@ -1013,6 +1013,7 @@ class _BottomSectionState extends State<BottomSection> {
                       child: Text(
                         "View price summary".tr,
                         style: TextStyle(
+                          fontFamily: AppConsts.font,
                           color: AppConsts.secondaryColor,
                           fontWeight: FontWeight.w600,
                           fontSize: textTheme.bodySmall?.fontSize ?? 13,
@@ -1069,6 +1070,7 @@ class _BottomSectionState extends State<BottomSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1088,6 +1090,7 @@ class _BottomSectionState extends State<BottomSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,
                       ),

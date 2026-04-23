@@ -1,6 +1,7 @@
 // passport_forms_web.dart
 import 'dart:math' as math;
 
+import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/utils/widgets/date_dropdown_row.dart';
 import 'package:flutter/cupertino.dart';
@@ -251,7 +252,7 @@ void _scrollColumnAfterScan(int col) {
   Widget _groupHeaderText(String text) {
     return Text(
       text,
-      style: const TextStyle(fontWeight: FontWeight.w700),
+      style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w700),
       // overflow: TextOverflow.ellipsis,
     );
   }
@@ -301,7 +302,7 @@ void _scrollColumnAfterScan(int col) {
 
     Widget help(String t) => Text(
       t,
-      style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant, height: 1.15),
+      style: TextStyle(fontFamily: AppConsts.font, fontSize: 11, color: cs.onSurfaceVariant, height: 1.15),
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
     );
@@ -591,7 +592,7 @@ void _scrollColumnAfterScan(int col) {
           curve: Curves.easeInOut,
         );
 
-        Get.snackbar('Validation'.tr, err, snackPosition: SnackPosition.BOTTOM);
+        AppFuns.showSnack('Validation'.tr, err, type: SnackType.warning);
         return false;
       }
     }
@@ -600,6 +601,10 @@ void _scrollColumnAfterScan(int col) {
   }
 
   Future<void> _saveWeb(PassportsFormsController formsController) async {
+    // إخفاء لوحة المفاتيح بشكل موثوق قبل عرض لودر التحميل والانتقال
+    FocusManager.instance.primaryFocus?.unfocus();
+    FocusScope.of(context).unfocus();
+    await SystemChannels.textInput.invokeMethod('TextInput.hide');
     AppFuns.hideKeyboard();
 
     final visibleOk = _webFormKey.currentState?.validate() ?? true;
@@ -611,6 +616,10 @@ void _scrollColumnAfterScan(int col) {
 
     final passports = formsController.collectModels();
 
+    // مهلة قصيرة حتى تختفي الكيبورد فعليًا قبل إظهار اللودر
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (!mounted) return;
     context.loaderOverlay.show();
     final bookingResponse =
         await formsController.createBookingServer(passports, formsController.contactModel);
@@ -620,10 +629,10 @@ void _scrollColumnAfterScan(int col) {
 
     final insertId = bookingResponse['insert_id'];
     if (insertId == null) {
-      Get.snackbar(
+      AppFuns.showSnack(
         'Error'.tr,
         'Booking request failed, please try again.'.tr,
-        snackPosition: SnackPosition.BOTTOM,
+        type: SnackType.error,
       );
       return;
     }
@@ -914,7 +923,7 @@ if (r == 1) {
                 Text("Total flight".tr),
                 Text(
                   AppFuns.priceWithCoin(formsController.totalFlight, formsController.currency),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.bold, fontSize: 20),
                 ),
               ],
             ),

@@ -37,7 +37,7 @@ class IssuingPage extends StatefulWidget {
     required this.pnr,
     required this.booking,
     required this.fromPage,
-  });
+  }); 
 
   @override
   State<IssuingPage> createState() => _IssuingPageState();
@@ -144,25 +144,21 @@ class _IssuingPageState extends State<IssuingPage> {
           appBar: AppBar(
             title: Text(
               "Issuing".tr,
-              style: TextStyle(
-                color: isDark ? Colors.white : AppConsts.primaryColor,
+              style: const TextStyle(
+                color: Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: AppConsts.xlg,
                 letterSpacing: 0.3,
               ),
             ),
-            backgroundColor: isDark
-                ? AppConsts.primaryColor
-                : const Color(0xFFFAF6F1),
-            foregroundColor:
-                isDark ? Colors.white : AppConsts.primaryColor,
+            backgroundColor: AppConsts.primaryColor,
+            foregroundColor: Colors.white,
             surfaceTintColor: Colors.transparent,
             scrolledUnderElevation: 0,
-            iconTheme: IconThemeData(
-              color: isDark ? Colors.white : AppConsts.primaryColor,
-            ),
-            titleTextStyle: TextStyle(
-              color: isDark ? Colors.white : AppConsts.primaryColor,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              fontFamily: AppConsts.font,
+              color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: AppConsts.xlg,
             ),
@@ -189,6 +185,7 @@ class _IssuingPageState extends State<IssuingPage> {
                         side: const BorderSide(color: AppConsts.secondaryColor, width: 1.3),
                       ),
                       textStyle: const TextStyle(
+                        fontFamily: AppConsts.font,
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,
                       ),
@@ -227,7 +224,9 @@ class _IssuingPageState extends State<IssuingPage> {
           ),
           body: Column(
             children: [
+              const SizedBox(height: 10),
               StatusCard(cs: cs, bookingStatus: bookingStatus),
+              const SizedBox(height: 4),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -267,7 +266,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                       confirmed = true;
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not confirm booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                    AppFuns.showSnack("Error".tr, "Could not confirm booking".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
@@ -288,6 +287,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
                                     fontSize: AppConsts.normal,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -318,7 +318,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                       voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not cancel pre-booking".tr, snackPosition: SnackPosition.BOTTOM);
+                                    AppFuns.showSnack("Error".tr, "Could not cancel pre-booking".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
@@ -330,6 +330,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
                                     fontSize: AppConsts.normal,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -361,7 +362,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                       voidOn = _formatDateTime(res['flight']['void_time'] != null ? DateTime.parse(res['flight']['void_time']) : null);
                                     }
                                   } catch (e) {
-                                    Get.snackbar("Error".tr, "Could not void issue".tr, snackPosition: SnackPosition.BOTTOM);
+                                    AppFuns.showSnack("Error".tr, "Could not void issue".tr, type: SnackType.error);
                                   }
                                   if (context.mounted) context.loaderOverlay.hide();
                                   setState(() {});
@@ -373,6 +374,7 @@ class _IssuingPageState extends State<IssuingPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   textStyle: const TextStyle(
+                                    fontFamily: AppConsts.font,
                                     fontSize: AppConsts.normal,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -812,48 +814,94 @@ class StatusCard extends StatelessWidget {
   final ColorScheme cs;
   final String bookingStatus;
 
-  ({Color color, IconData icon}) _visuals(BuildContext context) {
+  ({Color color, IconData icon, bool navyBg}) _visuals(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // مقارنة مرنة (بدون حساسيّة لحالة الأحرف/المسافات) حتى لا يفشل الشرط لو جاء "Confirmed" أو فيه فراغ
     final s = bookingStatus.trim().toLowerCase();
 
     bool matches(BookingStatus status) => s == status.name.toLowerCase();
 
-    // مؤكّد: أخضر واضح في الثيمين
+    // مؤكّد: أخضر واضح في الثيمين — نص أبيض
     if (matches(BookingStatus.confirmed) || s == 'confirm' || s == 'issued' || s == 'ok') {
       return (
         color: isDark ? const Color(0xFF2FB96A) : const Color(0xFF16A34A),
         icon: Icons.check_circle_rounded,
+        navyBg: false,
       );
     }
+    // preBooking/pending: خلفية كحلية (نفس AppBar) مع عنوان وأيقونة ذهبية — منسَّق وأنيق
     if (matches(BookingStatus.preBooking) || matches(BookingStatus.pending) || s == 'pre-book') {
-      return (color: const Color(0xFFF59E0B), icon: Icons.schedule_rounded);
+      return (
+        color: AppConsts.primaryColor,
+        icon: Icons.schedule_rounded,
+        navyBg: true,
+      );
     }
     if (matches(BookingStatus.canceled) || matches(BookingStatus.expiry) || s == 'cancelled') {
-      return (color: const Color(0xFFC62828), icon: Icons.cancel_rounded);
+      return (
+        color: const Color(0xFFC62828),
+        icon: Icons.cancel_rounded,
+        navyBg: false,
+      );
     }
     // Void: أحمر صريح وموحَّد في الثيمين (نفس أحمر اللايت)
     if (matches(BookingStatus.voided) || matches(BookingStatus.voide) || s == 'void') {
       return (
         color: const Color(0xFFC62828),
         icon: Icons.block_rounded,
+        navyBg: false,
       );
     }
-    return (color: const Color(0xFF78909C), icon: Icons.help_outline_rounded);
+    return (
+      color: const Color(0xFF78909C),
+      icon: Icons.help_outline_rounded,
+      navyBg: false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final v = _visuals(context);
+    // عند الخلفية الكحلية (preBooking): النص والأيقونة ذهبية، والحدود ذهبية
+    final Color fg = v.navyBg ? AppConsts.secondaryColor : Colors.white;
+    final Color iconBg = v.navyBg
+        ? AppConsts.secondaryColor.withValues(alpha: 0.16)
+        : Colors.white.withValues(alpha: 0.22);
+    final Color iconBorder = v.navyBg
+        ? AppConsts.secondaryColor.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.45);
+    final Color borderColor = v.navyBg
+        ? AppConsts.secondaryColor.withValues(alpha: 0.45)
+        : Colors.white.withValues(alpha: 0.22);
+    final Color shadowColor = v.navyBg
+        ? AppConsts.primaryColor.withValues(alpha: 0.45)
+        : v.color.withValues(alpha: 0.35);
+
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        color: v.color,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: v.navyBg
+              ? const [
+                  AppConsts.primaryColor,
+                  Color(0xFF1B2A57),
+                  AppConsts.primaryColor,
+                ]
+              : [
+                  v.color,
+                  Color.lerp(v.color, Colors.black, 0.08) ?? v.color,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color: v.color.withValues(alpha: 0.30),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: shadowColor,
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -865,18 +913,20 @@ class StatusCard extends StatelessWidget {
             height: 34,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.20),
+              color: iconBg,
+              border: Border.all(color: iconBorder, width: 1),
             ),
             alignment: Alignment.center,
-            child: Icon(v.icon, size: 20, color: Colors.white),
+            child: Icon(v.icon, size: 20, color: fg),
           ),
           const SizedBox(width: 12),
           Text(
             bookingStatus.tr,
-            style: const TextStyle(
+            style: TextStyle(
+              fontFamily: AppConsts.font,
               fontSize: AppConsts.xlg,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: fg,
               letterSpacing: 0.4,
             ),
           ),
@@ -1024,10 +1074,10 @@ class _InfoRow extends StatelessWidget {
                 InkWell(
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: value));
-                    Get.snackbar(
+                    AppFuns.showSnack(
                       "Copied".tr,
                       value,
-                      snackPosition: SnackPosition.BOTTOM,
+                      type: SnackType.success,
                       duration: const Duration(seconds: 2),
                     );
                   },
@@ -1217,10 +1267,10 @@ class _TravelerCard extends StatelessWidget {
                   InkWell(
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: ticketNumber!));
-                      Get.snackbar(
+                      AppFuns.showSnack(
                         "Copied".tr,
                         ticketNumber!,
-                        snackPosition: SnackPosition.BOTTOM,
+                        type: SnackType.success,
                         duration: const Duration(seconds: 2),
                       );
                     },

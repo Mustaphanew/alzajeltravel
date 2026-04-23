@@ -328,17 +328,20 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       labelStyle: TextStyle(
+        fontFamily: AppConsts.font,
         color: labelColor,
         fontWeight: FontWeight.w700,
         fontSize: AppConsts.sm,
         letterSpacing: 0.2,
       ),
       floatingLabelStyle: TextStyle(
+        fontFamily: AppConsts.font,
         color: labelColor,
         fontWeight: FontWeight.w800,
         fontSize: AppConsts.sm,
       ),
       hintStyle: TextStyle(
+        fontFamily: AppConsts.font,
         color: cs.onSurfaceVariant.withValues(alpha: 0.7),
       ),
       border: OutlineInputBorder(
@@ -360,6 +363,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
     );
 
     final TextStyle itemStyle = TextStyle(
+      fontFamily: AppConsts.font,
       color: valueColor,
       fontSize: AppConsts.normal,
       fontWeight: FontWeight.w600,
@@ -617,6 +621,7 @@ class _SearchAndFilterState extends State<SearchAndFilter> {
                 label: Text(
                   'Search'.tr,
                   style: const TextStyle(
+                    fontFamily: AppConsts.font,
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
@@ -668,6 +673,7 @@ class _DatePickerField extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
+            fontFamily: AppConsts.font,
             color: cs.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: AppConsts.normal,

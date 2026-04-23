@@ -535,7 +535,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
                         await _rebuildOffersFromState(scrollTop: true);
                       }
                     } catch (e) {
-                      Get.snackbar('Error'.tr, e.toString());
+                      AppFuns.showSnack('Error'.tr, e.toString(), type: SnackType.error);
                     }
                   },
                 ),
@@ -707,26 +707,48 @@ class _FlightOffersListState extends State<FlightOffersList> {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                   decoration: BoxDecoration(
+                    gradient: isDark
+                        ? LinearGradient(
+                            begin: AlignmentDirectional.topEnd,
+                            end: AlignmentDirectional.bottomStart,
+                            colors: [
+                              AppConsts.primaryColor.withValues(alpha: 0.55),
+                              AppConsts.primaryColor.withValues(alpha: 0.85),
+                              const Color(0xFF0E1730).withValues(alpha: 0.95),
+                            ],
+                            stops: const [0.0, 0.55, 1.0],
+                          )
+                        : null,
                     border: Border(bottom: bottomSide),
                   ),
                   child: Row(
                     children: [
                       Expanded(
-                        child: ExpansionTile(
-                          controller: expansionController,
-                          iconColor: isDark ? AppConsts.secondaryColor : null,
-                          collapsedIconColor: isDark ? AppConsts.secondaryColor : null,
-                          title: Text(
-                            (isExpanded) ? "Hide edit Search".tr : "Edit Search".tr,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: AppConsts.font,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: editTitleColor,
-                            ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            dividerColor: Colors.transparent,
                           ),
-                          children: [innerContent],
+                          child: ExpansionTile(
+                            controller: expansionController,
+                            iconColor: isDark ? AppConsts.secondaryColor : null,
+                            collapsedIconColor: isDark ? AppConsts.secondaryColor : null,
+                            backgroundColor: Colors.transparent,
+                            collapsedBackgroundColor: Colors.transparent,
+                            title: Text(
+                              (isExpanded) ? "Hide edit Search".tr : "Edit Search".tr,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: AppConsts.font,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: editTitleColor,
+                              ),
+                            ),
+                            children: [innerContent],
+                          ),
                         ),
                       ),
                     ],
@@ -794,7 +816,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
                                         try {
                                           final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
                                           if (!ok) {
-                                            Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                            AppFuns.showSnack('Error'.tr, '${otherPricesCtrl.errorMessage}', type: SnackType.error);
                                           } else {
                                             Get.to(() => OtherPricesPage());
                                           }
@@ -818,7 +840,7 @@ class _FlightOffersListState extends State<FlightOffersList> {
                                               try {
                                                 final ok = await otherPricesCtrl.fetchOtherPrices(offer: offer);
                                                 if (!ok) {
-                                                  Get.snackbar('Error'.tr, '${otherPricesCtrl.errorMessage}');
+                                                  AppFuns.showSnack('Error'.tr, '${otherPricesCtrl.errorMessage}', type: SnackType.error);
                                                 }
                                               } finally {
                                                 if (context.mounted) context.loaderOverlay.hide();
@@ -1247,7 +1269,7 @@ class FlightOfferCard extends StatelessWidget {
                         width: 1.25,
                       ),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      textStyle: const TextStyle(fontFamily: AppConsts.font, fontWeight: FontWeight.w600),
                     ),
                     onPressed: onDetails,
                     icon: const Icon(Icons.info_outline, size: 20),

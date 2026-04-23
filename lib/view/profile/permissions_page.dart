@@ -61,15 +61,21 @@ class PermissionsPage extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppConsts.primaryColor.withValues(alpha: 0.15),
+              color: isDark
+                  ? AppConsts.secondaryColor.withValues(alpha: 0.18)
+                  : AppConsts.primaryColor.withValues(alpha: 0.15),
               border: Border.all(
-                color: AppConsts.primaryColor.withValues(alpha: 0.45),
+                color: isDark
+                    ? AppConsts.secondaryColor.withValues(alpha: 0.55)
+                    : AppConsts.primaryColor.withValues(alpha: 0.45),
                 width: 1,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.verified_user_rounded,
-              color: AppConsts.primaryColor,
+              color: isDark
+                  ? AppConsts.secondaryColor
+                  : AppConsts.primaryColor,
               size: 18,
             ),
           ),

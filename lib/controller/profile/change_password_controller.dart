@@ -99,7 +99,7 @@ class ChangePasswordController extends GetxController {
       // );
       await Future.delayed(const Duration(seconds: 5));
 
-      Get.snackbar('Success'.tr, 'Password changed successfully'.tr);
+      AppFuns.showSnack('Success'.tr, 'Password changed successfully'.tr, type: SnackType.success);
 
       // اختياري: تنظيف الحقول بعد النجاح
       // currentPassword.clear();
@@ -108,7 +108,7 @@ class ChangePasswordController extends GetxController {
 
       expandableController.collapse();
     } catch (e) {
-      Get.snackbar('Error'.tr, 'Failed to change password'.tr);
+      AppFuns.showSnack('Error'.tr, 'Failed to change password'.tr, type: SnackType.error);
       return false;
     } finally {
       loading = false;

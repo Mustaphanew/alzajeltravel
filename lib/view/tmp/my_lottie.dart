@@ -13,13 +13,30 @@ class MyLottie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Get.context?.theme.colorScheme;
-    final gifColor = Get.context?.theme.brightness == Brightness.light ? AppConsts.primaryColor : AppConsts.secondaryColor;
-    final txtColor = Get.context?.theme.brightness == Brightness.light ? Colors.black : Colors.white;
+    final isDark = Get.context?.theme.brightness == Brightness.dark;
+    // ignore: unused_local_variable
+    final gifColor = isDark == true
+        ? AppConsts.secondaryColor
+        : AppConsts.primaryColor;
+
+    // عناوين بارزة متناسقة مع هوية التطبيق (كحلي في الفاتح / ذهبي في الداكن)
+    final titleColor =
+        isDark == true ? AppConsts.secondaryColor : AppConsts.primaryColor;
+    // نص ثانوي/توضيحي: مخفّف ومتوافق مع الثيم
+    final mutedTextColor = isDark == true
+        ? Colors.white.withValues(alpha: 0.72)
+        : AppConsts.primaryColor.withValues(alpha: 0.72);
+
+    // خلفية البطاقة الداخلية (حول "Please wait")
+    final innerCardBg = isDark == true ? const Color(0xFF121A38) : Colors.white;
+    // لون الخارجي (الحاوية الكبرى)
+    final outerBg = isDark == true ? const Color(0xFF0B1430) : cs!.surface;
+
     return Directionality(
       textDirection: AppVars.lang == 'ar' ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
-          color: cs!.surface,
+          color: outerBg,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: EdgeInsets.all(16),
@@ -40,13 +57,21 @@ class MyLottie extends StatelessWidget {
                 height: MediaQuery.of(context).size.width * 0.6,
                 padding: EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: cs.onInverseSurface,
+                  color: innerCardBg,
                   borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppConsts.secondaryColor
+                        .withValues(alpha: isDark == true ? 0.45 : 0.3),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: (isDark == true
+                              ? AppConsts.primaryColor
+                              : Colors.black)
+                          .withValues(alpha: isDark == true ? 0.35 : 0.06),
                       blurRadius: 16,
-                      offset: const Offset(8, 8),
+                      offset: const Offset(4, 6),
                     ),
                   ],
                 ),
@@ -67,11 +92,13 @@ class MyLottie extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: AppConsts.font,
-                    color: txtColor,
-                    fontWeight: FontWeight.bold,
+                    color: titleColor,
+                    fontWeight: FontWeight.w800,
                     fontSize: 20,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 SizedBox(height: 16),
@@ -80,12 +107,20 @@ class MyLottie extends StatelessWidget {
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    color: cs.onInverseSurface,
+                    color: innerCardBg,
+                    border: Border.all(
+                      color: AppConsts.secondaryColor
+                          .withValues(alpha: isDark == true ? 0.45 : 0.3),
+                      width: 1,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: (isDark == true
+                                ? AppConsts.primaryColor
+                                : Colors.black)
+                            .withValues(alpha: isDark == true ? 0.35 : 0.08),
                         blurRadius: 16,
-                        offset: const Offset(0, 8),
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
@@ -100,28 +135,32 @@ class MyLottie extends StatelessWidget {
                             dotSize: 14,
                           ),
                           SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Please wait".tr,
-                                style: TextStyle(
-                                  fontFamily: AppConsts.font,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: cs.primaryFixed,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Please wait".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                    letterSpacing: 0.2,
+                                    color: titleColor,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "The process may take several seconds".tr,
-                                style: TextStyle(
-                                  fontFamily: AppConsts.font,
-                                  color: cs.primaryFixed,
-                                  fontSize: 12,
+                                SizedBox(height: 4),
+                                Text(
+                                  "The process may take several seconds".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppConsts.font,
+                                    color: mutedTextColor,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -133,10 +172,15 @@ class MyLottie extends StatelessWidget {
                         )..start(),
                         builder: (c) => GradientLinearProgress(
                           value: c.progress,
-                          // مطابق للصورة (كحلي -> ذهبي). لو تبي العكس بدّلهم.
-                          startColor: cs.secondary,
-                          endColor: cs.primary,
-                          
+                          // كحلي -> ذهبي متناسق مع هوية التطبيق
+                          startColor: AppConsts.primaryColor,
+                          endColor: AppConsts.secondaryColor,
+                          trackColor: isDark == true
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : AppConsts.primaryColor
+                                  .withValues(alpha: 0.08),
+                          borderColor: AppConsts.secondaryColor
+                              .withValues(alpha: 0.45),
                         ),
                       ),
                     ],
@@ -145,9 +189,11 @@ class MyLottie extends StatelessWidget {
                 SizedBox(height: 24),
                 Text(
                   "Do not close the page, you will be redirected automatically.".tr,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: AppConsts.font,
-                    color: txtColor,
+                    color: mutedTextColor,
+                    fontWeight: FontWeight.w500,
                     fontSize: 12,
                   ),
                 ),       
@@ -283,7 +329,7 @@ class _GradientLinearProgressState extends State<GradientLinearProgress>
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Container(color: Color(0xFFecebe9)),
+                Container(color: track),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: FractionallySizedBox(

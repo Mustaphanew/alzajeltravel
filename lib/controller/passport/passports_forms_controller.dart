@@ -4,6 +4,7 @@ import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/repo/country_repo.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:alzajeltravel/model/contact_model.dart';
 import 'package:alzajeltravel/model/country_model.dart';
@@ -218,7 +219,7 @@ class PassportsFormsController extends GetxController {
     }
 
     if (!allValid) {
-      Get.snackbar('Validation'.tr, 'Please complete all required passport fields'.tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack('Validation'.tr, 'Please complete all required passport fields'.tr, type: SnackType.warning);
       return false;
     }
 
@@ -243,6 +244,14 @@ class PassportsFormsController extends GetxController {
     expandAll();
     await Future.delayed(const Duration(milliseconds: 500));
 
+    // إخفاء موثوق للوحة المفاتيح بعد توسيع الفورمات
+    // (كانت تظهر لأن أحد الحقول كان autofocus)
+    FocusManager.instance.primaryFocus?.unfocus();
+    try {
+      await SystemChannels.textInput.invokeMethod('TextInput.hide');
+    } catch (_) {}
+    await Future.delayed(const Duration(milliseconds: 50));
+
     // 2) تحقق من صحة كل النماذج
     final ok = await validateAllForms();
     if (!ok) return;
@@ -266,7 +275,7 @@ class PassportsFormsController extends GetxController {
     // تحقّق من وجود insert_id
     final insertId = bookingResponse['insert_id'];
     if (insertId == null) {
-      Get.snackbar('Error'.tr, 'Booking request failed, please try again.'.tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack('Error'.tr, 'Booking request failed, please try again.'.tr, type: SnackType.error);
       return;
     }
 
@@ -343,10 +352,10 @@ class PassportsFormsController extends GetxController {
 
     // ______________________________________________________
     // 7) إشعار بسيط بعد التجميع (اختياري)
-    Get.snackbar(
+    AppFuns.showSnack(
       'Passports'.tr,
       'Collected @count passports'.trParams({'count': passports.length.toString()}),
-      snackPosition: SnackPosition.BOTTOM,
+      type: SnackType.success,
     );
   }
 
@@ -465,7 +474,7 @@ class PassportsFormsController extends GetxController {
     final response = await AppVars.api.post(AppApis.createBookingFlight, params: params);
 
     if (response == null) {
-      Get.snackbar('Error'.tr, 'Could not create booking'.tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack('Error'.tr, 'Could not create booking'.tr, type: SnackType.error);
       return null;
     }
 
@@ -584,12 +593,12 @@ class PassportsFormsController extends GetxController {
   bool validateContactForm() {
     final formState = contactFormKey.currentState;
     if (formState == null || !formState.validate()) {
-      Get.snackbar('Validation'.tr, 'Please complete all required contact fields'.tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack('Validation'.tr, 'Please complete all required contact fields'.tr, type: SnackType.warning);
       return false;
     }
 
     if (contactDialCountry == null) {
-      Get.snackbar('Validation'.tr, 'Please select country dial code'.tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack('Validation'.tr, 'Please select country dial code'.tr, type: SnackType.warning);
       return false;
     }
 

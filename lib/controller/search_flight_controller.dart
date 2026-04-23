@@ -230,26 +230,26 @@ void safeUpdate([List<Object>? ids]) {
 
 Future<FlightSearchResult?> requestServer(BuildContext context) async {
   if (forms.isEmpty) {
-    Get.snackbar("Error".tr, "No form data".tr, snackPosition: SnackPosition.BOTTOM);
+    AppFuns.showSnack("Error".tr, "No form data".tr, type: SnackType.error);
     return null;
   }
 
   final f0 = forms[0];
 
   if (f0.fromLocation == null || f0.toLocation == null) {
-    Get.snackbar("Error".tr, "Please select airports".tr, snackPosition: SnackPosition.BOTTOM);
+    AppFuns.showSnack("Error".tr, "Please select airports".tr, type: SnackType.error);
     return null;
   }
 
   final departureDate = f0.departureDatePickerController.selectedDate;
   if (departureDate == null) {
-    Get.snackbar("Error".tr, "Please select departure date".tr, snackPosition: SnackPosition.BOTTOM);
+    AppFuns.showSnack("Error".tr, "Please select departure date".tr, type: SnackType.error);
     return null;
   }
 
   if (journeyType == JourneyType.roundTrip &&
       f0.returnDatePickerController.selectedDate == null) {
-    Get.snackbar("Error".tr, "Please select return date".tr, snackPosition: SnackPosition.BOTTOM);
+    AppFuns.showSnack("Error".tr, "Please select return date".tr, type: SnackType.error);
     return null;
   }
 
@@ -291,7 +291,7 @@ Future<FlightSearchResult?> requestServer(BuildContext context) async {
     );
 
     if (response == null) {
-      Get.snackbar("Error".tr, "Failed to search flights".tr, snackPosition: SnackPosition.BOTTOM);
+      AppFuns.showSnack("Error".tr, "Failed to search flights".tr, type: SnackType.error);
       return null;
     }
 

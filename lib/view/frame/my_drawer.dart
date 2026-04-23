@@ -280,7 +280,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 }
               } catch (_) {
                 if (context.mounted) context.loaderOverlay.hide();
-                Get.snackbar("Error".tr, "Could not logout".tr, snackPosition: SnackPosition.BOTTOM);
+                AppFuns.showSnack("Error".tr, "Could not logout".tr, type: SnackType.error);
               }
             },
             splashColor: cs.error.withValues(alpha: 0.15),
