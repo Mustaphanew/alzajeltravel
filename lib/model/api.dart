@@ -10,13 +10,48 @@ import 'package:cross_file/cross_file.dart';
 Dio dio = Dio(
   BaseOptions(
     baseUrl: AppApis.baseUrl,
-    connectTimeout: const Duration(seconds: 12),
-    receiveTimeout: const Duration(seconds: 20),
-    sendTimeout: const Duration(seconds: 20),
+    connectTimeout: const Duration(seconds: 15),
+    receiveTimeout: const Duration(seconds: 60),
+    sendTimeout: const Duration(seconds: 30),
     headers: {'Accept': 'application/json'},
     responseType: ResponseType.json,
   ),
 );
+
+/// مفاتيح حسّاسة يجب حجبها عند طباعة الـ params في الـ log.
+const _kSensitiveKeys = <String>{
+  'password',
+  'pass',
+  'pwd',
+  'new_password',
+  'old_password',
+  'current_password',
+  'token',
+  'access_token',
+  'refresh_token',
+  'api_key',
+  'secret',
+  'card_number',
+  'cvv',
+  'cvc',
+};
+
+/// يُرجع نسخة آمنة من الـ params لعرضها في الـ log — يحجب القيم الحسّاسة.
+Map<String, dynamic> _redactForLog(Map<String, dynamic>? params) {
+  if (params == null) return {};
+  final out = <String, dynamic>{};
+  params.forEach((k, v) {
+    final lower = k.toLowerCase();
+    if (_kSensitiveKeys.contains(lower)) {
+      out[k] = '***';
+    } else if (v is Map) {
+      out[k] = _redactForLog(Map<String, dynamic>.from(v));
+    } else {
+      out[k] = v;
+    }
+  });
+  return out;
+}
 
 class Api {
   Future<dynamic> get(
@@ -44,6 +79,9 @@ class Api {
         return response.data;
       }
     } on DioException catch (err) {
+      debugPrint("❌ GET error type: ${err.type}");
+      debugPrint("❌ GET error message: ${err.message}");
+      debugPrint("❌ GET error underlying: ${err.error}");
       debugPrint("❌ GET error status: ${err.response?.statusCode}");
       debugPrint("❌ GET error data: ${err.response?.data}");
     }
@@ -110,7 +148,7 @@ class Api {
       if (kDebugMode) {
         debugPrint("url: $url");
         debugPrint("full: ${dio.options.baseUrl}$url");
-        debugPrint("params: $params");
+        debugPrint("params: ${_redactForLog(params)}");
       }
 
       final response = await dio.post(
@@ -133,6 +171,9 @@ class Api {
         return response.data;
       }
     } on DioException catch (err) {
+      debugPrint("❌ POST error type: ${err.type}");
+      debugPrint("❌ POST error message: ${err.message}");
+      debugPrint("❌ POST error underlying: ${err.error}");
       debugPrint("❌ POST error status: ${err.response?.statusCode}");
       debugPrint("❌ POST error data: ${err.response?.data}");
     }
