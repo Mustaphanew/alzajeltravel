@@ -6,10 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:cross_file/cross_file.dart';
 
-
 Dio dio = Dio(
   BaseOptions(
-    baseUrl: AppApis.baseUrl,
+    baseUrl: AppApis.apiBaseUrl,
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 60),
     sendTimeout: const Duration(seconds: 30),
@@ -17,41 +16,6 @@ Dio dio = Dio(
     responseType: ResponseType.json,
   ),
 );
-
-/// مفاتيح حسّاسة يجب حجبها عند طباعة الـ params في الـ log.
-const _kSensitiveKeys = <String>{
-  'password',
-  'pass',
-  'pwd',
-  'new_password',
-  'old_password',
-  'current_password',
-  'token',
-  'access_token',
-  'refresh_token',
-  'api_key',
-  'secret',
-  'card_number',
-  'cvv',
-  'cvc',
-};
-
-/// يُرجع نسخة آمنة من الـ params لعرضها في الـ log — يحجب القيم الحسّاسة.
-Map<String, dynamic> _redactForLog(Map<String, dynamic>? params) {
-  if (params == null) return {};
-  final out = <String, dynamic>{};
-  params.forEach((k, v) {
-    final lower = k.toLowerCase();
-    if (_kSensitiveKeys.contains(lower)) {
-      out[k] = '***';
-    } else if (v is Map) {
-      out[k] = _redactForLog(Map<String, dynamic>.from(v));
-    } else {
-      out[k] = v;
-    }
-  });
-  return out;
-}
 
 class Api {
   Future<dynamic> get(
@@ -62,28 +26,27 @@ class Api {
   }) async {
     try {
       final String url = uri + extra;
-      if (kDebugMode) debugPrint("get url: ${dio.options.baseUrl}$url");
 
       final response = await dio.get(
         url,
         queryParameters: params,
         options: Options(headers: headers),
         onReceiveProgress: (received, total) {
-          if (total != -1) {
-            debugPrint("Downloading progress get: ${received / total * 100}%");
+          if (kDebugMode && total != -1) {
+            debugPrint(
+              '📥 GET ${(received / total * 100).toStringAsFixed(1)}% of $total bytes',
+            );
           }
         },
       );
 
-      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return response.data;
       }
-    } on DioException catch (err) {
-      debugPrint("❌ GET error type: ${err.type}");
-      debugPrint("❌ GET error message: ${err.message}");
-      debugPrint("❌ GET error underlying: ${err.error}");
-      debugPrint("❌ GET error status: ${err.response?.statusCode}");
-      debugPrint("❌ GET error data: ${err.response?.data}");
+    } on DioException {
+      // تفاصيل الخطأ تُطبع تلقائياً في LoggingInterceptor (debug فقط).
     }
     return null;
   }
@@ -96,7 +59,7 @@ class Api {
     String extra = "",
     Map<String, dynamic>? params,
     Map<String, dynamic>? headers,
-    XFile? file,                  // ✅ بدل File
+    XFile? file,                   // ✅ بدل File
     String fileFieldName = 'file', // اسم الحقل في السيرفر
     bool asJson = true,
   }) async {
@@ -110,9 +73,8 @@ class Api {
     if (file != null) {
       final bytes = await file.readAsBytes();
 
-      final filename = (file.name.isNotEmpty)
-          ? file.name
-          : p.basename(file.path);
+      final filename =
+          (file.name.isNotEmpty) ? file.name : p.basename(file.path);
 
       params[fileFieldName] = MultipartFile.fromBytes(
         bytes,
@@ -145,37 +107,34 @@ class Api {
 
     try {
       final url = uri + extra;
-      if (kDebugMode) {
-        debugPrint("url: $url");
-        debugPrint("full: ${dio.options.baseUrl}$url");
-        debugPrint("params: ${_redactForLog(params)}");
-      }
 
       final response = await dio.post(
         url,
         data: body,
         options: options,
         onSendProgress: (received, total) {
-          if (total != -1) {
-            debugPrint("Uploading progress post: ${received / total * 100}%");
+          if (kDebugMode && total != -1) {
+            debugPrint(
+              '📤 POST upload ${(received / total * 100).toStringAsFixed(1)}% of $total bytes',
+            );
           }
         },
         onReceiveProgress: (received, total) {
-          if (total != -1) {
-            debugPrint("Downloading progress post: ${received / total * 100}%");
+          if (kDebugMode && total != -1) {
+            debugPrint(
+              '📥 POST download ${(received / total * 100).toStringAsFixed(1)}% of $total bytes',
+            );
           }
         },
       );
 
-      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return response.data;
       }
-    } on DioException catch (err) {
-      debugPrint("❌ POST error type: ${err.type}");
-      debugPrint("❌ POST error message: ${err.message}");
-      debugPrint("❌ POST error underlying: ${err.error}");
-      debugPrint("❌ POST error status: ${err.response?.statusCode}");
-      debugPrint("❌ POST error data: ${err.response?.data}");
+    } on DioException {
+      // تفاصيل الخطأ تُطبع تلقائياً في LoggingInterceptor (debug فقط).
     }
     return null;
   }

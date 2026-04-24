@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build web
-        run: flutter build web --release --base-href "/alzajeltravel/"
+      - name: Build web (prod)
+        run: flutter build web --release --base-href "/alzajeltravel/" --dart-define=FLAVOR=prod
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4

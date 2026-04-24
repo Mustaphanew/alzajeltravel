@@ -22,6 +22,7 @@ import 'package:alzajeltravel/services/notification_service.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/base_url_config.dart';
 import 'package:alzajeltravel/utils/themes.dart';
 import 'package:alzajeltravel/utils/widgets.dart';
 import 'package:alzajeltravel/view/frame.dart';
@@ -53,9 +54,15 @@ Future<void> main() async {
     print("error firebase: $e");
   }
 
+  // 3.5) تحديد baseUrl حسب FLAVOR:
+  //      - dev : رابط ثابت بالكود (داخل BaseUrlConfig)
+  //      - prod: يُجلب من Firebase Remote Config (مفتاح base_url)
+  //      لا يرمي استثناء — عند الفشل يستخدم القيمة الاحتياطية.
+  await BaseUrlConfig.init();
+
   // 4) إشعارات: تهيئة القناة + المستمعات + طلب إذن إذا لزم
   await NotificationService.init();
-  initDio(); // 👈 مهم عشان الكوكيز تشتغل
+  initDio(); // 👈 يعتمد على baseUrl المُحدَّد أعلاه
   // لازم قبل runApp 
   if (kIsWeb) {
     PWAInstall().setup(installCallback: () {

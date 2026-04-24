@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "565049632804",
-    "project_id": "alzajeltravel-2496e",
-    "storage_bucket": "alzajeltravel-2496e.firebasestorage.app"
+    "project_number": "6540576529",
+    "project_id": "alzajeltravel-e67e1",
+    "storage_bucket": "alzajeltravel-e67e1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:565049632804:android:8388d1f70f34549bfe10b1",
+        "mobilesdk_app_id": "1:6540576529:android:e4b1df4d580459c485eeb0",
         "android_client_info": {
           "package_name": "com.alzajeltravel.agent"
         }
@@ -15,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDZ5skr9Ok1pEGD0FUeR_X9tbdkIJU-IhY"
+          "current_key": "AIzaSyDxOyuS5NoiKvNESAagp4_WCrqZIgBfyEs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:6540576529:android:6f9fcaed0013c02085eeb0",
+        "android_client_info": {
+          "package_name": "com.horizon.agents"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxOyuS5NoiKvNESAagp4_WCrqZIgBfyEs"
         }
       ],
       "services": {

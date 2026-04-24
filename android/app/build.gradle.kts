@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -10,8 +12,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// قراءة بيانات التوقيع من android/key.properties (غير مرفوع على git)
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.alzajeltravel.agent"
+    namespace = "com.horizon.agents"
     compileSdk = 36
     ndkVersion = "29.0.14033849"
 
@@ -23,16 +32,31 @@ android {
     // ✅ حذفنا kotlinOptions لأن jvmTarget فيها صار Deprecated
 
     defaultConfig {
-        applicationId = "com.alzajeltravel.agent"
+        applicationId = "com.horizon.agents"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // استخدم توقيع الإصدار إن وُجد ملف key.properties، وإلا ارجع لتوقيع debug للتطوير
+            signingConfig = if (keystorePropertiesFile.exists())
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

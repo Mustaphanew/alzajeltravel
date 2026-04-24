@@ -74,6 +74,7 @@ dependencies:
   two_dimensional_scrollables: ^0.3.8
 
   scrollbar_ultima: ^1.0.4
+  firebase_remote_config: ^6.4.0
 
 
 

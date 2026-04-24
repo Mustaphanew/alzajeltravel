@@ -2,7 +2,9 @@
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:alzajeltravel/controller/settings_controller.dart';
+import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 import 'package:alzajeltravel/view/settings/help_center.dart';
@@ -25,18 +27,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return GetBuilder<SettingsController>(
       init: SettingsController(),
       builder: (c) => Scaffold(
-        backgroundColor: isDark
-            ? const Color(0xFF0B1430)
-            : const Color(0xFFFAF6F1),
+        backgroundColor: isDark ? const Color(0xFF0B1430) : const Color(0xFFFAF6F1),
         appBar: AppBar(
           title: Text(
             'App Settings'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: AppConsts.xlg,
-              letterSpacing: 0.3,
-            ),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppConsts.xlg, letterSpacing: 0.3),
           ),
           titleSpacing: 15,
           backgroundColor: AppConsts.primaryColor,
@@ -45,12 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
           elevation: 0,
           scrolledUnderElevation: 0,
           iconTheme: const IconThemeData(color: Colors.white),
-          shape: Border(
-            bottom: BorderSide(
-              color: AppConsts.secondaryColor.withValues(alpha: 0.35),
-              width: 1,
-            ),
-          ),
+          shape: Border(bottom: BorderSide(color: AppConsts.secondaryColor.withValues(alpha: 0.35), width: 1)),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(12, 14, 12, 30),
@@ -67,22 +57,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     _SettingsRow(
                       leading: (AppVars.appLocale == Get.deviceLocale)
-                          ? _iconCircle(
-                              child: const Icon(
-                                Icons.language_rounded,
-                                color: AppConsts.secondaryColor,
-                                size: 20,
-                              ),
-                            )
+                          ? _iconCircle(child: const Icon(Icons.language_rounded, color: AppConsts.secondaryColor, size: 20))
                           : _iconCircle(
                               padding: 4,
                               child: CountryFlag.fromLanguageCode(
                                 c.locale.languageCode,
-                                theme: ImageTheme(
-                                  height: 26,
-                                  width: 26,
-                                  shape: Circle(),
-                                ),
+                                theme: ImageTheme(height: 26, width: 26, shape: Circle()),
                               ),
                             ),
                       title: 'Language'.tr,
@@ -103,11 +83,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ? const Icon(Icons.language_rounded)
                                     : CountryFlag.fromLanguageCode(
                                         loc.languageCode,
-                                        theme: ImageTheme(
-                                          height: 28,
-                                          width: 28,
-                                          shape: Circle(),
-                                        ),
+                                        theme: ImageTheme(height: 28, width: 28, shape: Circle()),
                                       ),
                               );
                             }),
@@ -118,13 +94,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     _divider(cs),
                     _SettingsRow(
-                      leading: _iconCircle(
-                        child: const Icon(
-                          Icons.brightness_6_rounded,
-                          color: AppConsts.secondaryColor,
-                          size: 20,
-                        ),
-                      ),
+                      leading: _iconCircle(child: const Icon(Icons.brightness_6_rounded, color: AppConsts.secondaryColor, size: 20)),
                       title: 'Appearance'.tr,
                       subtitle: c.currentTheme,
                       onTap: () async {
@@ -133,21 +103,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           title: 'Choose Appearance'.tr,
                           selected: c.themeMode,
                           options: [
-                            SettingOption(
-                              value: ThemeMode.system,
-                              label: 'System'.tr,
-                              icon: const Icon(Icons.phone_android_rounded),
-                            ),
-                            SettingOption(
-                              value: ThemeMode.light,
-                              label: 'Light'.tr,
-                              icon: const Icon(Icons.light_mode_rounded),
-                            ),
-                            SettingOption(
-                              value: ThemeMode.dark,
-                              label: 'Dark'.tr,
-                              icon: const Icon(Icons.dark_mode_rounded),
-                            ),
+                            SettingOption(value: ThemeMode.system, label: 'System'.tr, icon: const Icon(Icons.phone_android_rounded)),
+                            SettingOption(value: ThemeMode.light, label: 'Light'.tr, icon: const Icon(Icons.light_mode_rounded)),
+                            SettingOption(value: ThemeMode.dark, label: 'Dark'.tr, icon: const Icon(Icons.dark_mode_rounded)),
                           ],
                           onSelected: c.setThemeMode,
                         );
@@ -162,10 +120,21 @@ class _SettingsPageState extends State<SettingsPage> {
               // ───── Help center ─────
               _SectionTitle(text: 'Help Center'.tr),
               const SizedBox(height: 8),
+              _SettingsCard(isDark: isDark, padding: EdgeInsets.zero, child: const HelpCenterPage()),
+
+              const SizedBox(height: 22),
+
+              // ───── Website ─────
+              _SectionTitle(text: 'Website'.tr),
+              const SizedBox(height: 8),
               _SettingsCard(
                 isDark: isDark,
-                padding: EdgeInsets.zero,
-                child: const HelpCenterPage(),
+                child: _SettingsRow(
+                  leading: _iconCircle(child: const Icon(Icons.public_rounded, color: AppConsts.secondaryColor, size: 20)),
+                  title: 'Website'.tr,
+                  subtitle: AppApis.baseUrl,
+                  onTap: () => _openWebsite(context),
+                ),
               ),
             ],
           ),
@@ -174,14 +143,29 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _openWebsite(BuildContext context) async {
+    final uri = Uri.tryParse(AppApis.baseUrl);
+    if (uri == null) {
+      _showError(context, 'Could not open link'.tr);
+      return;
+    }
+
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && context.mounted) {
+        _showError(context, 'Could not open link'.tr);
+      }
+    } catch (_) {
+      if (context.mounted) _showError(context, 'Could not open link'.tr);
+    }
+  }
+
+  void _showError(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Widget _divider(ColorScheme cs) {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      indent: 12,
-      endIndent: 12,
-      color: cs.outlineVariant.withValues(alpha: 0.4),
-    );
+    return Divider(height: 1, thickness: 1, indent: 12, endIndent: 12, color: cs.outlineVariant.withValues(alpha: 0.4));
   }
 
   Widget _iconCircle({required Widget child, double padding = 0}) {
@@ -192,10 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: AppConsts.secondaryColor.withValues(alpha: 0.14),
-        border: Border.all(
-          color: AppConsts.secondaryColor.withValues(alpha: 0.55),
-          width: 1,
-        ),
+        border: Border.all(color: AppConsts.secondaryColor.withValues(alpha: 0.55), width: 1),
       ),
       padding: EdgeInsets.all(padding),
       child: child,
@@ -217,20 +198,12 @@ class _SectionTitle extends StatelessWidget {
           Container(
             width: 4,
             height: 18,
-            decoration: BoxDecoration(
-              color: AppConsts.secondaryColor,
-              borderRadius: BorderRadius.circular(3),
-            ),
+            decoration: BoxDecoration(color: AppConsts.secondaryColor, borderRadius: BorderRadius.circular(3)),
           ),
           const SizedBox(width: 8),
           Text(
             text,
-            style: TextStyle(
-              fontSize: AppConsts.lg,
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-              letterSpacing: 0.2,
-            ),
+            style: TextStyle(fontSize: AppConsts.lg, fontWeight: FontWeight.w800, color: cs.onSurface, letterSpacing: 0.2),
           ),
         ],
       ),
@@ -243,17 +216,12 @@ class _SettingsCard extends StatelessWidget {
   final bool isDark;
   final EdgeInsetsGeometry padding;
 
-  const _SettingsCard({
-    required this.child,
-    required this.isDark,
-    this.padding = const EdgeInsets.symmetric(vertical: 4),
-  });
+  const _SettingsCard({required this.child, required this.isDark, this.padding = const EdgeInsets.symmetric(vertical: 4)});
 
   @override
   Widget build(BuildContext context) {
     final Color cardBg = isDark ? const Color(0xFF121A38) : Colors.white;
-    final Color borderColor =
-        AppConsts.secondaryColor.withValues(alpha: isDark ? 0.35 : 0.28);
+    final Color borderColor = AppConsts.secondaryColor.withValues(alpha: isDark ? 0.35 : 0.28);
 
     return Container(
       decoration: BoxDecoration(
@@ -262,9 +230,7 @@ class _SettingsCard extends StatelessWidget {
         border: Border.all(color: borderColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppConsts.primaryColor.withValues(
-              alpha: isDark ? 0.25 : 0.07,
-            ),
+            color: AppConsts.primaryColor.withValues(alpha: isDark ? 0.25 : 0.07),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -283,12 +249,7 @@ class _SettingsRow extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onTap;
 
-  const _SettingsRow({
-    required this.leading,
-    required this.title,
-    this.subtitle,
-    this.onTap,
-  });
+  const _SettingsRow({required this.leading, required this.title, this.subtitle, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -311,34 +272,19 @@ class _SettingsRow extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: AppConsts.normal,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                      letterSpacing: 0.2,
-                    ),
+                    style: TextStyle(fontSize: AppConsts.normal, fontWeight: FontWeight.w700, color: cs.onSurface, letterSpacing: 0.2),
                   ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
                     const SizedBox(height: 3),
                     Text(
                       subtitle!,
-                      style: TextStyle(
-                        fontSize: AppConsts.sm,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: TextStyle(fontSize: AppConsts.sm, fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
                     ),
                   ],
                 ],
               ),
             ),
-            Icon(
-              isRtl
-                  ? Icons.chevron_left_rounded
-                  : Icons.chevron_right_rounded,
-              color: AppConsts.secondaryColor,
-              size: 22,
-            ),
+            Icon(Icons.navigate_next, color: AppConsts.secondaryColor, size: 22),
           ],
         ),
       ),

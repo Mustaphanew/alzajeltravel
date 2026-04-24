@@ -47,29 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDZ5skr9Ok1pEGD0FUeR_X9tbdkIJU-IhY',
-    appId: '1:565049632804:android:8388d1f70f34549bfe10b1',
-    messagingSenderId: '565049632804',
-    projectId: 'alzajeltravel-2496e',
-    storageBucket: 'alzajeltravel-2496e.firebasestorage.app',
+    apiKey: 'AIzaSyDxOyuS5NoiKvNESAagp4_WCrqZIgBfyEs',
+    appId: '1:6540576529:android:6f9fcaed0013c02085eeb0',
+    messagingSenderId: '6540576529',
+    projectId: 'alzajeltravel-e67e1',
+    storageBucket: 'alzajeltravel-e67e1.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBewtUTtXNlVcWL09fNbC3K3AtvLTVnRN0',
-    appId: '1:565049632804:ios:990d3a9fabef9da2fe10b1',
-    messagingSenderId: '565049632804',
-    projectId: 'alzajeltravel-2496e',
-    storageBucket: 'alzajeltravel-2496e.firebasestorage.app',
-    iosBundleId: 'com.alzajeltravel.agent',
+    apiKey: 'AIzaSyAx2xfrgbG1wa8ImUsdtEoVFsKJe-mOlZE',
+    appId: '1:6540576529:ios:f91b8025502627f985eeb0',
+    messagingSenderId: '6540576529',
+    projectId: 'alzajeltravel-e67e1',
+    storageBucket: 'alzajeltravel-e67e1.firebasestorage.app',
+    iosBundleId: 'com.horizon.agents',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBek9nLEwO-8xlFQlnp2SJiZi4Y_mYxSTo',
-    appId: '1:565049632804:web:d83248ec45c58615fe10b1',
-    messagingSenderId: '565049632804',
-    projectId: 'alzajeltravel-2496e',
-    authDomain: 'alzajeltravel-2496e.firebaseapp.com',
-    storageBucket: 'alzajeltravel-2496e.firebasestorage.app',
+    apiKey: 'AIzaSyARTTQz-SuInDbNMmE2v8KwltAFc9pOCEM',
+    appId: '1:6540576529:web:9a856acf4c9172d785eeb0',
+    messagingSenderId: '6540576529',
+    projectId: 'alzajeltravel-e67e1',
+    authDomain: 'alzajeltravel-e67e1.firebaseapp.com',
+    storageBucket: 'alzajeltravel-e67e1.firebasestorage.app',
   );
 
 }

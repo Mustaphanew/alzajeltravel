@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class AppConsts {
-  static const String androidLink = "https://play.google.com/store/apps/details?id=com.alzajeltravel.agent";
+  static const String androidLink = "https://play.google.com/store/apps/details?id=com.horizon.agents";
   static const String baseUrl = "https://www.alzajeltravel.com/mobile.alzajeltravel.com";
   static const String aboutUsUrl = "https://www.alzajeltravel.com/whorwe";
   static const String imageUrl =

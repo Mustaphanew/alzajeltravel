@@ -71,6 +71,7 @@ Map<String, String> ar = {
   'QAR – ﷼ (Qatari Riyal)': 'ريال قطري – ﷼',
   'SAR – ﷼ (Saudi Riyal)': 'ريال سعودي – ﷼',
   'AED – د.إ (UAE Dirham)': 'درهم إماراتي – د.إ',
+  'Could not open link': 'تعذّر فتح الرابط',
   // help center _____________________________
   'Help Center': 'مركز المساعدة',
   'WhatsApp': 'واتساب',
