@@ -42,6 +42,9 @@ app.*.map.json
 # Claude Code local data
 .claude/
 
+# Local deployment assets
+.deploy/
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
