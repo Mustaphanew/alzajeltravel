@@ -1,26 +1,23 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'package:alzajeltravel/model/passport/passport_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_consts.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
 
-/// صفحة مسح الجواز/البطاقة عبر الكاميرا.
+/// Passport/card scanning page.
 ///
-/// تدفّق العمل:
-/// 1) المستخدم يلتقط صورة بالكاميرا أو يختارها من المعرض.
-/// 2) يقصّ الصورة ليعزل منطقة الـ MRZ/الباركود.
-/// 3) تُرفع الصورة إلى [AppApis.passportScan] كـ multipart/form-data.
-/// 4) يُنتَظر JSON يتوافق مع [PassportModel.fromJson].
-/// 5) تُعاد `PassportModel` إلى المستدعي عبر `Get.back(result: model)`.
+/// Flow:
+/// 1) The user captures an image with the camera or picks one from the gallery.
+/// 2) The image is cropped around the MRZ/barcode area.
+/// 3) The image is uploaded to [AppApis.passportScan] as multipart/form-data.
+/// 4) The JSON response is parsed with [PassportModel.fromJson].
+/// 5) The parsed model is returned to the caller with `Get.back(result: model)`.
 class PassportScannerPage extends StatefulWidget {
   const PassportScannerPage({super.key});
 
@@ -42,86 +39,36 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
       _status = null;
     });
 
-    // طلب الصلاحية المناسبة قبل فتح الـ picker
-    final ok = await _ensurePermission(source);
-    if (!ok) return;
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: source,
+        imageQuality: 95,
+        maxWidth: 2400,
+      );
+      if (picked == null) return;
 
-    final XFile? picked = await _picker.pickImage(
-      source: source,
-      imageQuality: 95,
-      maxWidth: 2400,
-    );
-    if (picked == null) return;
-
-    final XFile? cropped = await _crop(picked);
-    setState(() => _image = cropped ?? picked);
+      final XFile? cropped = await _crop(picked);
+      if (!mounted) return;
+      setState(() => _image = cropped ?? picked);
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = _pickerErrorMessage(e));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    }
   }
 
-  /// يضمن أن المستخدم منح الصلاحية الصحيحة للكاميرا.
-  /// يُعيد `true` إن كانت الصلاحية متوفرة، و`false` عكس ذلك.
-  Future<bool> _ensurePermission(ImageSource source) async {
-    if (kIsWeb) return true; // المتصفح يتكفّل بإدارة الصلاحيات.
-
-    // على Android، يتعامل image_picker مع صلاحية المعرض تلقائيًّا
-    // (PhotoPicker على Android 13+ لا يحتاج صلاحية).
-    if (source == ImageSource.gallery && Platform.isAndroid) {
-      return true;
+  String _pickerErrorMessage(PlatformException e) {
+    switch (e.code) {
+      case 'camera_access_denied':
+        return 'Camera access was denied.'.tr;
+      case 'photo_access_denied':
+      case 'gallery_access_denied':
+        return 'Photo access was denied.'.tr;
+      default:
+        return (e.message?.trim().isNotEmpty ?? false) ? e.message! : e.code;
     }
-
-    late final Permission permission;
-    late final String friendlyName;
-
-    if (source == ImageSource.camera) {
-      permission = Permission.camera;
-      friendlyName = 'Camera'.tr;
-    } else {
-      // iOS — المعرض يحتاج Permission.photos
-      permission = Permission.photos;
-      friendlyName = 'Photos'.tr;
-    }
-
-    PermissionStatus status = await permission.status;
-    if (status.isGranted || status.isLimited) return true;
-
-    // حاول الطلب — إذا لم تُمنح مسبقًا
-    if (status.isDenied || status.isRestricted) {
-      status = await permission.request();
-      if (status.isGranted || status.isLimited) return true;
-    }
-
-    // بعد الطلب لا تزال غير ممنوحة — اعرض حوارًا واضحًا يفتح الإعدادات
-    if (!mounted) return false;
-    await _showOpenSettingsDialog(friendlyName);
-    return false;
-  }
-
-  Future<void> _showOpenSettingsDialog(String permName) async {
-    await showDialog<void>(
-      context: context,
-      builder: (dCtx) => AlertDialog(
-        title: Text('$permName ${'permission needed'.tr}'),
-        content: Text(
-          'Please enable the permission from app settings to continue.'.tr,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dCtx).pop(),
-            child: Text('Cancel'.tr),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConsts.secondaryColor,
-              foregroundColor: AppConsts.primaryColor,
-            ),
-            onPressed: () async {
-              Navigator.of(dCtx).pop();
-              await openAppSettings();
-            },
-            child: Text('Open Settings'.tr),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<XFile?> _crop(XFile file) async {
@@ -139,10 +86,7 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
           lockAspectRatio: false,
           initAspectRatio: CropAspectRatioPreset.original,
         ),
-        IOSUiSettings(
-          title: 'Crop image'.tr,
-          aspectRatioLockEnabled: false,
-        ),
+        IOSUiSettings(title: 'Crop image'.tr, aspectRatioLockEnabled: false),
       ],
     );
     if (cropped == null) return null;
@@ -173,16 +117,14 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
         AppApis.passportScan,
         file: file,
         fileFieldName: 'image',
-        params: {
-          'lang': AppVars.lang,
-        },
+        params: {'lang': AppVars.lang},
       );
 
       if (response == null) {
         throw 'Could not extract MRZ.'.tr;
       }
 
-      // نقبل عدّة أشكال للاستجابة: {data: {...}} أو {...} مباشرةً
+      // Accept either {data: {...}} or a direct model map.
       Map<String, dynamic> raw;
       if (response is Map) {
         raw = Map<String, dynamic>.from(response);
@@ -282,7 +224,9 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
           color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _image == null ? cs.outlineVariant : AppConsts.secondaryColor,
+            color: _image == null
+                ? cs.outlineVariant
+                : AppConsts.secondaryColor,
             width: _image == null ? 1 : 1.5,
           ),
         ),
@@ -291,7 +235,11 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(FontAwesomeIcons.idCard, size: 48, color: cs.onSurfaceVariant),
+                  Icon(
+                    FontAwesomeIcons.idCard,
+                    size: 48,
+                    color: cs.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'No image selected.'.tr,
@@ -310,8 +258,7 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
     );
   }
 
-  /// فاذا تعذر عرض الصورة من الشبكة (على Android/iOS المسار يكون file path)
-  /// نعرضها كملف محلي.
+  /// On Android/iOS the image path is local, so fall back to reading bytes.
   Widget _localImage() {
     return FutureBuilder(
       future: _image!.readAsBytes(),
@@ -336,7 +283,9 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
         children: [
           Icon(Icons.error_outline, color: cs.error),
           const SizedBox(width: 8),
-          Expanded(child: Text(_error!, style: TextStyle(color: cs.error))),
+          Expanded(
+            child: Text(_error!, style: TextStyle(color: cs.error)),
+          ),
         ],
       ),
     );
@@ -347,7 +296,9 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppConsts.secondaryColor.withValues(alpha: 0.10),
-        border: Border.all(color: AppConsts.secondaryColor.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: AppConsts.secondaryColor.withValues(alpha: 0.35),
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -357,7 +308,8 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Try a clearer photo and ensure the MRZ lines are fully visible.'.tr,
+              'Try a clearer photo and ensure the MRZ lines are fully visible.'
+                  .tr,
               style: TextStyle(color: cs.onSurface, height: 1.4),
             ),
           ),
@@ -380,12 +332,19 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _busy ? null : () => _pickAndCrop(ImageSource.camera),
+                  onPressed: _busy
+                      ? null
+                      : () => _pickAndCrop(ImageSource.camera),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppConsts.secondaryColor,
-                    side: const BorderSide(color: AppConsts.secondaryColor, width: 1.4),
+                    side: const BorderSide(
+                      color: AppConsts.secondaryColor,
+                      width: 1.4,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   icon: const Icon(Icons.camera_alt, size: 18),
                   label: Text('Pick from camera'.tr),
@@ -394,12 +353,19 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _busy ? null : () => _pickAndCrop(ImageSource.gallery),
+                  onPressed: _busy
+                      ? null
+                      : () => _pickAndCrop(ImageSource.gallery),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppConsts.secondaryColor,
-                    side: const BorderSide(color: AppConsts.secondaryColor, width: 1.4),
+                    side: const BorderSide(
+                      color: AppConsts.secondaryColor,
+                      width: 1.4,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   icon: const Icon(Icons.photo, size: 18),
                   label: Text('Pick from gallery'.tr),
@@ -428,7 +394,9 @@ class _PassportScannerPageState extends State<PassportScannerPage> {
                       foregroundColor: AppConsts.primaryColor,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       textStyle: const TextStyle(
                         fontSize: AppConsts.normal,
                         fontWeight: FontWeight.bold,

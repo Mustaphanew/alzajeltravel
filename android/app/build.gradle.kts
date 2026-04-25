@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.flutter.gradle.tasks.FlutterTask
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -77,6 +78,12 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+tasks.withType<FlutterTask>().configureEach {
+    if (System.getProperty("os.name").lowercase().contains("windows")) {
+        flutterExecutable = rootProject.file("../tool/flutter_with_git.bat")
+    }
 }
 
 dependencies {

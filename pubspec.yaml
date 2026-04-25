@@ -20,11 +20,9 @@ dependencies:
   get_storage: ^2.1.1
   introduction_screen: ^4.0.0
   cached_network_image: ^3.4.1
-  permission_handler: ^12.0.1
-  googleapis_auth: ^2.0.0
   fluttertoast: ^9.0.0
-  # sqlite3: ^3.1.1
-  # sqlite3_flutter_libs: ^0.5.41
+  sqlite3: ^3.1.1
+  sqlite3_flutter_libs: ^0.5.41
   swipe_image_gallery: ^0.11.0
   dropdown_search: ^6.0.2
   flutter_svg: ^2.2.2
@@ -47,7 +45,7 @@ dependencies:
   image: ^4.5.4
   image_picker: ^1.2.0
   firebase_core: ^4.3.0
-  firebase_messaging: ^16.1.0
+  firebase_messaging: ^16.2.0
   awesome_notifications: ^0.10.1
   country_flags: 4.1.2
   url_launcher: ^6.3.2

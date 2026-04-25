@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- إذن إشعارات أندرويد 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -6,8 +7,8 @@
     <!-- للاهتزاز (موصى به من توثيق الحزمة) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- لإعادة جدولة الإشعارات بعد إعادة التشغيل (موصى به من توثيق الحزمة) -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- لا توجد إشعارات مجدولة حاليًا، لذلك نحذف صلاحية إعادة الجدولة بعد تشغيل الجهاز. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
 
     <!-- لتحميل الصور من الإنترنت إذا استخدمت رابط صورة -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -16,16 +17,34 @@
     <!-- اختياري للأجهزة القديمة -->
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
-    <!-- الكاميرا لمسح الجواز/البطاقة -->
-    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- image_picker يستخدم تطبيق الكاميرا/منتقي الصور بالنظام، لذلك لا نطلب صلاحية الكاميرا. -->
+    <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <!-- الوصول إلى الصور والملفات -->
-    <!-- Android 13+ (API 33+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Photo Picker لا يحتاج صلاحيات وصول واسعة للصور أو الملفات. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove" />
     <!-- Android 12 وأقدم -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" tools:node="remove" />
+    <uses-permission android:name="com.sec.android.provider.badge.permission.READ" tools:node="remove" />
+    <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" tools:node="remove" />
+    <uses-permission android:name="com.htc.launcher.permission.READ_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" tools:node="remove" />
+    <uses-permission android:name="com.sonyericsson.home.permission.BROADCAST_BADGE" tools:node="remove" />
+    <uses-permission android:name="com.sonymobile.home.permission.PROVIDER_INSERT_BADGE" tools:node="remove" />
+    <uses-permission android:name="com.anddoes.launcher.permission.UPDATE_COUNT" tools:node="remove" />
+    <uses-permission android:name="com.majeur.launcher.permission.UPDATE_BADGE" tools:node="remove" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" tools:node="remove" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.READ_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.WRITE_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_APP_BADGE" tools:node="remove" />
+    <uses-permission android:name="com.oppo.launcher.permission.READ_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="com.oppo.launcher.permission.WRITE_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_READ" tools:node="remove" />
+    <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_WRITE" tools:node="remove" />
 
 
     <!-- Provide required visibility configuration for API level 30 and above -->

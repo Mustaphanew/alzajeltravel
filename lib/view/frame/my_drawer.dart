@@ -2,6 +2,7 @@ import 'package:alzajeltravel/model/profile/profile_model.dart';
 import 'package:alzajeltravel/utils/app_apis.dart';
 import 'package:alzajeltravel/utils/app_funs.dart';
 import 'package:alzajeltravel/utils/app_vars.dart';
+import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,7 +81,10 @@ class _MyDrawerState extends State<MyDrawer> {
 
                   // فاصل ناعم
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Divider(
                       height: 1,
                       thickness: 1,
@@ -91,7 +95,10 @@ class _MyDrawerState extends State<MyDrawer> {
                   _DrawerItem(
                     icon: Icons.notifications_rounded,
                     title: "Notifications".tr,
-                    onTap: () => _jumpToTab(1),
+                    onTap: () {
+                      _closeDrawer();
+                      Get.toNamed(Routes.notifications.path);
+                    },
                   ),
                   _DrawerItem(
                     icon: Icons.settings_rounded,
@@ -118,10 +125,7 @@ class _MyDrawerState extends State<MyDrawer> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppConsts.primaryColor,
-            Color(0xFF1E2F7A),
-          ],
+          colors: [AppConsts.primaryColor, Color(0xFF1E2F7A)],
         ),
       ),
       child: Stack(
@@ -186,7 +190,9 @@ class _MyDrawerState extends State<MyDrawer> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppConsts.secondaryColor.withValues(alpha: 0.45),
+                            color: AppConsts.secondaryColor.withValues(
+                              alpha: 0.45,
+                            ),
                             blurRadius: 14,
                             offset: const Offset(0, 4),
                           ),
@@ -280,7 +286,11 @@ class _MyDrawerState extends State<MyDrawer> {
                 }
               } catch (_) {
                 if (context.mounted) context.loaderOverlay.hide();
-                AppFuns.showSnack("Error".tr, "Could not logout".tr, type: SnackType.error);
+                AppFuns.showSnack(
+                  "Error".tr,
+                  "Could not logout".tr,
+                  type: SnackType.error,
+                );
               }
             },
             splashColor: cs.error.withValues(alpha: 0.15),
@@ -288,7 +298,10 @@ class _MyDrawerState extends State<MyDrawer> {
             child: Ink(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: cs.error.withValues(alpha: 0.55), width: 1.2),
+                border: Border.all(
+                  color: cs.error.withValues(alpha: 0.55),
+                  width: 1.2,
+                ),
                 color: cs.error.withValues(alpha: 0.08),
               ),
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
@@ -321,11 +334,7 @@ class _DrawerItem extends StatelessWidget {
   final String title;
   final VoidCallback? onTap;
 
-  const _DrawerItem({
-    required this.icon,
-    required this.title,
-    this.onTap,
-  });
+  const _DrawerItem({required this.icon, required this.title, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -358,11 +367,7 @@ class _DrawerItem extends StatelessWidget {
                       ],
                     ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: AppConsts.secondaryColor,
-                    size: 22,
-                  ),
+                  child: Icon(icon, color: AppConsts.secondaryColor, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

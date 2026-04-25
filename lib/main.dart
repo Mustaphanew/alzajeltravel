@@ -1,12 +1,14 @@
 import 'package:alzajeltravel/root_decider.dart';
+import 'package:alzajeltravel/model/db/db_helper.dart';
+import 'package:alzajeltravel/services/notification_fcm/notification_fcm_service.dart';
 import 'package:alzajeltravel/utils/classes/http_overrides/http_overrides.dart';
 import 'package:alzajeltravel/firebase_options.dart';
 import 'package:alzajeltravel/utils/routes.dart';
 import 'package:alzajeltravel/view/frame/issuing/issuing_page.dart';
 import 'package:alzajeltravel/view/login/login_page.dart';
 import 'package:alzajeltravel/view/tmp/my_lottie.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +31,7 @@ import 'package:alzajeltravel/view/frame.dart';
 import 'package:alzajeltravel/view/frame/passport/passports_forms.dart';
 import 'package:alzajeltravel/view/frame/search_flight.dart';
 import 'package:alzajeltravel/view/intro.dart';
+import 'package:alzajeltravel/view/notifications/notifications_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
 import 'package:pwa_install/pwa_install.dart';
@@ -38,14 +41,19 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   setupHttpOverrides();
-  
+
   // 2) تهيئاتك المتزامنة/المسبقة
   await GetStorage.init();
   // await Jiffy.setLocale('ar');
 
   // 3) Firebase (يفضل قبل إظهار أي حوارات أذونات)
   try {
-    final app = await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    final app = await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    }
     print(
       "firebase initialized: ${app.name}, "
       "${app.options.apiKey}, ${app.options.appId}, ${app.options.projectId}",
@@ -62,26 +70,28 @@ Future<void> main() async {
 
   // 4) إشعارات: تهيئة القناة + المستمعات + طلب إذن إذا لزم
   await NotificationService.init();
+  await DbHelper().createDatabase();
+  final fcmService = NotificationFCMService();
+  await fcmService.initFCM();
   initDio(); // 👈 يعتمد على baseUrl المُحدَّد أعلاه
-  // لازم قبل runApp 
+  // لازم قبل runApp
   if (kIsWeb) {
-    PWAInstall().setup(installCallback: () {
-      debugPrint('APP INSTALLED!');
-    });
+    PWAInstall().setup(
+      installCallback: () {
+        debugPrint('APP INSTALLED!');
+      },
+    );
   }
-  
+
   runApp(
     GlobalLoaderOverlay(
-      // overlayColor: (Get.context?.theme.brightness == Brightness.light)? 
+      // overlayColor: (Get.context?.theme.brightness == Brightness.light)?
       //   Colors.white.withValues(alpha: 1):
       //   Colors.black.withValues(alpha: 1),
-      
       overlayWidgetBuilder: (progress) {
         print("brightness: ${Get.context?.theme.brightness}");
         // return Container(height: 300, width: 300, child: FlightLoader());
-        return MyLottie(
-          title: (progress?? "Loading".tr).toString() + " ...",
-        );
+        return MyLottie(title: (progress ?? "Loading".tr).toString() + " ...");
       },
       child: const MyApp(),
     ),
@@ -89,14 +99,12 @@ Future<void> main() async {
 
   // 6) معالجة حالة "التطبيق مُنهى وتم فتحه عبر الإشعار"
   //    (مرة واحدة فقط، بعد runApp، ومع تأجيل لِـ frame لضمان جاهزية الـ Navigator والبلجنز)
-  if (!kIsWeb) {
-    final initial = await AwesomeNotifications().getInitialNotificationAction(removeFromActionEvents: true);
-    if (initial != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await NotificationController.onActionReceivedMethod(initial);
-      });
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await fcmService.handleInitialMessageAfterAppReady();
+    if (!kIsWeb) {
+      await NotificationService.handleInitialActionIfAny();
     }
-  }
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -112,7 +120,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    print("first_run: ${AppVars.getStorage.read("first_run")}"); // (first_run == null) is the first run
+    print(
+      "first_run: ${AppVars.getStorage.read("first_run")}",
+    ); // (first_run == null) is the first run
   }
 
   @override
@@ -128,26 +138,11 @@ class _MyAppState extends State<MyApp> {
           initialRoute: Routes.root.path,
 
           getPages: [
-            GetPage(
-              name: Routes.root.path,
-              page: () => const RootDecider(),
-            ),
-            GetPage(
-              name: Routes.intro.path,
-              page: () => const Intro(),
-            ),
-            GetPage(
-              name: Routes.login.path,
-              page: () => const LoginPage(),
-            ),
-            GetPage(
-              name: Routes.frame.path,
-              page: () => Frame(),
-            ),
-            GetPage(
-              name: Routes.searchFlight.path,
-              page: () => SearchFlight(),
-            ),
+            GetPage(name: Routes.root.path, page: () => const RootDecider()),
+            GetPage(name: Routes.intro.path, page: () => const Intro()),
+            GetPage(name: Routes.login.path, page: () => const LoginPage()),
+            GetPage(name: Routes.frame.path, page: () => Frame()),
+            GetPage(name: Routes.searchFlight.path, page: () => SearchFlight()),
             GetPage(
               name: Routes.passportForms.path,
               page: () => PassportsFormsPage(
@@ -157,11 +152,15 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             GetPage(
+              name: Routes.notifications.path,
+              page: () => const NotificationsPage(),
+            ),
+            GetPage(
               name: Routes.prebookingAndIssueing.path,
               page: () => IssuingPage(
                 offerDetail: Get.arguments["offerDetail"],
                 travelers: Get.arguments["travelers"],
-                contact: Get.arguments["contact"], 
+                contact: Get.arguments["contact"],
                 pnr: Get.arguments["pnr"],
                 booking: Get.arguments["booking"],
                 fromPage: Get.arguments["fromPage"],
@@ -204,5 +203,4 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
-
 }

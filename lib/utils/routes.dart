@@ -11,8 +11,9 @@ enum Routes {
   moreFlightDetail('/more-flight-detail'),
   passportForms('/passport-forms'),
   travelersReview('/travelers-review'),
+  notifications('/notifications'),
   prebookingAndIssueing('/prebooking-and-issueing');
-  
+
   final String route;
   const Routes(this.route);
 
@@ -31,5 +32,5 @@ enum Routes {
     return Routes.values.firstWhere((e) {
       return e.route == v || e.path == v;
     });
-  } 
+  }
 }

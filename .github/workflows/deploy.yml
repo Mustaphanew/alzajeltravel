@@ -23,7 +23,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web (prod)
-        run: flutter build web --release --base-href "/alzajeltravel/" --dart-define=FLAVOR=prod
+        run: flutter build web --release --base-href "/alzajeltravel/" --dart-define=FLAVOR=prod --dart-define=FIREBASE_WEB_VAPID_KEY=BDmqRXB9xm4bgP7UUfKAXyuj-g654iFLYM30RgsU_WOvghiOxy7-btJq4FbTgVHKFuFxQI2KaI7rcg0UYom2INM
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4

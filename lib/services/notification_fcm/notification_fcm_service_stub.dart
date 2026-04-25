@@ -1,5 +1,9 @@
-class FCM {
-  static Future<String> getAccessToken() {
-    throw UnsupportedError('FCM access token is not supported on Web in this app.');
-  }
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+
+class NotificationFCMService {
+  Future<void> initFCM() async {}
+
+  Future<void> handleInitialMessageAfterAppReady() async {}
 }
